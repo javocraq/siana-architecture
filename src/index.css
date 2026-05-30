@@ -1,0 +1,304 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Siana — Editorial Design System (per spec)
+   Playfair Display + DM Mono + Instrument Serif italic (logo)
+   Terracotta accent #bf3a18.
+   All colors HSL.
+============================================================ */
+
+@layer base {
+  :root {
+    /* Surfaces */
+    --background: 0 0% 100%;            /* #ffffff paper */
+    --foreground: 60 4% 7%;             /* #111110 ink */
+
+    --paper: 0 0% 100%;                 /* #ffffff */
+    --paper-warm: 60 5% 97%;            /* #f8f8f7 */
+    --paper-mid: 60 3% 92%;             /* #ebebea */
+
+    --ink: 60 4% 7%;                    /* #111110 */
+    --ink-soft: 40 4% 26%;              /* #444340 */
+    --warm-gray: 60 2% 60%;             /* #999896 */
+
+    /* Legacy alias tokens used elsewhere — keep mapped */
+    --off-white: 60 5% 97%;
+    --warm-white: 60 5% 97%;
+    --stone: 60 3% 92%;
+    --ink-muted: 40 4% 26%;
+    --ink-faint: 60 2% 60%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 60 4% 7%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 60 4% 7%;
+
+    --primary: 60 4% 7%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 60 5% 97%;
+    --secondary-foreground: 60 4% 7%;
+
+    --muted: 60 5% 97%;
+    --muted-foreground: 40 4% 26%;
+
+    --accent-default: 60 3% 92%;
+    --accent-foreground: 60 4% 7%;
+
+    --destructive: 0 60% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* TERRACOTTA — accent. Used sparingly per spec. */
+    --accent: 13 79% 42%;               /* #bf3a18 */
+    --accent-light: 12 73% 96%;         /* #fdf0ed */
+
+    /* Legacy "blue" tokens remapped to terracotta so existing
+       components inherit the new palette without churn. */
+    --blue: 13 79% 42%;
+    --blue-light: 12 73% 96%;
+    --blue-muted: 13 70% 75%;
+
+    /* Hairline border */
+    --border: 60 4% 7% / 0.06;
+    --input: 60 4% 7% / 0.08;
+    --ring: 60 4% 7%;
+
+    /* Radii — spec: 6px buttons, 10px cards */
+    --radius: 6px;
+    --radius-card: 10px;
+
+    /* Sidebar (admin) */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 60 4% 7%;
+    --sidebar-primary: 60 4% 7%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 60 5% 97%;
+    --sidebar-accent-foreground: 60 4% 7%;
+    --sidebar-border: 60 4% 7% / 0.06;
+    --sidebar-ring: 60 4% 7%;
+  }
+
+  .dark {
+    --background: 60 4% 7%;
+    --foreground: 0 0% 98%;
+    --card: 60 4% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 60 4% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 60 4% 7%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 65%;
+    --accent-default: 0 0% 12%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 60% 40%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 100% / 0.08;
+    --input: 0 0% 100% / 0.08;
+    --ring: 0 0% 98%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: hsl(var(--paper));
+    color: hsl(var(--ink));
+    font-family: 'DM Mono', ui-monospace, monospace;
+    font-weight: 400;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    line-height: 1.9;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', 'Times New Roman', serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+    text-transform: none;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Playfair Display', 'Times New Roman', serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .font-display-black {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    letter-spacing: -0.025em;
+  }
+  .font-logo {
+    font-family: 'Instrument Serif', 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+  .font-mono {
+    font-family: 'DM Mono', ui-monospace, monospace;
+  }
+  .font-body { font-family: 'DM Mono', ui-monospace, monospace; }
+  .font-serif-display {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .tracking-editorial { letter-spacing: -0.02em; }
+  .tracking-ui { letter-spacing: 0.03em; }
+  .tracking-tag { letter-spacing: 0.18em; }
+  .tracking-label { letter-spacing: 0.28em; }
+
+  .text-ink { color: hsl(var(--ink)); }
+  .text-ink-soft { color: hsl(var(--ink-soft)); }
+  .text-ink-muted { color: hsl(var(--ink-soft)); }
+  .text-ink-faint { color: hsl(var(--warm-gray)); }
+  .text-warm-gray { color: hsl(var(--warm-gray)); }
+  .text-accent-terra { color: hsl(var(--accent)); }
+
+  .bg-paper { background-color: hsl(var(--paper)); }
+  .bg-paper-warm { background-color: hsl(var(--paper-warm)); }
+  .bg-paper-mid { background-color: hsl(var(--paper-mid)); }
+  .bg-off-white { background-color: hsl(var(--paper-warm)); }
+  .bg-warm-white { background-color: hsl(var(--paper-warm)); }
+  .bg-stone { background-color: hsl(var(--paper-mid)); }
+  .bg-accent-terra { background-color: hsl(var(--accent)); }
+  .bg-accent-light { background-color: hsl(var(--accent-light)); }
+
+  .hairline { border-color: hsl(var(--border)); }
+
+  /* Photo treatment — slight desaturation, warms to full color on hover */
+  .photo-thumb {
+    filter: saturate(0.85) brightness(0.95);
+    transition: filter 0.4s ease, transform 0.6s ease;
+  }
+  .photo-thumb:hover,
+  .group:hover .photo-thumb {
+    filter: saturate(1) brightness(1);
+  }
+
+  /* Animations */
+  .fade-in {
+    animation: siana-fade 600ms ease-out both;
+  }
+  @keyframes siana-fade {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .fadeup-1 { opacity: 0; animation: siana-fadeup 0.8s 0.3s forwards; }
+  .fadeup-2 { opacity: 0; animation: siana-fadeup 0.9s 0.5s forwards; }
+  .fadeup-3 { opacity: 0; animation: siana-fadeup 0.8s 0.8s forwards; }
+  .fadeup-4 { opacity: 0; animation: siana-fadeup 0.8s 1.1s forwards; }
+  @keyframes siana-fadeup {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .scroll-line-anim {
+    transform-origin: left;
+    transform: scaleX(0);
+    animation: siana-expand 1.2s 1.5s ease forwards;
+  }
+  @keyframes siana-expand { to { transform: scaleX(1); } }
+
+  .slowzoom {
+    transform: scale(1.04);
+    animation: siana-slowzoom 20s ease-in-out infinite alternate;
+  }
+  @keyframes siana-slowzoom {
+    from { transform: scale(1.04); }
+    to { transform: scale(1.09); }
+  }
+
+  /* Pulse ring on map pins (placeholder use) */
+  .pin-pulse::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 22px; height: 22px;
+    border-radius: 9999px;
+    border: 1px solid hsl(var(--accent));
+    opacity: 0.35;
+    transform: translate(-50%, -50%);
+    animation: siana-pulse 2.2s infinite;
+  }
+  @keyframes siana-pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.35; }
+    50% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+  }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Section label with trailing line (per spec section 8) */
+  .section-label-line {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .section-label-line::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: hsl(var(--paper-mid));
+    max-width: 80px;
+  }
+
+  /* Frosted glass nav */
+  .nav-frost {
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(28,24,20,0.06);
+  }
+}
+
+/* ============ Rich text editor — table styling ============ */
+.ProseMirror table.rte-table,
+.prose table {
+  border-collapse: collapse;
+  margin: 1.25em 0;
+  width: 100%;
+  table-layout: fixed;
+  overflow: hidden;
+}
+.ProseMirror table.rte-table td,
+.ProseMirror table.rte-table th,
+.prose table td,
+.prose table th {
+  border: 1px solid hsl(var(--paper-mid));
+  padding: 8px 12px;
+  vertical-align: top;
+  position: relative;
+}
+.ProseMirror table.rte-table th,
+.prose table th {
+  background: hsl(var(--paper-warm));
+  font-weight: 600;
+  text-align: left;
+}
+.ProseMirror .selectedCell:after {
+  content: "";
+  position: absolute; inset: 0;
+  background: hsl(var(--accent) / 0.1);
+  pointer-events: none;
+}

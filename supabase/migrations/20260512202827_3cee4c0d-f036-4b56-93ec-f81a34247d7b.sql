@@ -1,0 +1,1 @@
+ALTER TABLE public.cities ADD COLUMN IF NOT EXISTS sections jsonb NOT NULL DEFAULT '[]'::jsonb;
