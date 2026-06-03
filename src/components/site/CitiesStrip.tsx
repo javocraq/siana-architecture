@@ -44,19 +44,19 @@ export default function CitiesStrip() {
         <div className="flex items-end justify-between mb-12 flex-wrap gap-6">
           <div>
             <p
-              className="font-mono uppercase text-accent-terra mb-3"
-              style={{ fontSize: "0.52rem", letterSpacing: "0.28em" }}
+              className="font-mono uppercase text-accent-terra mb-3 font-medium"
+              style={{ fontSize: "12px", letterSpacing: "0.22em" }}
             >
               Geography
             </p>
             <h2 className="font-display-black text-ink" style={{ fontSize: "clamp(2.5rem, 5vw, 5rem)", lineHeight: 0.94 }}>
-              Explore by <em className="italic text-warm-gray">city.</em>
+              Explore by <em className="italic text-ink-soft">city.</em>
             </h2>
           </div>
           <Link
             to="/cities"
-            className="font-mono uppercase text-warm-gray hover:text-ink transition-colors border-b border-paper-mid hover:border-ink pb-[2px]"
-            style={{ fontSize: "0.58rem", letterSpacing: "0.18em" }}
+            className="font-mono uppercase text-ink-soft hover:text-ink transition-colors border-b border-paper-mid hover:border-ink pb-[2px] font-medium"
+            style={{ fontSize: "13px", letterSpacing: "0.16em" }}
           >
             All cities →
           </Link>
@@ -78,14 +78,14 @@ export default function CitiesStrip() {
             }}
           >
             <div
-              className="font-display text-ink mb-1"
-              style={{ fontSize: "1.05rem", fontWeight: 400 }}
+              className="font-display text-ink mb-1.5"
+              style={{ fontSize: "1.25rem", fontWeight: 600 }}
             >
               {c.name}
             </div>
             <div
-              className="font-mono uppercase text-warm-gray"
-              style={{ fontSize: "0.48rem", letterSpacing: "0.15em" }}
+              className="font-mono uppercase text-ink-soft"
+              style={{ fontSize: "12px", letterSpacing: "0.14em" }}
             >
               {c.project_count} {c.project_count === 1 ? "building" : "buildings"}
             </div>

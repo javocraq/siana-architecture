@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
+import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 import { detectKindFromPath, kindConfig } from "@/lib/postKind";
 
@@ -23,6 +25,8 @@ export default function AdminJournal() {
   const cfg = kindConfig(kind);
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState<PostRow | null>(null);
+  const { toast } = useToast();
 
   const load = async () => {
     setLoading(true);
@@ -41,10 +45,20 @@ export default function AdminJournal() {
   }, [kind]);
 
 
-  const removePost = async (p: PostRow) => {
-    if (!confirm(`Delete "${p.title}"? This cannot be undone.`)) return;
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const p = pendingDelete;
+    setPendingDelete(null);
     const { error } = await supabase.from("posts").delete().eq("id", p.id);
-    if (!error) setPosts((prev) => prev.filter((x) => x.id !== p.id));
+    if (error) {
+      toast({ title: `Could not delete ${cfg.label.toLowerCase()}`, description: error.message, variant: "destructive" });
+      return;
+    }
+    setPosts((prev) => prev.filter((x) => x.id !== p.id));
+    toast({
+      title: `${cfg.label} deleted`,
+      description: `“${p.title}” has been removed.`,
+    });
   };
 
   return (
@@ -138,7 +152,7 @@ export default function AdminJournal() {
                           View
                         </Link>
                         <button
-                          onClick={() => removePost(p)}
+                          onClick={() => setPendingDelete(p)}
                           className="text-[11px] tracking-ui text-ink-muted hover:text-destructive"
                         >
                           Delete
@@ -160,6 +174,21 @@ export default function AdminJournal() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title={`Delete ${cfg.label.toLowerCase()}`}
+        description={
+          pendingDelete
+            ? `“${pendingDelete.title}” will be permanently removed. This cannot be undone.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={confirmDelete}
+      />
     </AdminLayout>
   );
 }

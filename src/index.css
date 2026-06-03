@@ -3,10 +3,14 @@
 @tailwind utilities;
 
 /* ============================================================
-   Siana — Editorial Design System (per spec)
-   Playfair Display + DM Mono + Instrument Serif italic (logo)
-   Terracotta accent #bf3a18.
-   All colors HSL.
+   Siana — Editorial Design System
+   Type system (all Google Fonts, no licensing required):
+     • Fraunces 700       → primary display / headings (serif, opsz)
+     • Manrope 600        → secondary titles (sans)
+     • Inter 400          → body text (sans)
+     • Instrument Serif   → wordmark (italic)
+     • Montserrat 500/600 → tags / labels (uppercase + tracked)
+   Terracotta accent #bf3a18. All colors HSL.
 ============================================================ */
 
 @layer base {
@@ -19,16 +23,16 @@
     --paper-warm: 60 5% 97%;            /* #f8f8f7 */
     --paper-mid: 60 3% 92%;             /* #ebebea */
 
-    --ink: 60 4% 7%;                    /* #111110 */
-    --ink-soft: 40 4% 26%;              /* #444340 */
-    --warm-gray: 60 2% 60%;             /* #999896 */
+    --ink: 60 4% 7%;                    /* #111110 — body text */
+    --ink-soft: 40 4% 22%;               /* #3a3937 — secondary text (was 26%) */
+    --warm-gray: 30 3% 38%;              /* #635f5a — metadata, eyebrows (was 60% — too faint) */
 
     /* Legacy alias tokens used elsewhere — keep mapped */
     --off-white: 60 5% 97%;
     --warm-white: 60 5% 97%;
     --stone: 60 3% 92%;
-    --ink-muted: 40 4% 26%;
-    --ink-faint: 60 2% 60%;
+    --ink-muted: 40 4% 22%;              /* alias of ink-soft */
+    --ink-faint: 30 3% 42%;               /* slightly lighter than warm-gray but still accessible (was 60%) */
 
     --card: 0 0% 100%;
     --card-foreground: 60 4% 7%;
@@ -66,9 +70,9 @@
     --input: 60 4% 7% / 0.08;
     --ring: 60 4% 7%;
 
-    /* Radii — spec: 6px buttons, 10px cards */
-    --radius: 6px;
-    --radius-card: 10px;
+    /* Radii — squared corners (editorial / no rounding on photos & buttons) */
+    --radius: 0px;
+    --radius-card: 0px;
 
     /* Sidebar (admin) */
     --sidebar-background: 0 0% 100%;
@@ -118,33 +122,41 @@
   body {
     background-color: hsl(var(--paper));
     color: hsl(var(--ink));
-    font-family: 'DM Mono', ui-monospace, monospace;
+    font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 400;
-    font-size: 13px;
-    letter-spacing: 0.03em;
-    line-height: 1.9;
+    font-size: 17px;
+    letter-spacing: 0;
+    line-height: 1.7;
     overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', 'Times New Roman', serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 0.95;
+    font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.05;
     text-transform: none;
   }
 }
 
 @layer utilities {
   .font-display {
-    font-family: 'Playfair Display', 'Times New Roman', serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    letter-spacing: -0.015em;
   }
   .font-display-black {
-    font-family: 'Playfair Display', serif;
-    font-weight: 900;
-    letter-spacing: -0.025em;
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+  .font-title {
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.005em;
   }
   .font-logo {
     font-family: 'Instrument Serif', 'Times New Roman', serif;
@@ -153,13 +165,39 @@
     letter-spacing: 0.01em;
   }
   .font-mono {
-    font-family: 'DM Mono', ui-monospace, monospace;
+    font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+    font-weight: 500;
   }
-  .font-body { font-family: 'DM Mono', ui-monospace, monospace; }
+  .font-body {
+    font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 400;
+  }
+
+  /* Accessible secondary type utilities (all meet WCAG AA on white) */
+  .text-secondary {
+    font-size: 15px;
+    line-height: 1.65;
+    color: hsl(var(--ink-soft));
+  }
+  .text-meta {
+    font-size: 14px;
+    line-height: 1.55;
+    color: hsl(var(--warm-gray));
+    letter-spacing: 0.01em;
+  }
+  .text-eyebrow {
+    font-size: 12px;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: hsl(var(--warm-gray));
+    font-weight: 500;
+  }
   .font-serif-display {
-    font-family: 'Playfair Display', serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    letter-spacing: -0.015em;
   }
 
   .tracking-editorial { letter-spacing: -0.02em; }

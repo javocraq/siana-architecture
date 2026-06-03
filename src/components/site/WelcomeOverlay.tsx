@@ -45,13 +45,13 @@ export default function WelcomeOverlay() {
         </h1>
         <p
           className="mt-5 font-mono"
-          style={{ fontSize: 13, color: "hsl(var(--ink-soft))", letterSpacing: "0.08em" }}
+          style={{ fontSize: 15, color: "hsl(var(--ink-soft))", letterSpacing: "0.04em", lineHeight: 1.6 }}
         >
           An architectural magazine meets a city platform
         </p>
         <p
-          className="mt-6 font-mono uppercase"
-          style={{ fontSize: 10, color: "hsl(var(--warm-gray))", letterSpacing: "0.18em" }}
+          className="mt-6 font-mono uppercase font-medium"
+          style={{ fontSize: 13, color: "hsl(var(--ink-soft))", letterSpacing: "0.16em" }}
         >
           {CITIES.join(" · ")}
         </p>

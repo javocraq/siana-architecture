@@ -34,11 +34,11 @@ export default function ArchitectureAISection() {
           <p
             className="uppercase"
             style={{
-              fontFamily: "Inter, sans-serif",
-              fontWeight: 300,
-              fontSize: 10,
-              letterSpacing: "0.2em",
-              color: "#2563EB",
+              fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+              fontWeight: 600,
+              fontSize: 13,
+              letterSpacing: "0.18em",
+              color: "#7AA8FF",
             }}
           >
             Architecture + AI
@@ -46,12 +46,12 @@ export default function ArchitectureAISection() {
           <h2
             className="mt-6"
             style={{
-              fontFamily: '"Cormorant Garamond", serif',
-              fontWeight: 300,
+              fontFamily: "'Fraunces', Georgia, serif",
+              fontWeight: 500,
               fontSize: "clamp(36px, 5vw, 48px)",
               color: "#ffffff",
               lineHeight: 1.1,
-              letterSpacing: "0.01em",
+              letterSpacing: "-0.015em",
             }}
           >
             The city, reimagined by machines
@@ -59,11 +59,11 @@ export default function ArchitectureAISection() {
           <p
             className="mt-6"
             style={{
-              fontFamily: "Inter, sans-serif",
-              fontWeight: 300,
-              fontSize: 15,
-              color: "rgba(255,255,255,0.6)",
-              lineHeight: 1.8,
+              fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+              fontWeight: 400,
+              fontSize: 17,
+              color: "rgba(255,255,255,0.82)",
+              lineHeight: 1.7,
               maxWidth: 480,
             }}
           >
@@ -73,13 +73,13 @@ export default function ArchitectureAISection() {
           </p>
           <Link
             to="/journal?category=architecture-ai"
-            className="inline-block mt-8 uppercase hover:opacity-70 transition-opacity"
+            className="inline-block mt-8 uppercase hover:opacity-80 transition-opacity"
             style={{
-              fontFamily: "Inter, sans-serif",
-              fontWeight: 300,
-              fontSize: 11,
-              letterSpacing: "0.18em",
-              color: "#2563EB",
+              fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+              fontWeight: 600,
+              fontSize: 14,
+              letterSpacing: "0.16em",
+              color: "#7AA8FF",
             }}
           >
             Read the series →
@@ -103,11 +103,12 @@ export default function ArchitectureAISection() {
                 <h3
                   className="group-hover:opacity-70 transition-opacity"
                   style={{
-                    fontFamily: '"Cormorant Garamond", serif',
-                    fontWeight: 400,
-                    fontSize: 18,
+                    fontFamily: "'Fraunces', Georgia, serif",
+                    fontWeight: 500,
+                    fontSize: 20,
                     color: "#ffffff",
                     lineHeight: 1.25,
+                    letterSpacing: "-0.01em",
                   }}
                 >
                   {p.title}
@@ -116,11 +117,11 @@ export default function ArchitectureAISection() {
                   <p
                     className="mt-2"
                     style={{
-                      fontFamily: "Inter, sans-serif",
-                      fontWeight: 300,
-                      fontSize: 12,
-                      color: "rgba(255,255,255,0.5)",
-                      lineHeight: 1.6,
+                      fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+                      fontWeight: 400,
+                      fontSize: 14,
+                      color: "rgba(255,255,255,0.78)",
+                      lineHeight: 1.65,
                     }}
                   >
                     {p.excerpt}

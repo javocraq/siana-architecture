@@ -5,6 +5,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import MapPicker from "@/components/admin/MapPicker";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
 
 type City = { id: string; name: string };
@@ -75,6 +76,7 @@ export default function AdminProjectEdit() {
   const { id } = useParams<{ id: string }>();
   const isNew = !id || id === "new";
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const [tab, setTab] = useState<Tab>("content");
   const [form, setForm] = useState<FormState>(empty);
@@ -174,22 +176,40 @@ export default function AdminProjectEdit() {
       meta_description: form.meta_description || null,
       canonical_url: form.canonical_url || null,
     };
+    const finalStatus = publishOverride || form.status;
     if (isNew) {
       const { data, error } = await supabase.from("projects").insert(payload).select("id").single();
       setSaving(false);
       if (error) {
         setError(error.message);
+        toast({ title: "Could not save project", description: error.message, variant: "destructive" });
         return;
       }
+      toast({
+        title: finalStatus === "published" ? "Project published" : "Draft saved",
+        description: `“${payload.name}” has been ${finalStatus === "published" ? "published" : "saved as a draft"}.`,
+      });
       navigate(`/admin/projects/${data.id}`, { replace: true });
     } else {
       const { error } = await supabase.from("projects").update(payload).eq("id", id!);
       setSaving(false);
       if (error) {
         setError(error.message);
+        toast({ title: "Could not save project", description: error.message, variant: "destructive" });
         return;
       }
       if (publishOverride) set("status", publishOverride);
+      toast({
+        title:
+          publishOverride === "published"
+            ? "Project published"
+            : publishOverride === "draft"
+              ? "Moved to draft"
+              : finalStatus === "published"
+                ? "Project updated"
+                : "Draft saved",
+        description: `“${payload.name}” has been saved.`,
+      });
     }
   };
 

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, X } from "lucide-react";
 import { detectKindFromPath, kindConfig } from "@/lib/postKind";
 
@@ -64,6 +65,7 @@ export default function AdminJournalEdit() {
   const location = useLocation();
   const kind = detectKindFromPath(location.pathname);
   const cfg = kindConfig(kind);
+  const { toast } = useToast();
 
 
   const [tab, setTab] = useState<Tab>("content");
@@ -181,8 +183,13 @@ export default function AdminJournalEdit() {
       setSaving(false);
       if (error) {
         setError(error.message);
+        toast({ title: `Could not save ${cfg.label.toLowerCase()}`, description: error.message, variant: "destructive" });
         return;
       }
+      toast({
+        title: newStatus === "published" ? `${cfg.label} published` : "Draft saved",
+        description: `“${payload.title}” has been ${newStatus === "published" ? "published" : "saved as a draft"}.`,
+      });
       navigate(`${cfg.adminBase}/${data.id}`, { replace: true });
 
     } else {
@@ -190,6 +197,7 @@ export default function AdminJournalEdit() {
       setSaving(false);
       if (error) {
         setError(error.message);
+        toast({ title: `Could not save ${cfg.label.toLowerCase()}`, description: error.message, variant: "destructive" });
         return;
       }
       if (publishOverride) {
@@ -198,6 +206,17 @@ export default function AdminJournalEdit() {
           set("published_at", payload.published_at);
         }
       }
+      toast({
+        title:
+          publishOverride === "published"
+            ? `${cfg.label} published`
+            : publishOverride === "draft"
+              ? "Moved to draft"
+              : newStatus === "published"
+                ? `${cfg.label} updated`
+                : "Draft saved",
+        description: `“${payload.title}” has been saved.`,
+      });
     }
   };
 

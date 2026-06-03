@@ -33,25 +33,25 @@ export default function Hero() {
       <div className="absolute inset-0 bg-background/70" aria-hidden />
 
       <div className="relative z-10 mx-auto max-w-[1100px] px-6 text-center">
-        <p className="text-[11px] tracking-tag uppercase text-ink-muted mb-8 fade-in">
+        <p className="text-[13px] tracking-tag uppercase text-ink-soft mb-8 fade-in font-medium">
           Siana Architecture
         </p>
-        <h1 className="font-display font-light text-[clamp(48px,9vw,96px)] leading-[1.05] tracking-editorial text-ink fade-in">
+        <h1 className="font-display text-[clamp(48px,9vw,96px)] leading-[1.05] tracking-editorial text-ink fade-in">
           The city as architecture
         </h1>
-        <p className="mt-8 mx-auto max-w-xl text-[14px] text-ink-muted leading-relaxed fade-in">
+        <p className="mt-8 mx-auto max-w-xl text-[17px] text-ink-soft leading-[1.65] fade-in">
           Curated architectural projects, explored through an editorial lens.
         </p>
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 fade-in">
           <Link
             to="/cities/munich"
-            className="inline-flex items-center px-8 py-3.5 border hairline text-[11px] tracking-tag uppercase text-ink hover:bg-ink hover:text-background transition-colors"
+            className="inline-flex items-center px-8 py-3.5 border hairline text-[13px] tracking-tag uppercase text-ink hover:bg-ink hover:text-background transition-colors font-medium"
           >
             Explore Munich
           </Link>
           <Link
             to="/journal"
-            className="text-[11px] tracking-tag uppercase text-ink hover:opacity-60 transition-opacity underline-offset-[6px] underline decoration-[1px]"
+            className="text-[13px] tracking-tag uppercase text-ink hover:opacity-60 transition-opacity underline-offset-[6px] underline decoration-[1px] font-medium"
           >
             Read the journal
           </Link>
@@ -60,8 +60,8 @@ export default function Hero() {
 
       {/* Scroll indicator */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-10">
-        <span className="text-[10px] tracking-tag uppercase text-ink-faint">Scroll</span>
-        <div className="w-px h-10 bg-ink-faint" />
+        <span className="text-[12px] tracking-tag uppercase text-ink-soft font-medium">Scroll</span>
+        <div className="w-px h-10 bg-ink-soft" />
       </div>
     </section>
   );

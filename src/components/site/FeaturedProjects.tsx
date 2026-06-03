@@ -64,8 +64,8 @@ export default function FeaturedProjects() {
       style={{ padding: "4rem 0", borderBottom: "1px solid hsl(var(--paper-mid))" }}
     >
       <p
-        className="font-mono uppercase text-warm-gray section-label-line"
-        style={{ padding: "0 2.5rem 1.5rem", fontSize: "0.52rem", letterSpacing: "0.28em" }}
+        className="font-mono uppercase text-ink-soft section-label-line font-medium"
+        style={{ padding: "0 2.5rem 1.5rem", fontSize: "13px", letterSpacing: "0.22em" }}
       >
         Recently added
       </p>
@@ -86,7 +86,7 @@ export default function FeaturedProjects() {
             style={{
               flex: "0 0 200px",
               height: "260px",
-              borderRadius: "10px",
+              borderRadius: 0,
               transition: "flex-basis 0.4s",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.flexBasis = "280px")}
@@ -105,11 +105,12 @@ export default function FeaturedProjects() {
               className="absolute bottom-0 left-0 right-0 font-mono uppercase"
               style={{
                 padding: "2rem 1rem 0.85rem",
-                background: "linear-gradient(transparent, rgba(17,17,16,0.75))",
-                fontSize: "0.5rem",
-                letterSpacing: "0.14em",
-                color: "rgba(255,255,255,0.85)",
-                borderRadius: "0 0 10px 10px",
+                background: "linear-gradient(transparent, rgba(17,17,16,0.85))",
+                fontSize: "12px",
+                letterSpacing: "0.12em",
+                color: "#ffffff",
+                fontWeight: 500,
+                borderRadius: 0,
               }}
             >
               {p.city?.name ? `${p.city.name} · ` : ""}{p.name}

@@ -20,12 +20,12 @@ interface Post {
 }
 
 const Eyebrow = ({ text }: { text?: string }) =>
-  text ? <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-4">{text}</p> : null;
+  text ? <p className="text-[13px] font-semibold tracking-[0.18em] uppercase text-ink-soft mb-4">{text}</p> : null;
 
 const Heading = ({ text }: { text?: string }) =>
   text ? (
     <h2 className="text-ink mb-10"
-      style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 300, fontSize: "clamp(36px, 4vw, 52px)", lineHeight: 1.05, letterSpacing: "0.01em" }}>
+      style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: "clamp(36px, 4vw, 52px)", lineHeight: 1.05, letterSpacing: "-0.015em" }}>
       {text}
     </h2>
   ) : null;
@@ -77,14 +77,14 @@ function ProjectsBlock({ s, cityId }: { s: ProjectsSection; cityId: string }) {
                   className="photo-thumb w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" loading="lazy" />
               </div>
               {p.category && (
-                <p className="italic mb-2" style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: 13, color: "#6b6760" }}>{p.category}</p>
+                <p className="italic mb-2" style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 14, color: "hsl(var(--ink-soft))" }}>{p.category}</p>
               )}
               <h3 className="text-ink mb-3 group-hover:opacity-60 transition-opacity"
-                style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 400, fontSize: 26, letterSpacing: "0.01em" }}>
+                style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em" }}>
                 {p.name}
               </h3>
               {p.architect && (
-                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 300, fontSize: 11, color: "hsl(var(--ink-muted))", letterSpacing: "0.02em" }}>
+                <p style={{ fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif", fontWeight: 400, fontSize: 14, color: "hsl(var(--ink-soft))", letterSpacing: "0.01em" }}>
                   {p.architect}{p.year_completed ? ` · ${p.year_completed}` : ""}
                 </p>
               )}
@@ -132,17 +132,17 @@ function JournalBlock({ s, cityId }: { s: JournalSection; cityId: string }) {
                 </div>
               )}
               {p.category && (
-                <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">{p.category}</p>
+                <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-3">{p.category}</p>
               )}
               <h3 className="text-ink mb-3 group-hover:opacity-60 transition-opacity"
-                style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 400, fontSize: 24, lineHeight: 1.2 }}>
+                style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: 24, lineHeight: 1.2, letterSpacing: "-0.01em" }}>
                 {p.title}
               </h3>
               {p.excerpt && (
-                <p className="text-ink-muted text-[13px] leading-relaxed line-clamp-3">{p.excerpt}</p>
+                <p className="text-ink-soft text-[15px] leading-[1.65] line-clamp-3">{p.excerpt}</p>
               )}
               {p.published_at && (
-                <p className="text-[10px] tracking-tag uppercase text-ink-faint mt-4">
+                <p className="text-[12px] font-medium tracking-[0.16em] uppercase text-ink-soft mt-4">
                   {new Date(p.published_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                 </p>
               )}

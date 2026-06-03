@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { to: "/", label: "Map" },
+  { to: "/#map", label: "Map" },
   { to: "/cities", label: "Cities" },
   { to: "/journal", label: "Journal" },
   { to: "/resources", label: "RESOURCES FOR ARCHITECTS" },
@@ -22,30 +22,33 @@ export default function Navbar() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-40 nav-frost">
-        <div className="mx-auto max-w-[1400px] px-6 lg:px-10 h-[60px] flex items-center justify-between">
+        <div className="mx-auto max-w-[1400px] px-6 lg:px-10 h-[76px] flex items-center justify-between">
           <Link
             to="/"
-            className="font-logo text-ink hover:opacity-80 transition-opacity"
-            style={{ fontSize: "1.15rem" }}
+            className="font-logo text-ink hover:opacity-80 transition-opacity leading-none"
+            style={{ fontSize: "2rem" }}
           >
             siana
           </Link>
 
-          <nav className="hidden md:flex items-center gap-10">
+          <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => {
-              const active = link.to === "/" ? location.pathname === "/" : location.pathname.startsWith(link.to);
+              const active =
+                link.to.startsWith("/#") || link.to === "/"
+                  ? location.pathname === "/"
+                  : location.pathname.startsWith(link.to);
               return (
                 <Link
                   key={link.to}
                   to={link.to}
                   className={cn(
-                    "font-mono uppercase transition-opacity",
-                    active ? "opacity-100" : "opacity-60 hover:opacity-100"
+                    "font-mono uppercase px-4 py-2 transition-colors duration-200 text-ink/85 hover:bg-ink/[0.06] hover:text-ink",
+                    active && "text-ink"
                   )}
                   style={{
-                    fontSize: "0.6rem",
-                    letterSpacing: "0.18em",
-                    color: "hsl(var(--ink-soft))",
+                    fontSize: "14px",
+                    letterSpacing: "0.16em",
+                    fontWeight: 500,
                   }}
                 >
                   {link.label}
@@ -69,8 +72,8 @@ export default function Navbar() {
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 bg-paper flex flex-col fade-in">
-          <div className="flex items-center justify-between h-[60px] px-6">
-            <Link to="/" className="font-logo text-ink" style={{ fontSize: "1.15rem" }}>
+          <div className="flex items-center justify-between h-[76px] px-6">
+            <Link to="/" className="font-logo text-ink leading-none" style={{ fontSize: "2rem" }}>
               siana
             </Link>
             <button

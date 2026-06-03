@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Helmet } from "react-helmet-async";
@@ -10,7 +10,7 @@ import MapFilters, { EMPTY_FILTERS, Filters, eraMatches } from "@/components/sit
 import { Search, X, List } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getMapboxToken, TOKEN_KEY } from "@/lib/mapbox";
-import FeaturedProjects from "@/components/site/FeaturedProjects";
+import FeaturedCities from "@/components/site/FeaturedCities";
 import FeaturedBuildings from "@/components/site/FeaturedBuildings";
 import LatestJournal from "@/components/site/LatestJournal";
 import CtaStrip from "@/components/site/CtaStrip";
@@ -61,6 +61,7 @@ const Index = () => {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [sheetOpen, setSheetOpen] = useState(false);
   const isMobile = useIsMobile();
+  const location = useLocation();
 
   // Load cities
   useEffect(() => {
@@ -103,6 +104,9 @@ const Index = () => {
         center: [activeCity.center_longitude || 11.582, activeCity.center_latitude || 48.1351],
         zoom: activeCity.default_zoom || 13,
         attributionControl: false,
+        // Let page scroll pass through the map; zoom needs ⌘/Ctrl+scroll
+        // (or two fingers on touch) so the map no longer traps the scroll.
+        cooperativeGestures: true,
       });
       map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-left");
       mapRef.current = map;
@@ -126,6 +130,16 @@ const Index = () => {
       essential: true,
     });
   }, [activeCity]);
+
+  // "Map" nav link points to "/#map" — scroll to the interactive map section
+  // (it lives below the hero on the home page).
+  useEffect(() => {
+    if (location.hash !== "#map") return;
+    const t = setTimeout(() => {
+      mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 120);
+    return () => clearTimeout(t);
+  }, [location.hash, location.key]);
 
   const architectOptions = Array.from(
     new Set(projects.map((p) => p.architect).filter(Boolean))
@@ -197,12 +211,12 @@ const Index = () => {
 
       {!token && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-paper/95">
-          <div className="max-w-md w-full mx-6 p-8 bg-paper" style={{ border: "1px solid hsl(var(--paper-mid))", borderRadius: 10 }}>
-            <p className="font-mono uppercase text-warm-gray mb-3" style={{ fontSize: 11, letterSpacing: "0.18em" }}>
+          <div className="max-w-md w-full mx-6 p-8 bg-paper" style={{ border: "1px solid hsl(var(--paper-mid))", borderRadius: 0 }}>
+            <p className="font-mono uppercase text-ink-soft mb-3 font-semibold" style={{ fontSize: 13, letterSpacing: "0.16em" }}>
               Mapbox token required
             </p>
             <h2 className="font-display text-3xl text-ink mb-4">Connect the map</h2>
-            <p className="text-[13px] text-ink-soft mb-6">
+            <p className="text-[15px] text-ink-soft mb-6 leading-[1.65]">
               Paste a Mapbox public token, or set <code>VITE_MAPBOX_PUBLIC_TOKEN</code> / hardcode it in <code>src/lib/mapbox.ts</code> to skip this prompt.
             </p>
             <input
@@ -210,13 +224,13 @@ const Index = () => {
               value={tokenInput}
               onChange={(e) => setTokenInput(e.target.value)}
               placeholder="pk.eyJ1Ijoi..."
-              className="w-full px-3 py-2.5 bg-paper text-[13px] mb-3 focus:outline-none focus:border-ink"
-              style={{ border: "1px solid hsl(var(--paper-mid))", borderRadius: 6 }}
+              className="w-full px-3 py-2.5 bg-paper text-[15px] mb-3 focus:outline-none focus:border-ink placeholder:text-ink-soft"
+              style={{ border: "1px solid hsl(var(--paper-mid))", borderRadius: 0 }}
             />
             <button
               onClick={saveToken}
-              className="w-full px-4 py-2.5 font-mono uppercase hover:opacity-80 transition-opacity"
-              style={{ background: "hsl(var(--ink))", color: "white", fontSize: 11, letterSpacing: "0.18em", borderRadius: 9999 }}
+              className="w-full px-4 py-2.5 font-mono uppercase hover:opacity-80 transition-opacity font-medium"
+              style={{ background: "hsl(var(--ink))", color: "white", fontSize: 14, letterSpacing: "0.16em", borderRadius: 0 }}
             >
               Save token
             </button>
@@ -233,7 +247,7 @@ const Index = () => {
           gridTemplateRows: "1fr auto",
           minHeight: "100vh",
           background: "hsl(var(--paper-warm))",
-          paddingTop: "60px",
+          paddingTop: "76px",
           overflow: "hidden",
         }}
       >
@@ -250,8 +264,8 @@ const Index = () => {
           }}
         >
           <p
-            className="fadeup-1 font-mono uppercase text-accent-terra"
-            style={{ fontSize: "0.58rem", letterSpacing: "0.28em", marginBottom: "1.5rem" }}
+            className="fadeup-1 font-mono uppercase text-accent-terra font-semibold"
+            style={{ fontSize: "13px", letterSpacing: "0.22em", marginBottom: "1.5rem" }}
           >
             ARCHITECTURE · CITIES · RESOURCES
           </p>
@@ -265,13 +279,13 @@ const Index = () => {
           >
             The curated<br />
             architecture<br />
-            guide.
+            guide
           </h1>
 
           <div className="fadeup-3 mt-12 flex items-end justify-between gap-8 flex-wrap">
             <p
               className="font-mono text-ink-soft"
-              style={{ fontSize: "0.72rem", lineHeight: 1.9, maxWidth: 320, letterSpacing: "0.03em" }}
+              style={{ fontSize: "15px", lineHeight: 1.7, maxWidth: 360, letterSpacing: "0.01em" }}
             >
               Curated architectural projects mapped across Europe's greatest cities.
               Explore by place, by style, by moment.
@@ -280,12 +294,12 @@ const Index = () => {
             <div className="flex items-center gap-6 flex-wrap">
               <button
                 onClick={scrollToMap}
-                className="font-mono uppercase inline-flex items-center text-white transition-all"
+                className="font-mono uppercase inline-flex items-center text-white transition-all font-semibold"
                 style={{
                   background: "hsl(var(--ink))",
-                  padding: "1rem 1.8rem",
-                  fontSize: "0.62rem",
-                  letterSpacing: "0.2em",
+                  padding: "1.1rem 2rem",
+                  fontSize: "14px",
+                  letterSpacing: "0.16em",
                   borderRadius: 0,
                   gap: "0.7rem",
                 }}
@@ -303,12 +317,12 @@ const Index = () => {
 
               <Link
                 to="/cities"
-                className="font-mono uppercase text-warm-gray hover:text-ink transition-colors"
+                className="font-mono uppercase text-ink-soft hover:text-ink transition-colors font-medium"
                 style={{
-                  fontSize: "0.58rem",
-                  letterSpacing: "0.16em",
+                  fontSize: "13px",
+                  letterSpacing: "0.14em",
                   borderBottom: "1px solid hsl(var(--paper-mid))",
-                  paddingBottom: 2,
+                  paddingBottom: 3,
                 }}
               >
                 Browse all cities
@@ -317,41 +331,11 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Stats / scroll bar */}
-        <div
-          className="fadeup-4 relative z-10 flex items-center gap-6 flex-wrap"
-          style={{
-            padding: "1.5rem 2.5rem",
-            borderTop: "1px solid hsl(var(--paper-mid))",
-          }}
-        >
-          <div
-            className="scroll-line-anim"
-            style={{ width: 36, height: 1, background: "hsl(var(--accent))" }}
-          />
-          <span
-            className="font-mono uppercase text-warm-gray"
-            style={{ fontSize: "0.52rem", letterSpacing: "0.2em" }}
-          >
-            Scroll to explore
-          </span>
-
-          <div className="flex gap-12 ml-auto">
-            <Stat number={String(projects.length || cities.reduce((a) => a, 0))} label="Buildings" />
-            <Stat number={String(cities.length)} label="Cities" />
-            <Stat
-              number={String(new Set(cities.map((c) => c.country).filter(Boolean)).size)}
-              label="Countries"
-            />
-          </div>
-        </div>
       </section>
 
-      {/* Recently added — peek strip between hero and map */}
-      <FeaturedProjects />
-
-      {/* Map section */}
+      {/* Map section — lead element after the hero */}
       <section
+        id="map"
         ref={mapSectionRef}
         className="relative bg-paper-warm"
         style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
@@ -362,22 +346,22 @@ const Index = () => {
         >
           <div>
             <p
-              className="font-mono uppercase text-accent-terra mb-3"
-              style={{ fontSize: "0.52rem", letterSpacing: "0.28em" }}
+              className="font-mono uppercase text-accent-terra mb-3 font-semibold"
+              style={{ fontSize: "13px", letterSpacing: "0.22em" }}
             >
               Interactive Map
             </p>
             <h2
               className="font-display text-ink"
-              style={{ fontSize: "clamp(2.5rem, 5vw, 5rem)", fontWeight: 700, lineHeight: 0.94 }}
+              style={{ fontSize: "clamp(2.5rem, 5vw, 5rem)", fontWeight: 500, lineHeight: 0.94 }}
             >
               Find it<br />
-              <em className="italic text-warm-gray">on the map.</em>
+              <em className="italic text-ink-soft">on the map.</em>
             </h2>
           </div>
           <p
-            className="font-mono text-warm-gray"
-            style={{ fontSize: "0.68rem", lineHeight: 1.9, maxWidth: 260, textAlign: "right", letterSpacing: "0.03em" }}
+            className="font-mono text-ink-soft"
+            style={{ fontSize: "15px", lineHeight: 1.65, maxWidth: 300, textAlign: "right", letterSpacing: "0.01em" }}
           >
             Every building is pinned. Filter by city, era, or architect.
             The map is where the journey begins.
@@ -407,7 +391,7 @@ const Index = () => {
                 aria-label="Toggle list"
               >
                 <span className="w-10 h-1 bg-paper-mid rounded-full mb-2" />
-                <span className="font-mono uppercase text-warm-gray" style={{ fontSize: 10, letterSpacing: "0.18em" }}>
+                <span className="font-mono uppercase text-ink-soft font-medium" style={{ fontSize: 13, letterSpacing: "0.14em" }}>
                   {filtered.length} projects in {activeCity.name}
                 </span>
               </button>
@@ -416,13 +400,13 @@ const Index = () => {
                 <h2 className="font-display text-ink leading-none" style={{ fontSize: 22 }}>
                   {activeCity.name}
                 </h2>
-                <p className="mt-2 font-mono uppercase text-warm-gray" style={{ fontSize: 11, letterSpacing: "0.18em" }}>
+                <p className="mt-2 font-mono uppercase text-ink-soft font-medium" style={{ fontSize: 13, letterSpacing: "0.14em" }}>
                   {filtered.length} {filtered.length === 1 ? "project" : "projects"}
                 </p>
                 {activeCity.tagline && (
                   <>
                     <div className="mt-4 mb-3 h-px w-8 bg-paper-mid" />
-                    <p className="font-display italic text-warm-gray" style={{ fontSize: 13, lineHeight: 1.5 }}>
+                    <p className="font-display italic text-ink-soft" style={{ fontSize: 16, lineHeight: 1.5 }}>
                       {activeCity.tagline}
                     </p>
                   </>
@@ -431,13 +415,13 @@ const Index = () => {
 
               <div className="px-6 py-4" style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}>
                 <div className="relative">
-                  <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-warm-gray" />
+                  <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-soft" />
                   <input
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search projects"
-                    className="w-full pl-6 pr-2 py-2 bg-transparent text-[13px] focus:outline-none placeholder:text-warm-gray"
+                    className="w-full pl-7 pr-2 py-2.5 bg-transparent text-[15px] focus:outline-none placeholder:text-ink-soft"
                     style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
                   />
                 </div>
@@ -470,23 +454,23 @@ const Index = () => {
                     >
                       <div
                         className="shrink-0 overflow-hidden bg-paper-mid"
-                        style={{ width: 52, height: 52, borderRadius: 6 }}
+                        style={{ width: 52, height: 52, borderRadius: 0 }}
                       >
                         {thumb && (
                           <img src={thumb} alt={p.name} className="photo-thumb w-full h-full object-cover" loading="lazy" />
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-display text-ink leading-tight truncate" style={{ fontSize: 18, fontWeight: 700 }}>
+                        <p className="font-display text-ink leading-tight truncate" style={{ fontSize: 19, fontWeight: 500 }}>
                           {p.name}
                         </p>
-                        <p className="mt-0.5 font-mono text-warm-gray truncate" style={{ fontSize: 11, letterSpacing: "0.03em" }}>
+                        <p className="mt-1 font-mono text-ink-soft truncate" style={{ fontSize: 13, letterSpacing: "0.01em" }}>
                           {[p.architect, p.year_completed].filter(Boolean).join(" · ")}
                         </p>
                         {p.category && (
                           <p
-                            className="mt-1 font-mono uppercase"
-                            style={{ fontSize: 9, color: "hsl(var(--warm-gray))", letterSpacing: "0.18em" }}
+                            className="mt-1.5 font-mono uppercase font-medium"
+                            style={{ fontSize: 12, color: "hsl(var(--ink-soft))", letterSpacing: "0.16em" }}
                           >
                             {p.category}
                           </p>
@@ -496,7 +480,7 @@ const Index = () => {
                   );
                 })}
                 {filtered.length === 0 && (
-                  <p className="px-6 py-8 text-warm-gray" style={{ fontSize: 12 }}>
+                  <p className="px-6 py-8 text-ink-soft" style={{ fontSize: 14 }}>
                     No projects match.
                   </p>
                 )}
@@ -508,14 +492,14 @@ const Index = () => {
           {token && activeCity && isMobile && !sheetOpen && (
             <button
               onClick={() => setSheetOpen(true)}
-              className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-20 inline-flex items-center gap-2 font-mono uppercase shadow-lg"
+              className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-20 inline-flex items-center gap-2 font-mono uppercase shadow-lg font-semibold"
               style={{
                 background: "hsl(var(--ink))",
                 color: "white",
-                padding: "0.7rem 1rem",
-                fontSize: 11,
-                letterSpacing: "0.18em",
-                borderRadius: 9999,
+                padding: "0.85rem 1.2rem",
+                fontSize: 13,
+                letterSpacing: "0.16em",
+                borderRadius: 0,
               }}
             >
               <List className="w-3.5 h-3.5" /> {filtered.length} projects
@@ -528,14 +512,14 @@ const Index = () => {
               className="absolute z-30 fade-in bottom-4 left-4 right-4 md:bottom-6 md:right-6 md:left-auto md:w-[320px]"
               style={{
                 background: "hsl(var(--paper))",
-                borderRadius: 10,
+                borderRadius: 0,
                 boxShadow: "0 6px 24px rgba(0,0,0,0.08)",
               }}
             >
               <button
                 onClick={() => setSelected(null)}
                 className="absolute top-2 right-2 z-10 p-1 text-warm-gray hover:text-ink"
-                style={{ background: "rgba(255,255,255,0.85)", borderRadius: 6 }}
+                style={{ background: "rgba(255,255,255,0.85)", borderRadius: 0 }}
                 aria-label="Close"
               >
                 <X className="w-3.5 h-3.5" />
@@ -543,7 +527,7 @@ const Index = () => {
               {(selected.cover_image_url || selected.hero_image_url) && (
                 <div
                   className="overflow-hidden bg-paper-mid"
-                  style={{ height: 220, borderRadius: "10px 10px 0 0" }}
+                  style={{ height: 220, borderRadius: 0 }}
                 >
                   <img
                     src={selected.cover_image_url || selected.hero_image_url || ""}
@@ -553,29 +537,29 @@ const Index = () => {
                 </div>
               )}
               <div className="p-5">
-                <h3 className="font-display text-ink leading-tight" style={{ fontSize: 22, fontWeight: 700 }}>
+                <h3 className="font-display text-ink leading-tight" style={{ fontSize: 24, fontWeight: 500 }}>
                   {selected.name}
                 </h3>
-                <p className="mt-2 font-mono text-warm-gray" style={{ fontSize: 11, letterSpacing: "0.03em" }}>
+                <p className="mt-2 font-mono text-ink-soft" style={{ fontSize: 14, letterSpacing: "0.01em" }}>
                   {[selected.architect, selected.year_completed].filter(Boolean).join(" · ")}
                 </p>
                 {selected.practice && (
                   <p
-                    className="mt-1 font-mono uppercase text-warm-gray"
-                    style={{ fontSize: 10, letterSpacing: "0.18em" }}
+                    className="mt-1.5 font-mono uppercase text-ink-soft font-medium"
+                    style={{ fontSize: 12, letterSpacing: "0.16em" }}
                   >
                     {selected.practice}
                   </p>
                 )}
                 {selected.tagline && (
-                  <p className="mt-3 text-warm-gray" style={{ fontSize: 12, lineHeight: 1.6 }}>
+                  <p className="mt-3 text-ink-soft" style={{ fontSize: 15, lineHeight: 1.65 }}>
                     {selected.tagline}
                   </p>
                 )}
                 <Link
                   to={`/projects/${selected.slug}`}
-                  className="mt-4 inline-flex items-center font-mono uppercase text-accent-terra hover:opacity-70"
-                  style={{ fontSize: 11, letterSpacing: "0.18em", borderBottom: "1px solid currentColor", paddingBottom: 2 }}
+                  className="mt-5 inline-flex items-center font-mono uppercase text-accent-terra hover:opacity-80 font-semibold"
+                  style={{ fontSize: 13, letterSpacing: "0.16em", borderBottom: "1px solid currentColor", paddingBottom: 3 }}
                 >
                   View project →
                 </Link>
@@ -595,8 +579,14 @@ const Index = () => {
               return (
                 <button
                   key={c.id}
-                  onClick={() => setActiveCity(c)}
-                  className="flex-1 min-w-[140px] py-6 pl-6 text-left transition-colors"
+                  type="button"
+                  onClick={() => {
+                    setActiveCity(c);
+                    setSelected(null);
+                    mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  aria-pressed={active}
+                  className="flex-1 min-w-[140px] py-6 pl-6 text-left transition-colors block"
                   style={{
                     borderRight: idx < cities.length - 1 ? "1px solid hsl(var(--paper-mid))" : "none",
                     background: active ? "hsl(var(--accent-light))" : "transparent",
@@ -609,14 +599,14 @@ const Index = () => {
                   }}
                 >
                   <div
-                    className="font-display text-ink mb-1"
-                    style={{ fontSize: "1.05rem", fontWeight: 400 }}
+                    className="font-display text-ink mb-1.5"
+                    style={{ fontSize: "1.25rem", fontWeight: 600 }}
                   >
                     {c.name}
                   </div>
                   <div
-                    className="font-mono uppercase text-warm-gray"
-                    style={{ fontSize: "0.48rem", letterSpacing: "0.15em" }}
+                    className="font-mono uppercase text-ink-soft"
+                    style={{ fontSize: "12px", letterSpacing: "0.14em" }}
                   >
                     {c.country || "—"}
                   </div>
@@ -626,6 +616,9 @@ const Index = () => {
           </div>
         )}
       </section>
+
+      {/* Cities strip — image, name & project count, below the map */}
+      <FeaturedCities />
 
       {/* Featured buildings — editorial asymmetric grid */}
       <FeaturedBuildings />
@@ -639,24 +632,5 @@ const Index = () => {
     </div>
   );
 };
-
-function Stat({ number, label }: { number: string; label: string }) {
-  return (
-    <div className="text-right">
-      <div
-        className="font-display text-ink"
-        style={{ fontSize: "1.5rem", fontWeight: 700, lineHeight: 1 }}
-      >
-        {number}
-      </div>
-      <div
-        className="font-mono uppercase text-warm-gray mt-1"
-        style={{ fontSize: "0.48rem", letterSpacing: "0.2em" }}
-      >
-        {label}
-      </div>
-    </div>
-  );
-}
 
 export default Index;

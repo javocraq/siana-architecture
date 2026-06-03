@@ -31,9 +31,9 @@ interface Project {
 }
 
 const cormorant: React.CSSProperties = {
-  fontFamily: '"Cormorant Garamond", serif',
-  fontWeight: 300,
-  letterSpacing: "0.01em",
+  fontFamily: "'Fraunces', Georgia, serif",
+  fontWeight: 500,
+  letterSpacing: "-0.015em",
   textTransform: "none",
 };
 
@@ -61,7 +61,7 @@ export default function ProjectDetail() {
       <SiteLayout>
         <div className="pt-40 pb-32 mx-auto max-w-[1280px] px-6 text-center">
           <h1 style={{ ...cormorant, fontSize: 56 }} className="text-ink">Project not found</h1>
-          <Link to="/" className="text-[12px] tracking-tag uppercase text-ink-muted hover:opacity-60 mt-6 inline-block">← Home</Link>
+          <Link to="/" className="text-[13px] font-medium tracking-[0.16em] uppercase text-ink-soft hover:opacity-60 mt-6 inline-block">← Home</Link>
         </div>
       </SiteLayout>
     );
@@ -105,7 +105,7 @@ export default function ProjectDetail() {
         <div className="absolute inset-0 flex flex-col justify-end pb-16 md:pb-20">
           <div className="mx-auto max-w-[1280px] w-full px-6 lg:px-10 text-background">
             {project.city && (
-              <Link to={`/cities/${project.city.slug}`} className="text-[10px] tracking-tag uppercase opacity-80 hover:opacity-100 mb-4 inline-block">
+              <Link to={`/cities/${project.city.slug}`} className="text-[13px] font-semibold tracking-[0.16em] uppercase opacity-90 hover:opacity-100 mb-4 inline-block">
                 {project.city.name}
               </Link>
             )}
@@ -147,7 +147,7 @@ export default function ProjectDetail() {
           >
             {metaStrip.map((m) => (
               <div key={m.label}>
-                <dt className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">{m.label}</dt>
+                <dt className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-3">{m.label}</dt>
                 <dd className="text-[15px]" style={{ color: "#0f0f0f" }}>
                   {m.href ? (
                     <Link to={m.href} className="hover:opacity-60">{m.value}</Link>
@@ -209,7 +209,7 @@ export default function ProjectDetail() {
             <p
               className="mt-3 uppercase"
               style={{
-                fontFamily: "Inter, sans-serif",
+                fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
                 fontWeight: 300,
                 fontSize: 12,
                 letterSpacing: "0.18em",
@@ -226,7 +226,7 @@ export default function ProjectDetail() {
       {gallery.length > 0 && (
         <section className="py-20 md:py-28">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-10">Gallery</p>
+            <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-10">Gallery</p>
             <div className="space-y-16">
               {gallery.map((img, i) => (
                 <figure key={i}>
@@ -234,7 +234,7 @@ export default function ProjectDetail() {
                     <img src={img.url} alt={img.caption || `${project.name} — ${i + 1}`} className="w-full h-auto" loading="lazy" />
                   </div>
                   {img.caption && (
-                    <figcaption className="text-[11px] tracking-tag uppercase text-ink-muted mt-4">
+                    <figcaption className="text-[13px] font-semibold tracking-[0.16em] uppercase text-ink-soft mt-4">
                       {img.caption}
                     </figcaption>
                   )}
@@ -247,7 +247,7 @@ export default function ProjectDetail() {
 
       {/* Back link */}
       <section className="pb-24 md:pb-32 mx-auto max-w-[1280px] px-6 lg:px-10">
-        <Link to="/cities" className="text-[11px] tracking-tag uppercase text-ink hover:opacity-60 border-t hairline pt-8 inline-block w-full">
+        <Link to="/cities" className="text-[13px] font-semibold tracking-[0.16em] uppercase text-ink hover:opacity-60 border-t hairline pt-8 inline-block w-full">
           ← Explore more
         </Link>
       </section>

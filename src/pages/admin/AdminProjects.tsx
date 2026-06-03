@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
+import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 
 type ProjectRow = {
@@ -28,6 +30,8 @@ export default function AdminProjects() {
   const [cityFilter, setCityFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<ProjectRow | null>(null);
+  const { toast } = useToast();
 
   const load = async () => {
     setLoading(true);
@@ -65,10 +69,17 @@ export default function AdminProjects() {
     }
   };
 
-  const removeProject = async (p: ProjectRow) => {
-    if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const p = pendingDelete;
+    setPendingDelete(null);
     const { error } = await supabase.from("projects").delete().eq("id", p.id);
-    if (!error) setProjects((prev) => prev.filter((x) => x.id !== p.id));
+    if (error) {
+      toast({ title: "Could not delete project", description: error.message, variant: "destructive" });
+      return;
+    }
+    setProjects((prev) => prev.filter((x) => x.id !== p.id));
+    toast({ title: "Project deleted", description: `“${p.name}” has been removed.` });
   };
 
   const filteredProjects = projects.filter((p) => {
@@ -225,7 +236,7 @@ export default function AdminProjects() {
                           View
                         </Link>
                         <button
-                          onClick={() => removeProject(p)}
+                          onClick={() => setPendingDelete(p)}
                           className="text-[11px] tracking-ui text-ink-muted hover:text-destructive"
                         >
                           Delete
@@ -246,6 +257,21 @@ export default function AdminProjects() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title="Delete project"
+        description={
+          pendingDelete
+            ? `“${pendingDelete.name}” will be permanently removed. This cannot be undone.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={confirmDelete}
+      />
     </AdminLayout>
   );
 }

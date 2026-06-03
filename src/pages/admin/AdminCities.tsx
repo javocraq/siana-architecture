@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
+import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 
 type CityRow = {
@@ -17,6 +19,8 @@ type CityRow = {
 export default function AdminCities() {
   const [cities, setCities] = useState<CityRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState<CityRow | null>(null);
+  const { toast } = useToast();
 
   const load = async () => {
     setLoading(true);
@@ -32,10 +36,17 @@ export default function AdminCities() {
     load();
   }, []);
 
-  const remove = async (c: CityRow) => {
-    if (!confirm(`Delete "${c.name}"? This cannot be undone.`)) return;
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const c = pendingDelete;
+    setPendingDelete(null);
     const { error } = await supabase.from("cities").delete().eq("id", c.id);
-    if (!error) setCities((prev) => prev.filter((x) => x.id !== c.id));
+    if (error) {
+      toast({ title: "Could not delete city", description: error.message, variant: "destructive" });
+      return;
+    }
+    setCities((prev) => prev.filter((x) => x.id !== c.id));
+    toast({ title: "City deleted", description: `“${c.name}” has been removed.` });
   };
 
   return (
@@ -116,7 +127,7 @@ export default function AdminCities() {
                         <Link to={`/cities/${c.slug}`} target="_blank" className="text-[11px] tracking-ui text-ink-muted hover:text-ink mr-4">
                           View
                         </Link>
-                        <button onClick={() => remove(c)} className="text-[11px] tracking-ui text-ink-muted hover:text-destructive">
+                        <button onClick={() => setPendingDelete(c)} className="text-[11px] tracking-ui text-ink-muted hover:text-destructive">
                           Delete
                         </button>
                       </td>
@@ -139,6 +150,21 @@ export default function AdminCities() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title="Delete city"
+        description={
+          pendingDelete
+            ? `“${pendingDelete.name}” will be permanently removed. This cannot be undone.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={confirmDelete}
+      />
     </AdminLayout>
   );
 }

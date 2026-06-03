@@ -1,3 +1,7 @@
+# robots.txt — sianaarchitecture.com
+# Open to all crawlers, including AI search engines & assistants — we WANT to
+# be indexed and cited in AI-generated answers.
+
 User-agent: Googlebot
 Allow: /
 
@@ -10,5 +14,58 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+# --- AI search / assistant crawlers (explicitly allowed so they can read & cite us) ---
+# OpenAI / ChatGPT
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic / Claude
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+# Google Gemini / AI Overviews
+User-agent: Google-Extended
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot-Extended
+Allow: /
+
+# Amazon, Common Crawl (used by many AI datasets), Meta AI
+User-agent: Amazonbot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+# Everyone else
 User-agent: *
 Allow: /
+
+# AI context file — overview of the site for LLMs (https://llmstxt.org)
+# https://sianaarchitecture.com/llms.txt
+
+# Sitemap (regenerated from the CMS on every deploy).
+Sitemap: https://sianaarchitecture.com/sitemap.xml

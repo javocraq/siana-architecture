@@ -57,8 +57,8 @@ export default function FeaturedBuildings() {
         </h2>
         <Link
           to="/cities"
-          className="font-mono uppercase text-warm-gray hover:text-ink transition-colors border-b border-paper-mid hover:border-ink pb-[2px] whitespace-nowrap mt-3"
-          style={{ fontSize: "0.58rem", letterSpacing: "0.2em" }}
+          className="font-mono uppercase text-ink-soft hover:text-ink transition-colors border-b border-paper-mid hover:border-ink pb-[2px] whitespace-nowrap mt-3 font-medium"
+          style={{ fontSize: "13px", letterSpacing: "0.16em" }}
         >
           View all {total || projects.length} →
         </Link>
@@ -78,7 +78,7 @@ export default function FeaturedBuildings() {
         <Link
           to={`/projects/${hero.slug}`}
           className="group relative overflow-hidden bg-paper-mid"
-          style={{ borderRadius: 10, gridRow: "1 / 3", minHeight: 500 }}
+          style={{ borderRadius: 0, gridRow: "1 / 3", minHeight: 500 }}
         >
           <img
             src={hero.cover_image_url || hero.hero_image_url || ""}
@@ -90,19 +90,19 @@ export default function FeaturedBuildings() {
             className="absolute bottom-0 left-0 right-0"
             style={{
               padding: "3rem 1.8rem 1.5rem",
-              background: "linear-gradient(transparent, rgba(17,17,16,0.78))",
-              borderRadius: "0 0 10px 10px",
+              background: "linear-gradient(transparent, rgba(17,17,16,0.9))",
+              borderRadius: 0,
             }}
           >
             {hero.city?.name && (
               <p
-                className="font-mono uppercase mb-2"
-                style={{ fontSize: "0.52rem", letterSpacing: "0.22em", color: "rgba(255,255,255,0.85)" }}
+                className="font-mono uppercase mb-2 font-semibold"
+                style={{ fontSize: "13px", letterSpacing: "0.18em", color: "#ffffff" }}
               >
                 {hero.city.name}
               </p>
             )}
-            <h3 className="font-display text-white" style={{ fontSize: "1.9rem", letterSpacing: "-0.01em" }}>
+            <h3 className="font-display text-white" style={{ fontSize: "2rem", letterSpacing: "-0.01em" }}>
               {hero.name}
             </h3>
           </div>
@@ -114,7 +114,7 @@ export default function FeaturedBuildings() {
             key={p.id}
             to={`/projects/${p.slug}`}
             className="group relative overflow-hidden bg-paper-mid"
-            style={{ borderRadius: 10, minHeight: 240 }}
+            style={{ borderRadius: 0, minHeight: 240 }}
           >
             <img
               src={p.cover_image_url || p.hero_image_url || ""}
@@ -126,19 +126,19 @@ export default function FeaturedBuildings() {
               className="absolute bottom-0 left-0 right-0"
               style={{
                 padding: "2.2rem 1.2rem 1rem",
-                background: "linear-gradient(transparent, rgba(17,17,16,0.72))",
-                borderRadius: "0 0 10px 10px",
+                background: "linear-gradient(transparent, rgba(17,17,16,0.9))",
+                borderRadius: 0,
               }}
             >
               {p.city?.name && (
                 <p
-                  className="font-mono uppercase mb-1"
-                  style={{ fontSize: "0.48rem", letterSpacing: "0.22em", color: "rgba(255,255,255,0.82)" }}
+                  className="font-mono uppercase mb-1.5 font-medium"
+                  style={{ fontSize: "12px", letterSpacing: "0.16em", color: "#ffffff" }}
                 >
                   {p.city.name}
                 </p>
               )}
-              <h3 className="font-display text-white" style={{ fontSize: "1.15rem", letterSpacing: "-0.01em" }}>
+              <h3 className="font-display text-white" style={{ fontSize: "1.3rem", letterSpacing: "-0.01em" }}>
                 {p.name}
               </h3>
             </div>

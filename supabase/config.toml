@@ -1,1 +1,9 @@
-project_id = "geitllsobedwtldnkwzh"
+project_id = "ewxeskasseihayxhqums"
+
+# Public sitemap endpoint — crawlers fetch it without a JWT.
+[functions.sitemap]
+verify_jwt = false
+
+# Public llms.txt endpoint (AI context file) — fetched without a JWT.
+[functions.llms]
+verify_jwt = false

@@ -85,10 +85,10 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
               <button
                 key={t.label}
                 onClick={t.clear}
-                className="inline-flex items-center gap-1 font-light uppercase px-2.5 py-1 border"
+                className="inline-flex items-center gap-1 font-medium uppercase px-3 py-1.5 border"
                 style={{
-                  fontSize: 10,
-                  letterSpacing: "0.14em",
+                  fontSize: 13,
+                  letterSpacing: "0.12em",
                   background: "hsl(var(--blue-light))",
                   color: "hsl(var(--blue))",
                   borderColor: "hsl(var(--blue-muted))",
@@ -100,8 +100,8 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
             ))}
             <button
               onClick={openPanel}
-              className="inline-flex items-center gap-1 font-light uppercase px-2.5 py-1 border text-ink hover:bg-off-white"
-              style={{ fontSize: 10, letterSpacing: "0.14em", borderColor: "#0f0f0f" }}
+              className="inline-flex items-center gap-1 font-medium uppercase px-3 py-1.5 border text-ink hover:bg-off-white"
+              style={{ fontSize: 13, letterSpacing: "0.12em", borderColor: "#0f0f0f" }}
             >
               <SlidersHorizontal className="w-2.5 h-2.5" /> Filters
             </button>
@@ -110,10 +110,10 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
           <div className="flex gap-1.5 items-center">
             <button
               onClick={() => onChange(EMPTY_FILTERS)}
-              className="font-light uppercase px-3 py-1 border whitespace-nowrap text-background"
+              className="font-medium uppercase px-3.5 py-1.5 border whitespace-nowrap text-background"
               style={{
-                fontSize: 10,
-                letterSpacing: "0.14em",
+                fontSize: 13,
+                letterSpacing: "0.12em",
                 background: "hsl(var(--blue))",
                 borderColor: "hsl(var(--blue))",
               }}
@@ -122,8 +122,8 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
             </button>
             <button
               onClick={openPanel}
-              className="inline-flex items-center gap-1.5 font-light uppercase px-3 py-1 text-ink hover:bg-off-white whitespace-nowrap border"
-              style={{ fontSize: 10, letterSpacing: "0.14em", borderColor: "#0f0f0f" }}
+              className="inline-flex items-center gap-1.5 font-medium uppercase px-3.5 py-1.5 text-ink hover:bg-off-white whitespace-nowrap border"
+              style={{ fontSize: 13, letterSpacing: "0.12em", borderColor: "#0f0f0f" }}
             >
               <SlidersHorizontal className="w-2.5 h-2.5" /> Filters
             </button>
@@ -134,14 +134,14 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
       {panelOpen && (
         <div className="absolute inset-0 z-30 bg-background flex flex-col fade-in">
           <div className="flex items-center justify-between px-6 py-4 border-b hairline">
-            <p className="text-[11px] tracking-tag uppercase text-ink">Filters</p>
+            <p className="text-[14px] font-semibold tracking-[0.16em] uppercase text-ink">Filters</p>
             <button onClick={() => setPanelOpen(false)} aria-label="Close" className="p-1 text-ink-muted hover:text-ink">
               <X className="w-4 h-4" />
             </button>
           </div>
           <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-5 space-y-7">
             <div>
-              <p className="text-[10px] tracking-tag uppercase text-ink-faint mb-3">Programme</p>
+              <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-3">Programme</p>
               <div className="flex flex-wrap gap-1.5">
                 {PROGRAMMES.map((p) => {
                   const on = draft.programme === p;
@@ -149,7 +149,7 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
                     <button
                       key={p}
                       onClick={() => setDraft({ ...draft, programme: on ? null : p })}
-                      className="text-[10px] tracking-tag uppercase px-2.5 py-1 border transition-colors"
+                      className="text-[13px] font-medium tracking-[0.14em] uppercase px-3.5 py-2 border transition-colors"
                       style={
                         on
                           ? { background: "hsl(var(--blue))", color: "#fff", borderColor: "hsl(var(--blue))" }
@@ -164,7 +164,7 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
             </div>
 
             <div>
-              <p className="text-[10px] tracking-tag uppercase text-ink-faint mb-3">Style</p>
+              <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-3">Style</p>
               <div className="flex flex-wrap gap-1.5">
                 {STYLES.map((s) => {
                   const on = draft.styles.includes(s);
@@ -172,7 +172,7 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
                     <button
                       key={s}
                       onClick={() => toggle("styles", s)}
-                      className="text-[10px] tracking-tag uppercase px-2.5 py-1 border transition-colors"
+                      className="text-[13px] font-medium tracking-[0.14em] uppercase px-3.5 py-2 border transition-colors"
                       style={
                         on
                           ? { background: "hsl(var(--blue))", color: "#fff", borderColor: "hsl(var(--blue))" }
@@ -187,7 +187,7 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
             </div>
 
             <div>
-              <p className="text-[10px] tracking-tag uppercase text-ink-faint mb-3">Era</p>
+              <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-3">Era</p>
               <div className="flex flex-wrap gap-1.5">
                 {ERAS.map((e) => {
                   const on = draft.eras.includes(e);
@@ -195,7 +195,7 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
                     <button
                       key={e}
                       onClick={() => toggle("eras", e)}
-                      className="text-[10px] tracking-tag uppercase px-2.5 py-1 border transition-colors"
+                      className="text-[13px] font-medium tracking-[0.14em] uppercase px-3.5 py-2 border transition-colors"
                       style={
                         on
                           ? { background: "hsl(var(--blue))", color: "#fff", borderColor: "hsl(var(--blue))" }
@@ -210,13 +210,13 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
             </div>
 
             <div>
-              <p className="text-[10px] tracking-tag uppercase text-ink-faint mb-3">Architect</p>
+              <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-3">Architect</p>
               <input
                 type="text"
                 value={draft.architect}
                 onChange={(e) => setDraft({ ...draft, architect: e.target.value })}
                 placeholder="Search architects"
-                className="w-full bg-transparent border-b hairline text-[13px] py-2 focus:outline-none focus:border-ink placeholder:text-ink-faint"
+                className="w-full bg-transparent border-b hairline text-[15px] py-2.5 focus:outline-none focus:border-ink placeholder:text-ink-soft"
               />
               {filteredArchitects.length > 0 && (
                 <div className="mt-2 space-y-1">
@@ -224,7 +224,7 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
                     <button
                       key={a}
                       onClick={() => setDraft({ ...draft, architect: a })}
-                      className="block w-full text-left text-[12px] text-ink-muted hover:text-ink py-1"
+                      className="block w-full text-left text-[14px] text-ink-soft hover:text-ink py-1.5"
                     >
                       {a}
                     </button>
@@ -236,7 +236,7 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
           <div className="px-6 py-4 border-t hairline flex items-center justify-between">
             <button
               onClick={() => setDraft(EMPTY_FILTERS)}
-              className="text-[11px] tracking-tag uppercase text-ink-muted hover:text-ink"
+              className="text-[13px] font-semibold tracking-[0.16em] uppercase text-ink-soft hover:text-ink"
             >
               Clear
             </button>
@@ -245,7 +245,7 @@ export default function MapFilters({ filters, onChange, resultCount, architectOp
                 onChange(draft);
                 setPanelOpen(false);
               }}
-              className="text-[11px] tracking-tag uppercase text-ink hover:opacity-60 underline underline-offset-[6px] decoration-[1px]"
+              className="text-[13px] font-semibold tracking-[0.16em] uppercase text-ink hover:opacity-70 underline underline-offset-[6px] decoration-[1px]"
             >
               Show {resultCount} projects →
             </button>

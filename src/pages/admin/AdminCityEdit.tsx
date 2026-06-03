@@ -7,6 +7,7 @@ import ImageUpload from "@/components/admin/ImageUpload";
 import MapPicker from "@/components/admin/MapPicker";
 import SectionBuilder from "@/components/admin/SectionBuilder";
 import type { CitySection } from "@/lib/citySections";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 type Tab = "content" | "layout" | "media" | "seo";
@@ -59,6 +60,7 @@ export default function AdminCityEdit() {
   const { id } = useParams<{ id: string }>();
   const isNew = !id || id === "new";
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const [tab, setTab] = useState<Tab>("content");
   const [form, setForm] = useState<FormState>(empty);
@@ -126,16 +128,40 @@ export default function AdminCityEdit() {
       canonical_url: form.canonical_url || null,
       sections: form.sections as any,
     };
+    const finalStatus = publishOverride || form.status;
     if (isNew) {
       const { data, error } = await supabase.from("cities").insert(payload).select("id").single();
       setSaving(false);
-      if (error) { setError(error.message); return; }
+      if (error) {
+        setError(error.message);
+        toast({ title: "Could not save city", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({
+        title: finalStatus === "published" ? "City published" : "Draft saved",
+        description: `“${payload.name}” has been ${finalStatus === "published" ? "published" : "saved as a draft"}.`,
+      });
       navigate(`/admin/cities/${data.id}`, { replace: true });
     } else {
       const { error } = await supabase.from("cities").update(payload).eq("id", id!);
       setSaving(false);
-      if (error) { setError(error.message); return; }
+      if (error) {
+        setError(error.message);
+        toast({ title: "Could not save city", description: error.message, variant: "destructive" });
+        return;
+      }
       if (publishOverride) set("status", publishOverride);
+      toast({
+        title:
+          publishOverride === "published"
+            ? "City published"
+            : publishOverride === "draft"
+              ? "Moved to draft"
+              : finalStatus === "published"
+                ? "City updated"
+                : "Draft saved",
+        description: `“${payload.name}” has been saved.`,
+      });
     }
   };
 

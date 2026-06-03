@@ -50,14 +50,14 @@ export default function JournalArticle() {
       <SiteLayout>
         <div className="pt-40 pb-32 mx-auto max-w-[1280px] px-6 text-center">
           <h1 className="font-display text-[48px] tracking-editorial text-ink">Article not found</h1>
-          <Link to={cfg.publicBase} className="text-[12px] tracking-tag uppercase text-ink-muted hover:opacity-60 mt-6 inline-block">← {cfg.sectionTitle}</Link>
+          <Link to={cfg.publicBase} className="text-[13px] font-medium tracking-[0.16em] uppercase text-ink-soft hover:opacity-70 mt-6 inline-block">← {cfg.sectionTitle}</Link>
         </div>
       </SiteLayout>
     );
   }
 
   if (loading || !post) {
-    return <SiteLayout><div className="pt-40 mx-auto max-w-[1280px] px-6 text-ink-muted text-[12px] tracking-tag uppercase">Loading…</div></SiteLayout>;
+    return <SiteLayout><div className="pt-40 mx-auto max-w-[1280px] px-6 text-ink-soft text-[13px] font-medium tracking-[0.16em] uppercase">Loading…</div></SiteLayout>;
   }
 
   return (
@@ -73,17 +73,17 @@ export default function JournalArticle() {
         {/* Header */}
         <header className="pt-32 md:pt-40 pb-16 mx-auto max-w-[860px] px-6 lg:px-10 text-center">
           {post.category && (
-            <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-6">{post.category}</p>
+            <p className="text-[13px] font-semibold tracking-[0.18em] uppercase text-ink-soft mb-6">{post.category}</p>
           )}
           <h1 className="font-display text-[44px] md:text-[72px] leading-[1.05] tracking-editorial text-ink">
             {post.title}
           </h1>
           {post.excerpt && (
-            <p className="font-display italic text-[20px] md:text-[24px] tracking-editorial text-ink-muted mt-8 max-w-2xl mx-auto">
+            <p className="font-display italic text-[22px] md:text-[26px] tracking-editorial text-ink-soft mt-8 max-w-2xl mx-auto leading-[1.45]">
               {post.excerpt}
             </p>
           )}
-          <p className="text-[10px] tracking-tag uppercase text-ink-faint mt-10">
+          <p className="text-[13px] font-medium tracking-[0.16em] uppercase text-ink-soft mt-10">
             {post.author && <>{post.author} · </>}
             {post.published_at && new Date(post.published_at).toLocaleDateString("en-GB", {
               day: "numeric", month: "long", year: "numeric",
@@ -111,7 +111,7 @@ export default function JournalArticle() {
         )}
 
         <div className="mx-auto max-w-[680px] px-6 lg:px-10 pb-24">
-          <Link to={cfg.publicBase} className="text-[11px] tracking-tag uppercase text-ink hover:opacity-60 border-t hairline pt-8 inline-block w-full">
+          <Link to={cfg.publicBase} className="text-[13px] font-semibold tracking-[0.16em] uppercase text-ink hover:opacity-70 border-t hairline pt-8 inline-block w-full">
             ← Back to {cfg.sectionTitle}
 
           </Link>

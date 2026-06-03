@@ -14,10 +14,19 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Playfair Display"', "Times New Roman", "serif"],
-        mono: ['"DM Mono"', "ui-monospace", "monospace"],
-        body: ['"DM Mono"', "ui-monospace", "monospace"],
+        // Primary serif — Fraunces (Google Fonts, Canela-style).
+        display: ['"Fraunces"', "Georgia", "Times New Roman", "serif"],
+        // Secondary sans for titles — Manrope (Google Fonts, Arboria-style).
+        title: ['"Manrope"', "system-ui", "-apple-system", "sans-serif"],
+        // Body text — Inter (Google Fonts, Acumin Pro-style).
+        body: ['"Inter"', '"Helvetica Neue"', "Helvetica", "Arial", "sans-serif"],
+        // Label / tag typeface — Montserrat geometric sans (replaces DM Mono).
+        mono: ['"Montserrat"', "system-ui", "-apple-system", "sans-serif"],
+        // Wordmark — Instrument Serif italic.
         logo: ['"Instrument Serif"', "Times New Roman", "serif"],
+        // Legacy narrative aliases re-mapped to the current system.
+        garamond: ['"Fraunces"', "Georgia", "serif"],
+        grotesk: ['"Manrope"', "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -90,9 +99,9 @@ export default {
         },
       },
       borderRadius: {
-        lg: "10px",
-        md: "6px",
-        sm: "4px",
+        lg: "0px",
+        md: "0px",
+        sm: "0px",
       },
       letterSpacing: {
         editorial: "-0.02em",

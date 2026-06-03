@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ImageUpload from "@/components/admin/ImageUpload";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 
 type SeoRow = {
@@ -21,6 +23,8 @@ export default function AdminSEO() {
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [newKey, setNewKey] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<SeoRow | null>(null);
+  const { toast } = useToast();
 
   const load = async () => {
     setLoading(true);
@@ -45,7 +49,12 @@ export default function AdminSEO() {
       robots: row.robots || "index,follow",
     }).eq("id", row.id);
     setSavingKey(null);
-    if (error) setError(error.message);
+    if (error) {
+      setError(error.message);
+      toast({ title: "Could not save SEO defaults", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "SEO defaults saved", description: `“/${row.page_key}” has been updated.` });
   };
 
   const addKey = async (key: string) => {
@@ -61,10 +70,17 @@ export default function AdminSEO() {
     setNewKey("");
   };
 
-  const remove = async (row: SeoRow) => {
-    if (!confirm(`Delete SEO defaults for "${row.page_key}"?`)) return;
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const row = pendingDelete;
+    setPendingDelete(null);
     const { error } = await supabase.from("seo_globals").delete().eq("id", row.id);
-    if (!error) setRows((prev) => prev.filter((r) => r.id !== row.id));
+    if (error) {
+      toast({ title: "Could not delete SEO defaults", description: error.message, variant: "destructive" });
+      return;
+    }
+    setRows((prev) => prev.filter((r) => r.id !== row.id));
+    toast({ title: "SEO defaults deleted", description: `“/${row.page_key}” has been removed.` });
   };
 
   const missing = PRESETS.filter((k) => !rows.some((r) => r.page_key === k));
@@ -125,7 +141,7 @@ export default function AdminSEO() {
                       style={{ background: "hsl(var(--blue))" }}>
                       {savingKey === row.page_key ? "Saving…" : "Save"}
                     </button>
-                    <button onClick={() => remove(row)} title="Delete"
+                    <button onClick={() => setPendingDelete(row)} title="Delete"
                       className="p-2 text-ink-muted hover:text-destructive">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -163,6 +179,21 @@ export default function AdminSEO() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title="Delete SEO defaults"
+        description={
+          pendingDelete
+            ? `SEO defaults for “/${pendingDelete.page_key}” will be permanently removed.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={confirmDelete}
+      />
     </AdminLayout>
   );
 }

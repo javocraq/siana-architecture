@@ -86,14 +86,14 @@ export default function CityDetail() {
       <SiteLayout>
         <div className="pt-40 pb-32 mx-auto max-w-[1280px] px-6 text-center">
           <h1 className="font-display text-[48px] tracking-editorial text-ink">City not found</h1>
-          <Link to="/cities" className="text-[12px] tracking-tag uppercase text-ink-muted hover:opacity-60 mt-6 inline-block">← All cities</Link>
+          <Link to="/cities" className="text-[13px] font-medium tracking-[0.16em] uppercase text-ink-soft hover:opacity-60 mt-6 inline-block">← All cities</Link>
         </div>
       </SiteLayout>
     );
   }
 
   if (loading || !city) {
-    return <SiteLayout><div className="pt-40 mx-auto max-w-[1280px] px-6 text-ink-muted text-[12px] tracking-tag uppercase">Loading…</div></SiteLayout>;
+    return <SiteLayout><div className="pt-40 mx-auto max-w-[1280px] px-6 text-ink-soft text-[13px] font-medium tracking-[0.16em] uppercase">Loading…</div></SiteLayout>;
   }
 
   const hasCustomLayout = city.sections && city.sections.length > 0;
@@ -114,9 +114,9 @@ export default function CityDetail() {
         <div className="absolute inset-0 bg-gradient-to-b from-ink/30 via-transparent to-ink/60" />
         <div className="absolute inset-0 flex flex-col justify-end pb-16 md:pb-24">
           <div className="mx-auto max-w-[1280px] w-full px-6 lg:px-10 text-background">
-            <p className="text-[10px] tracking-tag uppercase opacity-80 mb-4">{city.country}</p>
+            <p className="text-[13px] font-semibold tracking-[0.18em] uppercase opacity-95 mb-4">{city.country}</p>
             <h1
-              style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 300, letterSpacing: "0.01em", textTransform: "none" }}
+              style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, letterSpacing: "-0.02em", textTransform: "none" }}
               className="text-[88px] md:text-[160px] leading-[0.9]"
             >
               {city.name}
@@ -124,7 +124,7 @@ export default function CityDetail() {
             {city.tagline && (
               <p
                 className="italic mt-8 max-w-2xl opacity-95"
-                style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 400, fontSize: "clamp(22px, 2.4vw, 32px)", letterSpacing: "0.01em" }}
+                style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: "clamp(22px, 2.4vw, 32px)", letterSpacing: "0.01em" }}
               >
                 {city.tagline}
               </p>
@@ -153,15 +153,15 @@ export default function CityDetail() {
             <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
               <div className="flex items-end justify-between mb-14 border-t hairline pt-12">
                 <div>
-                  <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-4">Projects</p>
+                  <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-4">Projects</p>
                   <h2
                     className="text-ink"
-                    style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 300, fontSize: "clamp(42px, 4.5vw, 56px)", lineHeight: 1.05, letterSpacing: "0.01em" }}
+                    style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: "clamp(42px, 4.5vw, 56px)", lineHeight: 1.05, letterSpacing: "-0.015em" }}
                   >
                     {projects.length} {projects.length === 1 ? "project" : "projects"} in {city.name}
                   </h2>
                 </div>
-                <Link to="/map" className="hidden md:inline-flex text-[11px] tracking-tag uppercase text-ink hover:opacity-60">
+                <Link to="/map" className="hidden md:inline-flex text-[13px] font-semibold tracking-[0.16em] uppercase text-ink hover:opacity-60">
                   On the map →
                 </Link>
               </div>
@@ -180,23 +180,23 @@ export default function CityDetail() {
                     {p.category && (
                       <p
                         className="italic mb-2"
-                        style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 400, fontSize: 13, color: "#6b6760" }}
+                        style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 15, color: "hsl(var(--ink-soft))" }}
                       >
                         {p.category}
                       </p>
                     )}
                     <h3
                       className="text-ink leading-tight mb-3 group-hover:opacity-60 transition-opacity"
-                      style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 400, fontSize: 26, letterSpacing: "0.01em" }}
+                      style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em" }}
                     >
                       {p.name}
                     </h3>
                     {p.architect && (
                       <p
                         style={{
-                          fontFamily: "Inter, sans-serif",
+                          fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
                           fontWeight: 300,
-                          fontSize: 11,
+                          fontSize: 14,
                           color: "hsl(var(--ink-muted))",
                           letterSpacing: "0.02em",
                         }}
@@ -214,10 +214,10 @@ export default function CityDetail() {
             <section className="py-24 md:py-32 bg-warm-white">
               <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
                 <div className="border-t hairline pt-12 mb-14">
-                  <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-4">Journal</p>
+                  <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-4">Journal</p>
                   <h2
                     className="text-ink"
-                    style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 300, fontSize: "clamp(36px, 4vw, 52px)", lineHeight: 1.05, letterSpacing: "0.01em" }}
+                    style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: "clamp(36px, 4vw, 52px)", lineHeight: 1.05, letterSpacing: "-0.015em" }}
                   >
                     From the Journal
                   </h2>
@@ -231,14 +231,14 @@ export default function CityDetail() {
                             className="photo-thumb w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" loading="lazy" />
                         </div>
                       )}
-                      {p.category && <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">{p.category}</p>}
+                      {p.category && <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-3">{p.category}</p>}
                       <h3 className="text-ink mb-3 group-hover:opacity-60 transition-opacity"
-                        style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 400, fontSize: 24, lineHeight: 1.2 }}>
+                        style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: 24, lineHeight: 1.2, letterSpacing: "-0.01em" }}>
                         {p.title}
                       </h3>
-                      {p.excerpt && <p className="text-ink-muted text-[13px] leading-relaxed line-clamp-3">{p.excerpt}</p>}
+                      {p.excerpt && <p className="text-ink-soft text-[15px] leading-[1.65] line-clamp-3">{p.excerpt}</p>}
                       {p.published_at && (
-                        <p className="text-[10px] tracking-tag uppercase text-ink-faint mt-4">
+                        <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mt-4">
                           {new Date(p.published_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                         </p>
                       )}

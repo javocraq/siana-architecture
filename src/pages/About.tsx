@@ -22,14 +22,14 @@ const About = () => {
       {/* Manifesto */}
       <section className="pt-40 pb-24 md:pt-48 md:pb-32">
         <div className="mx-auto max-w-[820px] px-6 lg:px-10">
-          <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-8">Siana — Manifesto</p>
+          <p className="text-[13px] font-semibold tracking-[0.18em] uppercase text-ink-soft mb-8">Siana — Manifesto</p>
           <h1
             className="text-ink"
-            style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 300, fontSize: "clamp(48px, 7vw, 84px)", lineHeight: 1.05, letterSpacing: "0.01em" }}
+            style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: "clamp(48px, 7vw, 84px)", lineHeight: 1.05, letterSpacing: "-0.015em" }}
           >
             The city as architecture.
           </h1>
-          <div className="mt-12 space-y-6 text-[16px] md:text-[17px] leading-[1.9] text-ink-muted max-w-[640px]">
+          <div className="mt-12 space-y-6 text-[17px] md:text-[18px] leading-[1.7] text-ink-soft max-w-[640px]">
             <p>
               Siana is an architectural magazine that lives on a map. We believe
               the most interesting building in any city is rarely the most
@@ -43,7 +43,7 @@ const About = () => {
             </p>
             <p
               className="text-ink italic"
-              style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 400, fontSize: 26 }}
+              style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26 }}
             >
               Made for those who look.
             </p>
@@ -51,7 +51,7 @@ const About = () => {
           <div className="mt-12">
             <Link
               to="/"
-              className="inline-flex items-center text-[11px] tracking-tag uppercase text-ink hover:opacity-60 underline underline-offset-[6px] decoration-[1px]"
+              className="inline-flex items-center text-[14px] font-semibold tracking-[0.16em] uppercase text-ink hover:opacity-70 underline underline-offset-[6px] decoration-[1px]"
             >
               Open the map →
             </Link>

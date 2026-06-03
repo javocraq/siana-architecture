@@ -64,22 +64,12 @@ export default function Resources() {
         description="Practical guides, playbooks and tools for architecture, engineering and construction firms."
       />
       <div className="pt-32 md:pt-40 pb-24 md:pb-32 mx-auto max-w-[1280px] px-6 lg:px-10">
-        <header className="mb-12 max-w-2xl">
-          <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-4">Library</p>
-          <h1 className="text-[56px] md:text-[88px] leading-[0.95] text-ink" style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 300 }}>
-            RESOURCES FOR ARCHITECTS
-          </h1>
-          <p className="italic text-[20px] md:text-[24px] text-ink-muted mt-6" style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 300 }}>
-            Practical guides, playbooks and tools for architecture, engineering and construction firms.
-          </p>
-        </header>
-
-        <div className="flex flex-wrap gap-2 mb-16 border-t hairline pt-8">
+        <div className="flex flex-wrap gap-2 mb-16">
           <button
             onClick={() => setCategory(null)}
             className="uppercase transition-colors"
             style={{
-              fontSize: 10, fontWeight: 300, letterSpacing: "0.18em", padding: "6px 14px",
+              fontSize: 13, fontWeight: 600, letterSpacing: "0.16em", padding: "8px 16px",
               border: "1px solid",
               borderColor: !activeCategory ? "#0f0f0f" : "rgba(0,0,0,0.2)",
               background: !activeCategory ? "#0f0f0f" : "transparent",
@@ -96,7 +86,7 @@ export default function Resources() {
                 onClick={() => setCategory(on ? null : cat)}
                 className="uppercase transition-colors"
                 style={{
-                  fontSize: 10, fontWeight: 300, letterSpacing: "0.18em", padding: "6px 14px",
+                  fontSize: 13, fontWeight: 600, letterSpacing: "0.16em", padding: "8px 16px",
                   border: "1px solid",
                   borderColor: on ? "#2563EB" : "rgba(0,0,0,0.2)",
                   background: on ? "#2563EB" : "transparent",
@@ -110,9 +100,9 @@ export default function Resources() {
         </div>
 
         {loading ? (
-          <p className="text-ink-muted text-[12px] tracking-tag uppercase">Loading…</p>
+          <p className="text-ink-soft text-[13px] font-medium tracking-[0.16em] uppercase">Loading…</p>
         ) : filteredPosts.length === 0 ? (
-          <p className="text-ink-muted text-[12px] tracking-tag uppercase">No resources in this category yet.</p>
+          <p className="text-ink-soft text-[13px] font-medium tracking-[0.16em] uppercase">No resources in this category yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-16 gap-y-16 border-t hairline pt-12">
             {filteredPosts.map((p) => (
@@ -124,17 +114,17 @@ export default function Resources() {
                   </div>
                 )}
                 {p.category && (
-                  <p className="italic mb-3" style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 400, fontSize: 13, color: "#2563EB" }}>
+                  <p className="italic mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: 15, color: "#1d4ed8" }}>
                     {p.category}
                   </p>
                 )}
                 <h3 className="text-ink leading-tight mb-3 group-hover:opacity-60 transition-opacity"
-                  style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 400, fontSize: 26, letterSpacing: "0.01em" }}>
+                  style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em" }}>
                   {p.title}
                 </h3>
-                {p.excerpt && <p className="text-[13px] text-ink-muted line-clamp-3 leading-relaxed">{p.excerpt}</p>}
+                {p.excerpt && <p className="text-[15px] text-ink-soft line-clamp-3 leading-[1.65]">{p.excerpt}</p>}
                 {p.published_at && (
-                  <p className="text-[10px] tracking-tag uppercase text-ink-faint mt-4">
+                  <p className="text-[12px] font-medium tracking-[0.16em] uppercase text-ink-soft mt-4">
                     {new Date(p.published_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                   </p>
                 )}

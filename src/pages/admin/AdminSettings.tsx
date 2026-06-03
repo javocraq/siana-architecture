@@ -3,16 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 export default function AdminSettings() {
   const { user } = useAdmin();
+  const { toast } = useToast();
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -29,15 +29,16 @@ export default function AdminSettings() {
   const save = async () => {
     if (!user) return;
     setSaving(true);
-    setMsg(null);
-    setError(null);
     const { error } = await supabase.from("profiles").update({
       display_name: displayName || null,
       avatar_url: avatarUrl,
     }).eq("id", user.id);
     setSaving(false);
-    if (error) setError(error.message);
-    else setMsg("Profile saved.");
+    if (error) {
+      toast({ title: "Could not save profile", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Profile saved", description: "Your profile has been updated." });
   };
 
   return (
@@ -71,9 +72,6 @@ export default function AdminSettings() {
                 </Field>
               </div>
             </div>
-
-            {error && <p className="text-[12px] text-destructive">{error}</p>}
-            {msg && <p className="text-[12px]" style={{ color: "hsl(var(--blue))" }}>{msg}</p>}
 
             <div className="pt-2">
               <button onClick={save} disabled={saving}

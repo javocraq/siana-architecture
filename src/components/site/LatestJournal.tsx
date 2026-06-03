@@ -47,8 +47,8 @@ export default function LatestJournal() {
         </h2>
         <Link
           to="/journal"
-          className="font-mono uppercase text-warm-gray hover:text-ink transition-colors border-b border-paper-mid hover:border-ink pb-[2px] whitespace-nowrap"
-          style={{ fontSize: "0.58rem", letterSpacing: "0.18em" }}
+          className="font-mono uppercase text-ink-soft hover:text-ink transition-colors border-b border-paper-mid hover:border-ink pb-[2px] whitespace-nowrap font-medium"
+          style={{ fontSize: "13px", letterSpacing: "0.16em" }}
         >
           All essays →
         </Link>
@@ -68,7 +68,7 @@ export default function LatestJournal() {
         <Link
           to={`/journal/${featured.slug}`}
           className="group relative overflow-hidden bg-paper-mid"
-          style={{ borderRadius: "10px", gridRow: "1 / 3", minHeight: "460px" }}
+          style={{ borderRadius: 0, gridRow: "1 / 3", minHeight: "460px" }}
         >
           <img
             src={featured.hero_image_url || ""}
@@ -81,14 +81,14 @@ export default function LatestJournal() {
             className="absolute bottom-0 left-0 right-0"
             style={{
               padding: "2.5rem 1.4rem 1.2rem",
-              background: "linear-gradient(transparent, rgba(17,17,16,0.7))",
-              borderRadius: "0 0 10px 10px",
+              background: "linear-gradient(transparent, rgba(17,17,16,0.88))",
+              borderRadius: 0,
             }}
           >
             {featured.category && (
               <p
                 className="font-mono uppercase mb-1"
-                style={{ fontSize: "0.48rem", letterSpacing: "0.2em", color: "hsl(var(--accent-light))" }}
+                style={{ fontSize: "12px", letterSpacing: "0.18em", fontWeight: 500, color: "#ffe4dc" }}
               >
                 {featured.category}
               </p>
@@ -108,7 +108,7 @@ export default function LatestJournal() {
             key={p.id}
             to={`/journal/${p.slug}`}
             className="group relative overflow-hidden bg-paper-mid"
-            style={{ borderRadius: "10px", minHeight: "220px" }}
+            style={{ borderRadius: 0, minHeight: "220px" }}
           >
             <img
               src={p.hero_image_url || ""}
@@ -121,14 +121,14 @@ export default function LatestJournal() {
               className="absolute bottom-0 left-0 right-0"
               style={{
                 padding: "2rem 1.2rem 1rem",
-                background: "linear-gradient(transparent, rgba(17,17,16,0.7))",
-                borderRadius: "0 0 10px 10px",
+                background: "linear-gradient(transparent, rgba(17,17,16,0.88))",
+                borderRadius: 0,
               }}
             >
               {p.category && (
                 <p
                   className="font-mono uppercase mb-1"
-                  style={{ fontSize: "0.48rem", letterSpacing: "0.2em", color: "hsl(var(--accent-light))" }}
+                  style={{ fontSize: "12px", letterSpacing: "0.18em", fontWeight: 500, color: "#ffe4dc" }}
                 >
                   {p.category}
                 </p>
