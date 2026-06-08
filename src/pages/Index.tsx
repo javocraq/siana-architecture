@@ -16,12 +16,16 @@ import Footer from "@/components/site/Footer";
 
 type Pin = { latitude: number | null; longitude: number | null };
 
+const HERO_SLIDE_MS = 6000;
+
 const Index = () => {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [token] = useState<string>(() => getMapboxToken());
   const [pins, setPins] = useState<Pin[]>([]);
+  const [heroImages, setHeroImages] = useState<string[]>([]);
+  const [activeHero, setActiveHero] = useState(0);
 
   // Lightweight: just coordinates, to scatter pins across the preview map
   useEffect(() => {
@@ -33,6 +37,60 @@ const Index = () => {
       if (data) setPins(data as Pin[]);
     })();
   }, []);
+
+  // Hero background — collect architecture photography for the slideshow.
+  // Sources: published project photos + published city hero images. Both
+  // tables hold architecture imagery by definition. If neither has any
+  // pictures yet, fall back to a curated stock set so the hero never
+  // looks empty.
+  useEffect(() => {
+    (async () => {
+      const [{ data: projData }, { data: cityData }] = await Promise.all([
+        supabase
+          .from("projects")
+          .select("hero_image_url,cover_image_url")
+          .eq("status", "published")
+          .limit(12),
+        supabase
+          .from("cities")
+          .select("hero_image_url")
+          .eq("status", "published")
+          .limit(8),
+      ]);
+      const imgs = [
+        ...(projData ?? []).map((p) => p.hero_image_url || p.cover_image_url),
+        ...(cityData ?? []).map((c) => c.hero_image_url),
+      ].filter((s): s is string => Boolean(s));
+
+      // Curated architecture stock — used only when no project/city photos
+      // have been uploaded yet. Safe to delete once the CMS has content.
+      const FALLBACK_ARCH = [
+        "https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1800&q=80",
+        "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1800&q=80",
+        "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1800&q=80",
+        "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1800&q=80",
+        "https://images.unsplash.com/photo-1496564203457-11bb12075d90?auto=format&fit=crop&w=1800&q=80",
+        "https://images.unsplash.com/photo-1486718448742-163732cd1544?auto=format&fit=crop&w=1800&q=80",
+      ];
+      const pool = imgs.length > 0 ? imgs : FALLBACK_ARCH;
+
+      // Shuffle so the order isn't predictable between visits
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      setHeroImages(pool);
+    })();
+  }, []);
+
+  // Rotate the active hero image on a calm interval
+  useEffect(() => {
+    if (heroImages.length < 2) return;
+    const t = setInterval(() => {
+      setActiveHero((i) => (i + 1) % heroImages.length);
+    }, HERO_SLIDE_MS);
+    return () => clearInterval(t);
+  }, [heroImages.length]);
 
   // Non-interactive preview map — a visual teaser of the product, not a tool.
   // `interactive: false` means it never traps scroll and can't be panned; the
@@ -95,15 +153,40 @@ const Index = () => {
       <Navbar />
 
       {/* ============================================================
-          1. HERO — editorial cover that introduces the experience
+          1. HERO — editorial cover that introduces the experience.
+          Project photos quietly crossfade behind a warm paper veil so
+          the ink-coloured headline remains legible.
           ============================================================ */}
       <section
         className="relative grid"
         style={{ gridTemplateRows: "1fr auto", minHeight: "100vh", background: "hsl(var(--paper-warm))", paddingTop: "76px", overflow: "hidden" }}
       >
+        {/* Background slideshow */}
+        <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+          {heroImages.map((src, i) => (
+            <div
+              key={src}
+              className="absolute inset-0 transition-opacity ease-in-out"
+              style={{
+                opacity: i === activeHero ? 1 : 0,
+                backgroundImage: `url(${src})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "grayscale(15%)",
+                transitionDuration: "1800ms",
+              }}
+            />
+          ))}
+          {/* Warm paper veil — keeps ink-coloured copy readable on top */}
+          <div
+            className="absolute inset-0"
+            style={{ background: "hsl(var(--paper-warm) / 0.82)" }}
+          />
+        </div>
+
         <div
           className="relative z-10 mx-auto w-full"
-          style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "4rem 2.5rem 10rem", maxWidth: 1400 }}
+          style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "4rem 2.5rem 4rem", maxWidth: 1400 }}
         >
           <p className="fadeup-1 font-mono uppercase text-accent-terra font-semibold" style={{ fontSize: "13px", letterSpacing: "0.22em", marginBottom: "1.5rem" }}>
             <Link to="/atlas" className="hover:opacity-70 transition-opacity">Architecture</Link>
@@ -152,7 +235,7 @@ const Index = () => {
           2. MAP PREVIEW — a visual teaser; the tool itself lives at /atlas
           ============================================================ */}
       <section className="relative bg-paper-warm" style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}>
-        <div className="mx-auto max-w-[1400px] flex items-end justify-between flex-wrap gap-6" style={{ padding: "6rem 2.5rem 3rem" }}>
+        <div className="mx-auto max-w-[1400px] flex items-end justify-between flex-wrap gap-6" style={{ padding: "3rem 2.5rem 2.5rem" }}>
           <div>
             <p className="font-mono uppercase text-accent-terra mb-3 font-semibold" style={{ fontSize: "13px", letterSpacing: "0.22em" }}>
               The Atlas
