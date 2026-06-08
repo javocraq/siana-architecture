@@ -36,42 +36,58 @@ export default function NewsletterCta() {
 
   return (
     <section
-      className="bg-paper-warm"
+      className="bg-paper"
       style={{
         padding: "7rem 2.5rem",
         borderTop: "1px solid hsl(var(--paper-mid))",
       }}
     >
-      <div className="mx-auto flex flex-col items-center text-center" style={{ maxWidth: 560 }}>
-        <p
-          className="font-mono uppercase text-accent-terra font-semibold"
-          style={{ fontSize: "12px", letterSpacing: "0.28em" }}
-        >
-          Stay in Touch
-        </p>
-
-        <p
-          className="font-display italic text-ink-soft mt-6"
-          style={{ fontSize: "18px", lineHeight: 1.55 }}
-        >
-          Sign up for our newsletter to receive curated architecture
-          discoveries, city guides, and resources for architects.
-        </p>
-
-        <form onSubmit={onSubmit} className="w-full flex flex-col items-center mt-12">
+      <div
+        className="mx-auto grid gap-x-16 gap-y-12"
+        style={{
+          maxWidth: 1400,
+          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.1fr)",
+        }}
+      >
+        {/* Left — editorial intro, same hierarchy as other home sections */}
+        <div className="flex flex-col">
           <p
-            className="self-start font-mono uppercase text-ink-soft mb-4 font-medium"
+            className="font-mono uppercase text-accent-terra mb-5 font-semibold"
+            style={{ fontSize: "13px", letterSpacing: "0.22em" }}
+          >
+            Stay in Touch
+          </p>
+          <h2
+            className="font-display-black text-ink"
+            style={{ fontSize: "clamp(2rem, 4vw, 4rem)", lineHeight: 0.94 }}
+          >
+            The journal,<br />
+            <em className="italic text-accent-terra">in your inbox.</em>
+          </h2>
+          <p
+            className="font-mono text-ink-soft mt-8"
+            style={{ fontSize: "15px", lineHeight: 1.7, maxWidth: 420, letterSpacing: "0.01em" }}
+          >
+            Sign up for our newsletter to receive curated architecture
+            discoveries, city guides, and resources for architects.
+          </p>
+        </div>
+
+        {/* Right — form */}
+        <form onSubmit={onSubmit} className="flex flex-col">
+          <p
+            className="font-mono uppercase text-ink-soft mb-4 font-medium"
             style={{ fontSize: "11px", letterSpacing: "0.22em" }}
           >
             I'm interested in
           </p>
-          <div className="self-start w-full grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 mb-10">
             {INTERESTS.map((label) => {
               const checked = interests.includes(label);
               return (
                 <label
                   key={label}
-                  className="flex items-center gap-3 cursor-pointer text-left text-ink-soft hover:text-ink transition-colors"
+                  className="flex items-center gap-3 cursor-pointer text-ink-soft hover:text-ink transition-colors"
                   style={{ fontSize: "14px" }}
                 >
                   <input
@@ -87,51 +103,69 @@ export default function NewsletterCta() {
             })}
           </div>
 
-          <div className="w-full mb-5">
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Name"
-              className="w-full bg-transparent text-center text-ink placeholder:text-ink-soft focus:outline-none focus:border-ink transition-colors py-2.5"
-              style={{
-                borderBottom: "1px solid hsl(var(--paper-mid))",
-                fontSize: "15px",
-                letterSpacing: "0.02em",
-              }}
-            />
-          </div>
-
-          <div className="w-full mb-10">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="E-Mail"
-              className="w-full bg-transparent text-center text-ink placeholder:text-ink-soft focus:outline-none focus:border-ink transition-colors py-2.5"
-              style={{
-                borderBottom: "1px solid hsl(var(--paper-mid))",
-                fontSize: "15px",
-                letterSpacing: "0.02em",
-              }}
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 mb-10">
+            <div>
+              <label
+                className="font-mono uppercase text-ink-soft mb-2 block font-medium"
+                style={{ fontSize: "11px", letterSpacing: "0.22em" }}
+              >
+                Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-transparent text-ink focus:outline-none focus:border-ink transition-colors py-2"
+                style={{
+                  borderBottom: "1px solid hsl(var(--paper-mid))",
+                  fontSize: "15px",
+                }}
+              />
+            </div>
+            <div>
+              <label
+                className="font-mono uppercase text-ink-soft mb-2 block font-medium"
+                style={{ fontSize: "11px", letterSpacing: "0.22em" }}
+              >
+                E-Mail
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-transparent text-ink focus:outline-none focus:border-ink transition-colors py-2"
+                style={{
+                  borderBottom: "1px solid hsl(var(--paper-mid))",
+                  fontSize: "15px",
+                }}
+              />
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="font-mono uppercase text-ink hover:bg-ink hover:text-paper transition-colors disabled:opacity-60 font-medium"
+            className="self-start font-mono uppercase inline-flex items-center text-white transition-all font-semibold disabled:opacity-60"
             style={{
-              border: "1px solid hsl(var(--ink))",
-              padding: "0.9rem 2.6rem",
-              fontSize: "12px",
-              letterSpacing: "0.22em",
-              background: "transparent",
+              background: "hsl(var(--ink))",
+              padding: "1.1rem 2rem",
+              fontSize: "14px",
+              letterSpacing: "0.16em",
               borderRadius: 0,
+              gap: "0.7rem",
+            }}
+            onMouseEnter={(e) => {
+              if (submitting) return;
+              e.currentTarget.style.background = "hsl(var(--accent))";
+              e.currentTarget.style.gap = "1rem";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "hsl(var(--ink))";
+              e.currentTarget.style.gap = "0.7rem";
             }}
           >
-            {submitting ? "Signing up…" : "Sign Up"}
+            {submitting ? "Signing up…" : "Sign Up →"}
           </button>
         </form>
       </div>
