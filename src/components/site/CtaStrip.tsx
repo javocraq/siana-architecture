@@ -14,7 +14,7 @@ export default function CtaStrip() {
           className="font-mono uppercase text-accent-terra mb-4 font-medium"
           style={{ fontSize: "12px", letterSpacing: "0.22em" }}
         >
-          Begin
+          Explore
         </p>
         <h2
           className="font-display-black text-ink"

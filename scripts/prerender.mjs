@@ -185,6 +185,18 @@ async function main() {
       `<p>Siana is an architectural magazine that lives on a map. We curate projects across cities, write about them with the care of an editor and the eye of an architect, and put them on a map you can actually use.</p>`,
   })); n++;
 
+  // --- Atlas (the discovery tool) ---
+  write("/atlas", renderPage(template, {
+    path: "/atlas",
+    title: "Atlas — Explore Architecture on the Map | Siana",
+    description: "An interactive atlas of significant architecture across the world's cities. Filter by city, architect, style and year, and explore each project on the map.",
+    image: OG_DEFAULT,
+    content:
+      `<h1>The Atlas</h1>` +
+      `<p>An interactive map of significant architecture across the world's cities — filter by city, architect, style and year, and explore each project on the map.</p>` +
+      `<p><a href="/cities">Browse cities</a> · <a href="/journal">Journal</a></p>`,
+  })); n++;
+
   // --- City detail ---
   for (const c of cities) {
     write(`/cities/${c.slug}`, renderPage(template, {

@@ -6,6 +6,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
+import Atlas from "./pages/Atlas.tsx";
 import About from "./pages/About.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Cities from "./pages/Cities.tsx";
@@ -51,6 +52,7 @@ const App = () => (
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/atlas" element={<Atlas />} />
             <Route path="/about" element={<About />} />
             <Route path="/cities" element={<Cities />} />
             <Route path="/cities/:slug" element={<CityDetail />} />

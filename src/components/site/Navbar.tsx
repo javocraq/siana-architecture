@@ -3,10 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { to: "/#map", label: "Map" },
+  { to: "/atlas", label: "Atlas" },
   { to: "/cities", label: "Cities" },
-  { to: "/journal", label: "Journal" },
-  { to: "/resources", label: "RESOURCES FOR ARCHITECTS" },
+  { to: "/resources", label: "Resources for architects" },
   { to: "/about", label: "About" },
 ];
 
@@ -42,13 +41,13 @@ export default function Navbar() {
                   key={link.to}
                   to={link.to}
                   className={cn(
-                    "font-mono uppercase px-4 py-2 transition-colors duration-200 text-ink/85 hover:bg-ink/[0.06] hover:text-ink",
+                    "font-mono uppercase px-3 py-2 transition-colors duration-200 text-ink/70 hover:text-ink",
                     active && "text-ink"
                   )}
                   style={{
-                    fontSize: "14px",
-                    letterSpacing: "0.16em",
-                    fontWeight: 500,
+                    fontSize: "11px",
+                    letterSpacing: "0.18em",
+                    fontWeight: 400,
                   }}
                 >
                   {link.label}

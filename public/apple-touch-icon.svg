@@ -1,13 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
-  <rect width="180" height="180" rx="36" fill="#111110"/>
+  <rect width="180" height="180" fill="#ffffff"/>
   <text
     x="90"
-    y="132"
+    y="140"
     text-anchor="middle"
-    font-family="Georgia, 'Times New Roman', serif"
-    font-style="italic"
+    font-family="'Instrument Serif', 'Bodoni 72', Bodoni, Didot, 'Times New Roman', serif"
     font-weight="400"
-    font-size="128"
-    fill="#f8f8f7"
-  >s</text>
+    font-size="156"
+    fill="#111110"
+  >S</text>
 </svg>

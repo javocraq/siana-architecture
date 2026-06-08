@@ -71,6 +71,7 @@ function urlEntry(path, lastmod, changefreq, priority) {
 function buildSitemap({ cities, projects, journal, resources }) {
   const entries = [
     urlEntry("/", TODAY, "weekly", "1.0"),
+    urlEntry("/atlas", TODAY, "weekly", "0.9"),
     urlEntry("/cities", TODAY, "weekly", "0.9"),
     urlEntry("/journal", TODAY, "weekly", "0.9"),
     urlEntry("/resources", TODAY, "weekly", "0.7"),
@@ -120,6 +121,7 @@ function buildLlms({ cities, projects, journal }) {
     `## Journal (blog)\n${journal.map(journalLine).join("\n")}\n\n` +
     `## Projects\n${projects.map(projectLine).join("\n")}\n\n` +
     `## Main sections\n` +
+    `- [Atlas](${SITE_URL}/atlas): Interactive map — explore every project by city, architect, style and year.\n` +
     `- [Cities index](${SITE_URL}/cities): Browse all cities in the atlas.\n` +
     `- [Journal](${SITE_URL}/journal): All essays and field notes (the blog).\n` +
     `- [Resources for architects](${SITE_URL}/resources): Practical guides for architecture, engineering and construction practices.\n` +

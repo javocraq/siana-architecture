@@ -28,6 +28,7 @@ Siana documents notable architecture across global cities and writes about it wi
 
 ## Projects
 - [8 House](https://sianaarchitecture.com/projects/8-house): BIG, 2010 — Copenhagen.
+- [Altos de Lima](https://sianaarchitecture.com/projects/altos-de-lima): Javier F — Barcelona.
 - [Casa Batlló](https://sianaarchitecture.com/projects/casa-batllo): Antoni Gaudí, 1906 — Barcelona.
 - [Casa da Música](https://sianaarchitecture.com/projects/casa-da-musica): OMA / Rem Koolhaas, 2005 — Porto.
 - [Casa Luis Barragán](https://sianaarchitecture.com/projects/casa-luis-barragan): Luis Barragán, 1948 — Mexico City.
@@ -42,6 +43,7 @@ Siana documents notable architecture across global cities and writes about it wi
 - [Willis Tower](https://sianaarchitecture.com/projects/willis-tower): SOM / Fazlur Rahman Khan, 1973 — Chicago.
 
 ## Main sections
+- [Atlas](https://sianaarchitecture.com/atlas): Interactive map — explore every project by city, architect, style and year.
 - [Cities index](https://sianaarchitecture.com/cities): Browse all cities in the atlas.
 - [Journal](https://sianaarchitecture.com/journal): All essays and field notes (the blog).
 - [Resources for architects](https://sianaarchitecture.com/resources): Practical guides for architecture, engineering and construction practices.
