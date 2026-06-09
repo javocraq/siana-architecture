@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const navLinks = [
   { to: "/atlas", label: "Atlas" },
   { to: "/cities", label: "Cities" },
-  { to: "/resources", label: "Resources for architects" },
+  { to: "/practice", label: "Practice" },
   { to: "/about", label: "About" },
 ];
 

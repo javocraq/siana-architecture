@@ -70,7 +70,7 @@ export default function Journal() {
                     {feature.category && <p className={`${labelCaps} mb-4`}>{feature.category}</p>}
                     <h2
                       className="font-garamond text-black transition-colors group-hover:text-[#4F4534]"
-                      style={{ fontWeight: 500, fontSize: "clamp(34px, 5vw, 56px)", lineHeight: 1.1, letterSpacing: "-0.02em" }}
+                      style={{ fontWeight: 400, fontSize: "clamp(26px, 3.8vw, 42px)", lineHeight: 1.12, letterSpacing: "-0.005em" }}
                     >
                       {feature.title}
                     </h2>
@@ -104,7 +104,7 @@ export default function Journal() {
                         {p.category && <p className={`${labelCaps} mb-3`}>{p.category}</p>}
                         <h3
                           className="font-garamond text-black transition-colors group-hover:text-[#4F4534]"
-                          style={{ fontWeight: 500, fontSize: "clamp(22px, 2.4vw, 28px)", lineHeight: 1.15, letterSpacing: "-0.015em" }}
+                          style={{ fontWeight: 400, fontSize: "clamp(18px, 2vw, 22px)", lineHeight: 1.2, letterSpacing: "-0.005em" }}
                         >
                           {p.title}
                         </h3>

@@ -10,9 +10,10 @@ import { getMapboxToken } from "@/lib/mapbox";
 import FeaturedCities from "@/components/site/FeaturedCities";
 import FeaturedBuildings from "@/components/site/FeaturedBuildings";
 import LatestJournal from "@/components/site/LatestJournal";
-import CtaStrip from "@/components/site/CtaStrip";
 import NewsletterCta from "@/components/site/NewsletterCta";
 import Footer from "@/components/site/Footer";
+import Reveal from "@/components/site/Reveal";
+import EditorialButton from "@/components/site/EditorialButton";
 
 type Pin = { latitude: number | null; longitude: number | null };
 
@@ -38,49 +39,34 @@ const Index = () => {
     })();
   }, []);
 
-  // Hero background — collect architecture photography for the slideshow.
-  // Sources: published project photos + published city hero images. Both
-  // tables hold architecture imagery by definition. If neither has any
-  // pictures yet, fall back to a curated stock set so the hero never
-  // looks empty.
+  // Hero background — curated architecture photography. We deliberately
+  // do NOT pull from the projects/cities tables here: while those rows
+  // are nominally architecture, demo/seed entries can carry stock
+  // imagery that doesn't fit the cover. This list is hand-verified.
   useEffect(() => {
-    (async () => {
-      const [{ data: projData }, { data: cityData }] = await Promise.all([
-        supabase
-          .from("projects")
-          .select("hero_image_url,cover_image_url")
-          .eq("status", "published")
-          .limit(12),
-        supabase
-          .from("cities")
-          .select("hero_image_url")
-          .eq("status", "published")
-          .limit(8),
-      ]);
-      const imgs = [
-        ...(projData ?? []).map((p) => p.hero_image_url || p.cover_image_url),
-        ...(cityData ?? []).map((c) => c.hero_image_url),
-      ].filter((s): s is string => Boolean(s));
-
-      // Curated architecture stock — used only when no project/city photos
-      // have been uploaded yet. Safe to delete once the CMS has content.
-      const FALLBACK_ARCH = [
-        "https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1800&q=80",
-        "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1800&q=80",
-        "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1800&q=80",
-        "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1800&q=80",
-        "https://images.unsplash.com/photo-1496564203457-11bb12075d90?auto=format&fit=crop&w=1800&q=80",
-        "https://images.unsplash.com/photo-1486718448742-163732cd1544?auto=format&fit=crop&w=1800&q=80",
-      ];
-      const pool = imgs.length > 0 ? imgs : FALLBACK_ARCH;
-
-      // Shuffle so the order isn't predictable between visits
-      for (let i = pool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-      }
-      setHeroImages(pool);
-    })();
+    const ARCH_IMAGES = [
+      // Sunlit curved staircase — Valencia City of Sciences
+      "https://images.unsplash.com/photo-1779995734326-3d3790120164?auto=format&fit=crop&w=1800&q=80",
+      // Brutalist concrete structure in the desert
+      "https://images.unsplash.com/photo-1780303063301-33ccfe1c56c2?auto=format&fit=crop&w=1800&q=80",
+      // Concrete ceiling with square skylights, Shanghai
+      "https://images.unsplash.com/photo-1780362507842-f9e75fbdce03?auto=format&fit=crop&w=1800&q=80",
+      // Staircase with circular skylights, MLK Memorial Library
+      "https://images.unsplash.com/photo-1777997271952-4fa8fec2ffa6?auto=format&fit=crop&w=1800&q=80",
+      // Vintage interior with pendant lights and wooden floor
+      "https://images.unsplash.com/photo-1780317307594-15b43d794ce6?auto=format&fit=crop&w=1800&q=80",
+      // Contemporary dining space, Suances, Spain
+      "https://images.unsplash.com/photo-1779960723465-61f8d0f5ac2b?auto=format&fit=crop&w=1800&q=80",
+      // Country home interior with built-in wooden shelving
+      "https://images.unsplash.com/photo-1780427670049-43aa7921e3f0?auto=format&fit=crop&w=1800&q=80",
+    ];
+    // Shuffle so the order isn't predictable between visits
+    const pool = [...ARCH_IMAGES];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    setHeroImages(pool);
   }, []);
 
   // Rotate the active hero image on a calm interval
@@ -94,7 +80,8 @@ const Index = () => {
 
   // Non-interactive preview map — a visual teaser of the product, not a tool.
   // `interactive: false` means it never traps scroll and can't be panned; the
-  // whole surface is a link into the Atlas.
+  // whole surface is a link into the Atlas. The globe spins slowly so the
+  // hero map feels alive even though it's not clickable as a map.
   useEffect(() => {
     if (!token || !mapContainer.current || mapRef.current) return;
     mapboxgl.accessToken = token;
@@ -102,12 +89,23 @@ const Index = () => {
       const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/light-v11",
-        center: [4, 38],
-        zoom: 1.5,
+        projection: { name: "mercator" },
+        center: [10, 25],
+        zoom: 1.6,
         attributionControl: false,
         interactive: false,
       });
       mapRef.current = map;
+
+      // Spinning globe — slower than the Atlas tool since this is decorative.
+      const SECONDS_PER_REV = 120;
+      const spinGlobe = () => {
+        const c = map.getCenter();
+        c.lng -= 360 / SECONDS_PER_REV;
+        map.easeTo({ center: c, duration: 1000, easing: (n) => n });
+      };
+      map.on("moveend", spinGlobe);
+      map.on("load", spinGlobe);
     } catch (e) {
       console.error("Mapbox preview init failed", e);
     }
@@ -117,7 +115,8 @@ const Index = () => {
     };
   }, [token]);
 
-  // Decorative pins + frame them
+  // Decorative pins — pinned to the spinning globe at its natural extent;
+  // we deliberately do NOT fitBounds here so the whole globe stays visible.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || pins.length === 0) return;
@@ -125,7 +124,6 @@ const Index = () => {
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
       const pts = pins.filter((p) => p.latitude != null && p.longitude != null);
-      const bounds = new mapboxgl.LngLatBounds();
       pts.forEach((p) => {
         const el = document.createElement("span");
         el.style.cssText =
@@ -133,9 +131,7 @@ const Index = () => {
         markersRef.current.push(
           new mapboxgl.Marker({ element: el, anchor: "center" }).setLngLat([p.longitude!, p.latitude!]).addTo(map)
         );
-        bounds.extend([p.longitude!, p.latitude!]);
       });
-      if (pts.length > 1) map.fitBounds(bounds, { padding: 70, maxZoom: 5, duration: 0 });
     };
     if (map.loaded()) draw();
     else map.once("load", draw);
@@ -172,15 +168,19 @@ const Index = () => {
                 backgroundImage: `url(${src})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
-                filter: "grayscale(15%)",
                 transitionDuration: "1800ms",
               }}
             />
           ))}
-          {/* Warm paper veil — keeps ink-coloured copy readable on top */}
+          {/* Dark veil — keeps white copy legible over the photo slideshow.
+              Light on top so photos breathe, denser at the bottom where
+              the headline + CTAs live. */}
           <div
             className="absolute inset-0"
-            style={{ background: "hsl(var(--paper-warm) / 0.82)" }}
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(17,17,16,0.18) 0%, rgba(17,17,16,0.28) 45%, rgba(17,17,16,0.55) 100%)",
+            }}
           />
         </div>
 
@@ -188,71 +188,52 @@ const Index = () => {
           className="relative z-10 mx-auto w-full"
           style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "4rem 2.5rem 4rem", maxWidth: 1400 }}
         >
-          <p className="fadeup-1 font-mono uppercase text-accent-terra font-semibold" style={{ fontSize: "13px", letterSpacing: "0.22em", marginBottom: "1.5rem" }}>
+          <p className="fadeup-1 font-mono uppercase text-white font-semibold" style={{ fontSize: "13px", letterSpacing: "0.22em", marginBottom: "1.5rem", textShadow: "0 1px 8px rgba(0,0,0,0.25)" }}>
             <Link to="/atlas" className="hover:opacity-70 transition-opacity">Architecture</Link>
             {" · "}
             <Link to="/cities" className="hover:opacity-70 transition-opacity">Cities</Link>
             {" · "}
-            <Link to="/resources" className="hover:opacity-70 transition-opacity">Resources</Link>
+            <Link to="/practice" className="hover:opacity-70 transition-opacity">Practice</Link>
           </p>
 
-          <h1 className="fadeup-2 font-display-black text-ink" style={{ fontSize: "clamp(4rem, 9.5vw, 9.5rem)", lineHeight: 0.91 }}>
+          <h1
+            className="fadeup-2 font-display-black text-white"
+            style={{
+              fontSize: "clamp(2.8rem, 6.5vw, 6.5rem)",
+              lineHeight: 0.94,
+              textShadow: "0 2px 18px rgba(0,0,0,0.25)",
+            }}
+          >
             The curated<br />
             architecture<br />
             guide
           </h1>
 
           <div className="fadeup-3 mt-12 flex items-end justify-between gap-8 flex-wrap">
-            <p className="font-mono text-ink-soft" style={{ fontSize: "15px", lineHeight: 1.7, maxWidth: 360, letterSpacing: "0.01em" }}>
+            <p
+              className="font-mono text-white/85"
+              style={{ fontSize: "15px", lineHeight: 1.7, maxWidth: 360, letterSpacing: "0.01em", textShadow: "0 1px 8px rgba(0,0,0,0.25)" }}
+            >
               Curated architectural projects mapped across the world's greatest cities.
               Explore by place, by style, by moment.
             </p>
 
-            <div className="flex items-center gap-6 flex-wrap">
-              <Link
-                to="/atlas"
-                className="font-mono uppercase inline-flex items-center text-white transition-all font-semibold"
-                style={{ background: "hsl(var(--ink))", padding: "1.1rem 2rem", fontSize: "14px", letterSpacing: "0.16em", borderRadius: 0, gap: "0.7rem" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--accent))"; e.currentTarget.style.gap = "1rem"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--ink))"; e.currentTarget.style.gap = "0.7rem"; }}
-              >
-                Explore the Atlas →
-              </Link>
-
-              <Link
-                to="/cities"
-                className="font-mono uppercase text-ink-soft hover:text-ink transition-colors font-medium"
-                style={{ fontSize: "13px", letterSpacing: "0.14em", borderBottom: "1px solid hsl(var(--paper-mid))", paddingBottom: 3 }}
-              >
-                Browse all cities
-              </Link>
+            <div className="flex items-center gap-8 flex-wrap">
+              <EditorialButton to="/atlas" arrow variant="invert">Explore the Atlas</EditorialButton>
+              <EditorialButton to="/cities" variant="invert">Browse all cities</EditorialButton>
             </div>
           </div>
         </div>
       </section>
 
       {/* ============================================================
-          2. MAP PREVIEW — a visual teaser; the tool itself lives at /atlas
+          2. MAP PREVIEW — full-bleed map with editorial copy overlaid
+          on top. The whole surface opens the Atlas. The tool itself
+          lives at /atlas.
           ============================================================ */}
       <section className="relative bg-paper-warm" style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}>
-        <div className="mx-auto max-w-[1400px] flex items-end justify-between flex-wrap gap-6" style={{ padding: "3rem 2.5rem 2.5rem" }}>
-          <div>
-            <p className="font-mono uppercase text-accent-terra mb-3 font-semibold" style={{ fontSize: "13px", letterSpacing: "0.22em" }}>
-              The Atlas
-            </p>
-            <h2 className="font-display text-ink" style={{ fontSize: "clamp(2.5rem, 5vw, 5rem)", fontWeight: 500, lineHeight: 0.94 }}>
-              Every building,<br />
-              <em className="italic text-ink-soft">on the map.</em>
-            </h2>
-          </div>
-          <p className="font-mono text-ink-soft" style={{ fontSize: "15px", lineHeight: 1.65, maxWidth: 320, textAlign: "right", letterSpacing: "0.01em" }}>
-            A living atlas of architecture. Open the Atlas to filter by city,
-            architect, style and year — and discover each project on the map.
-          </p>
-        </div>
-
-        {/* Clickable preview — the whole surface opens the Atlas */}
-        <Link to="/atlas" aria-label="Open the Atlas" className="group relative block w-full" style={{ height: "68vh", minHeight: 480, background: "hsl(var(--paper-mid))" }}>
+        <Reveal delay={120}>
+        <Link to="/atlas" aria-label="Open the Atlas" className="group relative block w-screen" style={{ height: "100vh", minHeight: 640, background: "hsl(var(--paper-mid))" }}>
           {token ? (
             <div ref={mapContainer} className="absolute inset-0" style={{ pointerEvents: "none" }} />
           ) : (
@@ -261,17 +242,63 @@ const Index = () => {
             </div>
           )}
 
-          {/* Soft editorial veil so the map reads as a teaser */}
-          <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(247,243,237,0) 55%, rgba(247,243,237,0.55) 100%)" }} />
+          {/* Soft editorial veils — top fade gives the copy a calm
+              backdrop, bottom fade lifts the CTA. */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(247,243,237,0.78) 0%, rgba(247,243,237,0.35) 28%, rgba(247,243,237,0) 50%, rgba(247,243,237,0) 80%, rgba(247,243,237,0.55) 100%)",
+            }}
+          />
 
-          {/* CTA pill */}
-          <span
-            className="absolute left-1/2 -translate-x-1/2 bottom-8 inline-flex items-center gap-2 font-mono uppercase text-white font-semibold transition-all group-hover:gap-3"
-            style={{ background: "hsl(var(--ink))", padding: "1rem 1.9rem", fontSize: "14px", letterSpacing: "0.16em" }}
+          {/* Overlaid editorial copy — sits on the map but stays readable
+              thanks to the warm-paper top veil. */}
+          <div
+            className="absolute left-0 right-0 top-0 pointer-events-none"
+            style={{ padding: "4rem 2.5rem 0" }}
           >
-            Open the interactive map →
+            <div className="mx-auto max-w-[1400px]">
+              <p
+                className="font-mono uppercase text-accent-terra mb-3 font-semibold"
+                style={{ fontSize: "13px", letterSpacing: "0.22em" }}
+              >
+                The Atlas
+              </p>
+              <h2
+                className="font-display text-ink"
+                style={{ fontSize: "clamp(1.8rem, 3.5vw, 3.4rem)", fontWeight: 400, lineHeight: 1 }}
+              >
+                Every building, <em className="italic text-ink-soft">on the map</em>
+              </h2>
+              <p
+                className="font-mono text-ink-soft mt-5"
+                style={{ fontSize: "15px", lineHeight: 1.65, maxWidth: 520, letterSpacing: "0.01em" }}
+              >
+                A living atlas of architecture. Open the Atlas to filter by city,
+                architect, style and year — and discover each project on the map.
+              </p>
+            </div>
+          </div>
+
+          {/* Minimal CTA — thin label-caps with a hairline underline,
+              gap grows on hover. No filled pill. */}
+          <span
+            className="absolute left-1/2 -translate-x-1/2 bottom-10 inline-flex items-center font-mono uppercase text-ink transition-all group-hover:gap-3"
+            style={{
+              fontSize: "12px",
+              letterSpacing: "0.28em",
+              fontWeight: 500,
+              gap: "0.6rem",
+              borderBottom: "1px solid hsl(var(--ink))",
+              paddingBottom: 4,
+            }}
+          >
+            Open the interactive map
+            <span aria-hidden="true">→</span>
           </span>
         </Link>
+        </Reveal>
       </section>
 
       {/* Cities strip — image, name & project count */}
@@ -283,8 +310,7 @@ const Index = () => {
       {/* Latest journal */}
       <LatestJournal />
 
-      {/* CTA + footer */}
-      <CtaStrip />
+      {/* Newsletter + footer */}
       <NewsletterCta />
       <Footer />
     </div>

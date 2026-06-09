@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import Reveal from "@/components/site/Reveal";
 
 interface City {
   id: string;
@@ -22,6 +24,32 @@ export default function FeaturedCities() {
   const [cities, setCities] = useState<City[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragState = useRef({ down: false, startX: 0, scrollLeft: 0 });
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Track scroll position to toggle the arrows' enabled state.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const update = () => {
+      setCanScrollLeft(el.scrollLeft > 4);
+      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [cities.length]);
+
+  const scrollBy = (dir: 1 | -1) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // Roughly one card + gap per click — 320 + 32.
+    el.scrollBy({ left: dir * 352, behavior: "smooth" });
+  };
 
   useEffect(() => {
     (async () => {
@@ -73,27 +101,76 @@ export default function FeaturedCities() {
       className="bg-[#FFF9F2]"
       style={{ padding: "5rem 0", borderBottom: "1px solid hsl(var(--paper-mid))" }}
     >
-      <p
-        className="font-grotesk text-[13px] font-semibold uppercase tracking-[0.18em] text-[#4F4534]"
+      <div
+        className="flex items-center justify-between gap-6 flex-wrap"
         style={{ padding: "0 2.5rem", marginBottom: "3rem" }}
       >
-        Ciudades
-      </p>
+        <Reveal
+          as="h2"
+          className="font-display text-ink"
+          style={{
+            fontSize: "clamp(1.7rem, 3.2vw, 3rem)",
+            fontWeight: 400,
+            lineHeight: 1,
+            letterSpacing: "-0.005em",
+          }}
+        >
+          Cities
+        </Reveal>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => scrollBy(-1)}
+            disabled={!canScrollLeft}
+            aria-label="Anterior"
+            className="inline-flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/[0.04]"
+            style={{
+              width: 40,
+              height: 40,
+              border: "1px solid hsl(var(--paper-mid))",
+              background: "transparent",
+              color: "hsl(var(--ink))",
+            }}
+          >
+            <ChevronLeft className="w-4 h-4" strokeWidth={1.5} />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollBy(1)}
+            disabled={!canScrollRight}
+            aria-label="Siguiente"
+            className="inline-flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/[0.04]"
+            style={{
+              width: 40,
+              height: 40,
+              border: "1px solid hsl(var(--paper-mid))",
+              background: "transparent",
+              color: "hsl(var(--ink))",
+            }}
+          >
+            <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
+          </button>
+        </div>
+      </div>
       <div
         ref={scrollRef}
-        className="flex no-scrollbar overflow-x-auto"
+        className="flex no-scrollbar overflow-x-auto scroll-smooth"
         style={{ gap: "2rem", padding: "0 2.5rem", cursor: "grab" }}
         onMouseDown={onDown}
         onMouseLeave={onLeaveOrUp}
         onMouseUp={onLeaveOrUp}
         onMouseMove={onMove}
       >
-        {cities.map((c) => (
-          <Link
+        {cities.map((c, i) => (
+          <Reveal
             key={c.id}
-            to={`/cities/${c.slug}`}
-            className="group flex-shrink-0 block text-center"
+            delay={i * 90}
+            className="flex-shrink-0"
             style={{ width: 320 }}
+          >
+          <Link
+            to={`/cities/${c.slug}`}
+            className="group block text-center"
             draggable={false}
           >
             {/* Fragment card — sharp corners, full-bleed portrait, no scrim */}
@@ -118,6 +195,7 @@ export default function FeaturedCities() {
               {String(c.project_count).padStart(2, "0")} Proyectos
             </p>
           </Link>
+          </Reveal>
         ))}
       </div>
     </section>

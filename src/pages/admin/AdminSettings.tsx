@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import SettingsTabs from "@/components/admin/SettingsTabs";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/hooks/use-toast";
@@ -43,11 +44,23 @@ export default function AdminSettings() {
 
   return (
     <AdminLayout>
-      <div className="px-10 py-10 max-w-[760px]">
-        <div className="mb-10">
-          <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">Manage</p>
-          <h1 className="font-display text-[44px] text-ink leading-none">Settings</h1>
+      <div className="px-10 py-10 max-w-[960px]">
+        <div className="mb-8">
+          <p
+            className="font-mono uppercase text-ink-soft mb-3 font-semibold"
+            style={{ fontSize: 11, letterSpacing: "0.22em" }}
+          >
+            Gestionar
+          </p>
+          <h1
+            className="font-display text-ink"
+            style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.005em" }}
+          >
+            Ajustes
+          </h1>
         </div>
+
+        <SettingsTabs />
 
         {loading ? (
           <div className="flex items-center gap-3 text-ink-muted text-[12px]">
@@ -76,7 +89,7 @@ export default function AdminSettings() {
             <div className="pt-2">
               <button onClick={save} disabled={saving}
                 className="text-[11px] tracking-tag uppercase text-background px-5 py-2.5 disabled:opacity-50"
-                style={{ background: "hsl(var(--blue))" }}>
+                style={{ background: "hsl(var(--ink))" }}>
                 {saving ? "Saving…" : "Save changes"}
               </button>
             </div>

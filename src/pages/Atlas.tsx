@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/site/Navbar";
 import SEO from "@/components/site/SEO";
-import { Search, ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { getMapboxToken, TOKEN_KEY } from "@/lib/mapbox";
-import { MATERIALS, EXPERIENCES, STYLES, ERAS, eraMatches, tagsFor } from "@/lib/atlasFilters";
+import { MATERIALS, EXPERIENCES, tagsFor } from "@/lib/atlasFilters";
 
 type City = {
   id: string;
@@ -24,6 +24,7 @@ type Project = {
   name: string;
   tagline: string | null;
   architect: string | null;
+  practice: string | null;
   year_completed: number | null;
   category: string | null;
   style: string | null;
@@ -36,13 +37,27 @@ type Project = {
 };
 
 const NAV_H = 76;
+// Approx height of the filter bar (chips + padding). Used to push the map
+// canvas down so the bar isn't sitting on top of the map.
+const FILTER_BAR_H = 60;
 
-type Sel = { materials: string[]; experience: string[]; styles: string[]; eras: string[]; architects: string[] };
-const EMPTY: Sel = { materials: [], experience: [], styles: [], eras: [], architects: [] };
+/** Single active filter — picking a chip from any category activates one
+ *  filter, hides the filter bar, and frames the map on the matching set. */
+type FilterType = "city" | "material" | "experience";
+type Active = { type: FilterType; value: string };
 
-/** A minimal popover filter — a labelled chip that opens a panel of toggle chips. */
+const FILTER_LABELS: Record<FilterType, string> = {
+  city: "City",
+  material: "Material",
+  experience: "Experience",
+};
+
+/** A minimal popover filter — a labelled chip that opens a panel of toggle chips.
+ *  When `stacked` is set, options render one-per-row as standalone boxes
+ *  without a surrounding panel — used by the Cities filter so the chips
+ *  float over the map. */
 function FilterMenu({
-  label, options, selected, onToggle, open, onToggleOpen, onClose,
+  label, options, selected, onToggle, open, onToggleOpen, onClose, stacked,
 }: {
   label: string;
   options: string[];
@@ -51,6 +66,7 @@ function FilterMenu({
   open: boolean;
   onToggleOpen: () => void;
   onClose: () => void;
+  stacked?: boolean;
 }) {
   const count = selected.length;
   const active = count > 0 || open;
@@ -63,8 +79,10 @@ function FilterMenu({
           fontSize: 12,
           letterSpacing: "0.14em",
           fontWeight: 500,
+          background: "hsl(var(--paper-warm) / 0.92)",
           borderColor: active ? "hsl(var(--ink))" : "rgba(0,0,0,0.14)",
           color: active ? "hsl(var(--ink))" : "hsl(var(--ink-soft))",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
         }}
       >
         {label}
@@ -79,19 +97,20 @@ function FilterMenu({
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={onClose} />
-          <div className="absolute left-0 top-full mt-2 z-50 bg-paper p-4 fade-in" style={{ minWidth: 248, maxWidth: 320, border: "1px solid hsl(var(--paper-mid))", boxShadow: "0 10px 34px rgba(0,0,0,0.10)" }}>
-            <div className="flex flex-wrap gap-1.5 max-h-[280px] overflow-y-auto no-scrollbar">
+          {stacked ? (
+            <div className="absolute left-0 top-full mt-2 z-50 fade-in flex flex-col gap-1.5 overflow-y-auto no-scrollbar"
+              style={{ maxHeight: "min(60vh, 480px)", minWidth: 200 }}>
               {options.map((o) => {
                 const on = selected.includes(o);
                 return (
                   <button
                     key={o}
                     onClick={() => onToggle(o)}
-                    className="font-mono uppercase px-3 py-1.5 border transition-colors"
+                    className="font-mono uppercase px-3 py-2 border transition-colors text-left whitespace-nowrap"
                     style={
                       on
-                        ? { fontSize: 12, letterSpacing: "0.12em", background: "hsl(var(--ink))", color: "#fff", borderColor: "hsl(var(--ink))" }
-                        : { fontSize: 12, letterSpacing: "0.12em", borderColor: "rgba(0,0,0,0.12)", color: "hsl(var(--ink-muted))" }
+                        ? { fontSize: 12, letterSpacing: "0.12em", background: "hsl(var(--ink))", color: "#fff", borderColor: "hsl(var(--ink))", boxShadow: "0 2px 10px rgba(0,0,0,0.10)" }
+                        : { fontSize: 12, letterSpacing: "0.12em", background: "hsl(var(--paper))", borderColor: "rgba(0,0,0,0.12)", color: "hsl(var(--ink))", boxShadow: "0 2px 10px rgba(0,0,0,0.08)" }
                     }
                   >
                     {o}
@@ -99,7 +118,29 @@ function FilterMenu({
                 );
               })}
             </div>
-          </div>
+          ) : (
+            <div className="absolute left-0 top-full mt-2 z-50 bg-paper p-4 fade-in" style={{ minWidth: 280, maxWidth: 380, border: "1px solid hsl(var(--paper-mid))", boxShadow: "0 10px 34px rgba(0,0,0,0.10)" }}>
+              <div className="flex flex-wrap gap-1.5 overflow-y-auto no-scrollbar" style={{ maxHeight: "min(60vh, 480px)" }}>
+                {options.map((o) => {
+                  const on = selected.includes(o);
+                  return (
+                    <button
+                      key={o}
+                      onClick={() => onToggle(o)}
+                      className="font-mono uppercase px-3 py-1.5 border transition-colors"
+                      style={
+                        on
+                          ? { fontSize: 12, letterSpacing: "0.12em", background: "hsl(var(--ink))", color: "#fff", borderColor: "hsl(var(--ink))" }
+                          : { fontSize: 12, letterSpacing: "0.12em", borderColor: "rgba(0,0,0,0.12)", color: "hsl(var(--ink-muted))" }
+                      }
+                    >
+                      {o}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
@@ -114,7 +155,6 @@ export default function Atlas() {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
-  const stripRef = useRef<HTMLDivElement | null>(null);
 
   const [token, setToken] = useState<string>(() => getMapboxToken());
   const [tokenInput, setTokenInput] = useState("");
@@ -122,11 +162,33 @@ export default function Atlas() {
 
   const [cities, setCities] = useState<City[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [cityFilter, setCityFilter] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [sel, setSel] = useState<Sel>(EMPTY);
+  const [active, setActive] = useState<Active | null>(null);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [selected, setSelected] = useState<Project | null>(null);
+  const [searchParams] = useSearchParams();
+  const cityParam = searchParams.get("city");
+  const projectParam = searchParams.get("project");
+
+  // When the URL carries ?city=<slug>, activate that city as the filter.
+  useEffect(() => {
+    if (!cityParam || cities.length === 0) return;
+    const match = cities.find((c) => c.slug === cityParam);
+    if (match) setActive({ type: "city", value: match.name });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cityParam, cities.length]);
+
+  // When the URL carries ?project=<slug>, activate its city and select it.
+  useEffect(() => {
+    if (!projectParam || projects.length === 0 || !mapReady) return;
+    const p = projects.find((x) => x.slug === projectParam);
+    if (!p) return;
+    if (p.city?.name) setActive({ type: "city", value: p.city.name });
+    setSelected(p);
+    if (p.latitude != null && p.longitude != null) {
+      mapRef.current?.flyTo({ center: [p.longitude, p.latitude], zoom: 15, essential: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectParam, projects.length, mapReady]);
 
   useEffect(() => {
     (async () => {
@@ -138,7 +200,7 @@ export default function Atlas() {
           .order("name"),
         supabase
           .from("projects")
-          .select("id,slug,name,tagline,architect,year_completed,category,style,latitude,longitude,cover_image_url,hero_image_url,city_id,city:cities(name,slug)")
+          .select("id,slug,name,tagline,architect,practice,year_completed,category,style,latitude,longitude,cover_image_url,hero_image_url,city_id,city:cities(name,slug)")
           .eq("status", "published"),
       ]);
       if (cs) setCities(cs as any);
@@ -154,13 +216,42 @@ export default function Atlas() {
       const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/light-v11",
-        center: [4, 38],
-        zoom: 1.6,
+        center: [10, 25],
+        zoom: 1.5,
         attributionControl: false,
       });
       map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
       map.on("load", () => setMapReady(true));
       mapRef.current = map;
+
+      // ─── Spinning globe ─────────────────────────────────────────────
+      // The map rotates slowly at low zoom. As soon as the user zooms in
+      // (or zoom passes maxSpinZoom for any reason), the spin pauses.
+      const SECONDS_PER_REV = 220;
+      const MAX_SPIN_ZOOM = 4;
+      const SLOW_SPIN_ZOOM = 3;
+      let userInteracting = false;
+      const spinGlobe = () => {
+        const zoom = map.getZoom();
+        if (userInteracting || zoom >= MAX_SPIN_ZOOM) return;
+        let distancePerSecond = 360 / SECONDS_PER_REV;
+        if (zoom > SLOW_SPIN_ZOOM) {
+          const zoomDif = (MAX_SPIN_ZOOM - zoom) / (MAX_SPIN_ZOOM - SLOW_SPIN_ZOOM);
+          distancePerSecond *= zoomDif;
+        }
+        const c = map.getCenter();
+        c.lng -= distancePerSecond;
+        map.easeTo({ center: c, duration: 1000, easing: (n) => n });
+      };
+      map.on("mousedown", () => { userInteracting = true; });
+      map.on("mouseup", () => { userInteracting = false; spinGlobe(); });
+      map.on("touchstart", () => { userInteracting = true; });
+      map.on("touchend", () => { userInteracting = false; spinGlobe(); });
+      map.on("dragend", () => { userInteracting = false; spinGlobe(); });
+      map.on("pitchend", () => { userInteracting = false; spinGlobe(); });
+      map.on("rotateend", () => { userInteracting = false; spinGlobe(); });
+      map.on("moveend", () => { spinGlobe(); });
+      map.on("load", () => spinGlobe());
     } catch (e) {
       console.error("Mapbox init failed", e);
     }
@@ -171,35 +262,26 @@ export default function Atlas() {
     };
   }, [token]);
 
-  const architectOptions = useMemo(
-    () => Array.from(new Set(projects.map((p) => p.architect).filter(Boolean))).sort() as string[],
-    [projects]
-  );
+  // Map city name → id for fast lookup (used by the city filter).
+  const cityNameToId = useMemo(() => {
+    const m = new Map<string, string>();
+    cities.forEach((c) => m.set(c.name, c.id));
+    return m;
+  }, [cities]);
+  const cityOptions = useMemo(() => cities.map((c) => c.name), [cities]);
 
-  const filtered = useMemo(
-    () =>
-      projects.filter((p) => {
-        if (cityFilter && p.city_id !== cityFilter) return false;
-        const q = search.trim().toLowerCase();
-        if (
-          q &&
-          !(
-            p.name.toLowerCase().includes(q) ||
-            (p.architect || "").toLowerCase().includes(q) ||
-            (p.city?.name || "").toLowerCase().includes(q)
-          )
-        )
-          return false;
-        if (sel.styles.length && !(p.style && sel.styles.includes(p.style))) return false;
-        if (sel.eras.length && !sel.eras.some((e) => eraMatches(p.year_completed, e))) return false;
-        if (sel.architects.length && !(p.architect && sel.architects.includes(p.architect))) return false;
-        const t = tagsFor(p.slug);
-        if (sel.materials.length && !sel.materials.some((m) => t.materials.includes(m))) return false;
-        if (sel.experience.length && !sel.experience.some((x) => t.experience.includes(x))) return false;
-        return true;
-      }),
-    [projects, cityFilter, search, sel]
-  );
+  const filtered = useMemo(() => {
+    if (!active) return projects;
+    return projects.filter((p) => {
+      if (active.type === "city") {
+        return p.city_id === cityNameToId.get(active.value);
+      }
+      const t = tagsFor(p.slug);
+      if (active.type === "material") return t.materials.includes(active.value);
+      if (active.type === "experience") return t.experience.includes(active.value);
+      return true;
+    });
+  }, [projects, active, cityNameToId]);
 
   const fitTo = (list: Project[]) => {
     const map = mapRef.current;
@@ -211,22 +293,29 @@ export default function Atlas() {
     }
     const b = new mapboxgl.LngLatBounds();
     pts.forEach((p) => b.extend([p.longitude!, p.latitude!]));
-    map.fitBounds(b, { padding: { top: 60, bottom: 200, left: 60, right: 60 }, maxZoom: 13, duration: 1100 });
+    // Top padding accounts for the navbar + filter bar overlay so the
+    // bounded set centers visually within the area below them.
+    map.fitBounds(b, {
+      padding: { top: NAV_H + FILTER_BAR_H + 40, bottom: 80, left: 80, right: 80 },
+      maxZoom: 13,
+      duration: 1100,
+    });
   };
 
-  // Frame the atlas on load; fly to a city when chosen
+  // Frame the atlas on load; when a single city is active, fly to it;
+  // otherwise fit bounds around the matching set.
   useEffect(() => {
     if (!mapReady) return;
-    if (cityFilter) {
-      const c = cities.find((x) => x.id === cityFilter);
+    if (active?.type === "city") {
+      const c = cities.find((x) => x.name === active.value);
       if (c && c.center_latitude != null && c.center_longitude != null) {
         mapRef.current?.flyTo({ center: [c.center_longitude, c.center_latitude], zoom: c.default_zoom || 12, speed: 1.2, curve: 1.4, essential: true });
         return;
       }
     }
-    fitTo(projects);
+    fitTo(filtered.length ? filtered : projects);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapReady, cityFilter, projects.length]);
+  }, [mapReady, active, projects.length, filtered.length]);
 
   // Markers for the filtered set
   useEffect(() => {
@@ -252,13 +341,6 @@ export default function Atlas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtered, selected, mapReady]);
 
-  // Scroll the strip to the selected card
-  useEffect(() => {
-    if (!selected || !stripRef.current) return;
-    const card = stripRef.current.querySelector(`[data-pid="${selected.id}"]`);
-    card?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-  }, [selected]);
-
   const selectProject = (p: Project) => {
     setSelected(p);
     if (p.latitude != null && p.longitude != null) {
@@ -266,17 +348,19 @@ export default function Atlas() {
     }
   };
 
-  const toggle = (key: keyof Sel, val: string) =>
-    setSel((s) => ({ ...s, [key]: s[key].includes(val) ? s[key].filter((x) => x !== val) : [...s[key], val] }));
-
   const toggleMenu = (k: string) => setOpenMenu((m) => (m === k ? null : k));
   const closeMenu = () => setOpenMenu(null);
 
-  const anyActive = cityFilter !== null || search.trim() !== "" || Object.values(sel).some((a) => a.length > 0);
-  const clearAll = () => {
-    setSel(EMPTY);
-    setCityFilter(null);
-    setSearch("");
+  // Activating a value commits the filter and closes the dropdown — the
+  // filter bar then collapses to a single "× value" pill.
+  const activate = (type: FilterType, value: string) => {
+    setActive({ type, value });
+    setOpenMenu(null);
+    setSelected(null);
+  };
+  const clearActive = () => {
+    setActive(null);
+    setSelected(null);
   };
 
   const saveToken = () => {
@@ -307,109 +391,131 @@ export default function Atlas() {
         </div>
       )}
 
-      <div className="flex flex-col fade-in" style={{ marginTop: NAV_H, height: `calc(100vh - ${NAV_H}px)` }}>
-        {/* ===== Filter bar (cities + filters above the map) ===== */}
-        <div className="bg-paper-warm shrink-0" style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}>
-          {/* Cities */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar px-5 md:px-8 py-3.5" style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}>
-            <span className="font-mono uppercase text-ink-soft shrink-0 mr-1" style={{ fontSize: 11, letterSpacing: "0.18em" }}>Cities</span>
-            <button
-              onClick={() => { setCityFilter(null); setSelected(null); }}
-              className="font-mono uppercase px-3 py-1.5 border transition-colors shrink-0"
-              style={!cityFilter
-                ? { fontSize: 12, letterSpacing: "0.12em", background: "hsl(var(--ink))", color: "#fff", borderColor: "hsl(var(--ink))" }
-                : { fontSize: 12, letterSpacing: "0.12em", borderColor: "rgba(0,0,0,0.14)", color: "hsl(var(--ink-soft))" }}
-            >
-              All
-            </button>
-            {cities.map((c) => {
-              const on = cityFilter === c.id;
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => { setCityFilter(on ? null : c.id); setSelected(null); }}
-                  className="font-mono uppercase px-3 py-1.5 border transition-colors shrink-0"
-                  style={on
-                    ? { fontSize: 12, letterSpacing: "0.12em", background: "hsl(var(--ink))", color: "#fff", borderColor: "hsl(var(--ink))" }
-                    : { fontSize: 12, letterSpacing: "0.12em", borderColor: "rgba(0,0,0,0.14)", color: "hsl(var(--ink-soft))" }}
-                >
-                  {c.name}
-                </button>
-              );
-            })}
-          </div>
+      {/* Map fills the entire viewport; the filter bar overlays on top of
+          it with a near-transparent background so the cartography reads
+          through. */}
+      <div className="relative fade-in" style={{ height: "100vh", width: "100%", overflow: "hidden", background: "hsl(var(--paper-warm))" }}>
+        <div ref={mapContainer} className="absolute inset-0" />
 
-          {/* Filters + search */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar px-5 md:px-8 py-3">
-            <FilterMenu label="Materials" options={MATERIALS} selected={sel.materials} onToggle={(v) => toggle("materials", v)} open={openMenu === "materials"} onToggleOpen={() => toggleMenu("materials")} onClose={closeMenu} />
-            <FilterMenu label="Experience" options={EXPERIENCES} selected={sel.experience} onToggle={(v) => toggle("experience", v)} open={openMenu === "experience"} onToggleOpen={() => toggleMenu("experience")} onClose={closeMenu} />
-            <FilterMenu label="Style" options={STYLES} selected={sel.styles} onToggle={(v) => toggle("styles", v)} open={openMenu === "styles"} onToggleOpen={() => toggleMenu("styles")} onClose={closeMenu} />
-            <FilterMenu label="Era" options={ERAS} selected={sel.eras} onToggle={(v) => toggle("eras", v)} open={openMenu === "eras"} onToggleOpen={() => toggleMenu("eras")} onClose={closeMenu} />
-            <FilterMenu label="Architect" options={architectOptions} selected={sel.architects} onToggle={(v) => toggle("architects", v)} open={openMenu === "architects"} onToggleOpen={() => toggleMenu("architects")} onClose={closeMenu} />
-
-            {anyActive && (
-              <button onClick={clearAll} className="font-mono uppercase text-ink-soft hover:text-ink shrink-0 ml-1" style={{ fontSize: 11, letterSpacing: "0.16em" }}>
-                Clear
+        {/* Filter bar — floats over the map, just below the navbar.
+            High z-index so dropdown panels render above the selected card.
+            When a filter is active, the bar collapses into a single
+            "Filtering by … ×" pill that returns to the bar on click. */}
+        <div
+          className="absolute left-0 right-0 z-40"
+          style={{
+            top: NAV_H,
+            height: FILTER_BAR_H,
+            background: "transparent",
+            pointerEvents: "none",
+          }}
+        >
+          {active ? (
+            <div className="inline-flex items-center gap-3 px-5 md:px-8 h-full pointer-events-auto">
+              <span className="font-mono uppercase text-ink" style={{ fontSize: 11, letterSpacing: "0.18em", background: "hsl(var(--paper-warm) / 0.92)", padding: "4px 8px" }}>
+                {FILTER_LABELS[active.type]}
+              </span>
+              <button
+                onClick={clearActive}
+                className="font-mono uppercase inline-flex items-center gap-2 px-3 py-1.5 transition-colors hover:opacity-90"
+                style={{
+                  fontSize: 12,
+                  letterSpacing: "0.12em",
+                  background: "hsl(var(--ink))",
+                  color: "#fff",
+                  border: "1px solid hsl(var(--ink))",
+                }}
+                aria-label="Clear filter"
+              >
+                {active.value}
+                <X className="w-3.5 h-3.5" />
               </button>
-            )}
-
-            <div className="flex-1" />
-
-            <span className="hidden md:inline font-mono uppercase text-ink-soft shrink-0 mr-1" style={{ fontSize: 11, letterSpacing: "0.16em" }}>
-              {filtered.length} {filtered.length === 1 ? "project" : "projects"}
-            </span>
-            <div className="relative shrink-0" style={{ width: 200 }}>
-              <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-soft" />
-              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search" className="w-full pl-6 pr-2 py-1.5 bg-transparent text-[14px] focus:outline-none placeholder:text-ink-soft" style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }} />
             </div>
-          </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 flex-wrap px-5 md:px-8 h-full pointer-events-auto">
+              <FilterMenu label="Cities" options={cityOptions} selected={[]} onToggle={(v) => activate("city", v)} open={openMenu === "cities"} onToggleOpen={() => toggleMenu("cities")} onClose={closeMenu} stacked />
+              <FilterMenu label="Materials" options={MATERIALS} selected={[]} onToggle={(v) => activate("material", v)} open={openMenu === "materials"} onToggleOpen={() => toggleMenu("materials")} onClose={closeMenu} stacked />
+              <FilterMenu label="Experience" options={EXPERIENCES} selected={[]} onToggle={(v) => activate("experience", v)} open={openMenu === "experience"} onToggleOpen={() => toggleMenu("experience")} onClose={closeMenu} stacked />
+            </div>
+          )}
         </div>
 
-        {/* ===== Map ===== */}
-        <div className="relative flex-1" style={{ background: "hsl(var(--paper-mid))" }}>
-          <div ref={mapContainer} className="absolute inset-0" />
+          {/* Selected project — editorial card that opens the full page on click.
+              Slides in from the right edge of the map. Photo dominates the card,
+              copy sits in a tighter block underneath. Top offset clears the
+              floating filter bar so the card isn't tucked under it. */}
+          {selected && (
+            <div
+              key={selected.id}
+              className="absolute z-30 slide-in-right
+                left-4 right-4
+                md:left-auto md:right-6 md:w-[380px]"
+              style={{ top: NAV_H + 72 }}
+            >
+              <div className="relative bg-paper" style={{ boxShadow: "0 10px 36px rgba(0,0,0,0.18)" }}>
+                <button
+                  onClick={() => setSelected(null)}
+                  aria-label="Close"
+                  className="absolute top-2 right-2 z-20 p-1.5 text-ink hover:bg-paper-mid transition-colors"
+                  style={{ background: "rgba(255,255,255,0.9)" }}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
 
-          {/* Project cards strip */}
-          <div className="absolute left-0 right-0 bottom-0 z-20 pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(247,243,237,0) 0%, rgba(247,243,237,0.0) 100%)" }}>
-            <div ref={stripRef} className="flex gap-3 overflow-x-auto no-scrollbar px-4 md:px-6 py-4 pointer-events-auto">
-              {filtered.map((p) => {
-                const thumb = p.cover_image_url || p.hero_image_url;
-                const on = selected?.id === p.id;
-                return (
-                  <div
-                    key={p.id}
-                    data-pid={p.id}
-                    className="shrink-0 bg-paper flex items-stretch"
-                    style={{ width: 280, border: on ? "1px solid hsl(var(--ink))" : "1px solid hsl(var(--paper-mid))", boxShadow: "0 4px 18px rgba(0,0,0,0.08)" }}
-                  >
-                    <button onClick={() => selectProject(p)} className="text-left flex items-stretch gap-3 flex-1 min-w-0 p-2.5 hover:bg-accent-light transition-colors">
-                      <div className="shrink-0 overflow-hidden bg-paper-mid" style={{ width: 64, height: 64 }}>
-                        {thumb && <img src={thumb} alt={p.name} className="photo-thumb w-full h-full object-cover" loading="lazy" />}
-                      </div>
-                      <div className="min-w-0 flex-1 self-center">
-                        <p className="font-display text-ink leading-tight truncate" style={{ fontSize: 17, fontWeight: 500 }}>{p.name}</p>
-                        <p className="mt-0.5 font-mono text-ink-soft truncate" style={{ fontSize: 12 }}>
-                          {[p.architect, p.year_completed].filter(Boolean).join(" · ")}
-                        </p>
-                        <p className="mt-0.5 font-mono uppercase text-ink-soft truncate" style={{ fontSize: 10, letterSpacing: "0.14em" }}>
-                          {p.city?.name}
-                        </p>
-                      </div>
-                    </button>
-                    <Link to={`/projects/${p.slug}`} aria-label={`View ${p.name}`} className="shrink-0 flex items-center justify-center px-3 text-ink-soft hover:text-ink hover:bg-accent-light transition-colors" style={{ borderLeft: "1px solid hsl(var(--paper-mid))" }}>
-                      →
-                    </Link>
+                <Link
+                  to={`/projects/${selected.slug}`}
+                  className="block group"
+                  aria-label={`Open ${selected.name}`}
+                >
+                  {(selected.cover_image_url || selected.hero_image_url) && (
+                    <div className="overflow-hidden">
+                      <img
+                        src={selected.cover_image_url || selected.hero_image_url || ""}
+                        alt={selected.name}
+                        className="block w-full h-auto transition-transform duration-700 group-hover:scale-[1.03]"
+                      />
+                    </div>
+                  )}
+                  <div className="px-5 pt-4 pb-5">
+                    {selected.city?.name && (
+                      <p
+                        className="font-mono uppercase text-accent-terra font-semibold mb-1.5"
+                        style={{ fontSize: 11, letterSpacing: "0.2em" }}
+                      >
+                        {selected.city.name}
+                      </p>
+                    )}
+                    <h3
+                      className="font-display text-ink leading-tight"
+                      style={{ fontSize: 21, fontWeight: 400, letterSpacing: "-0.005em" }}
+                    >
+                      {selected.name}
+                    </h3>
+                    {(selected.architect || selected.year_completed) && (
+                      <p className="mt-1.5 font-mono text-ink-soft" style={{ fontSize: 12, letterSpacing: "0.01em" }}>
+                        {[selected.architect, selected.year_completed].filter(Boolean).join(" · ")}
+                      </p>
+                    )}
+                    <span
+                      className="mt-3 group font-mono uppercase inline-flex items-center text-ink transition-all group-hover:gap-3"
+                      style={{
+                        fontSize: 12,
+                        letterSpacing: "0.28em",
+                        fontWeight: 500,
+                        gap: "0.6rem",
+                        borderBottom: "1px solid hsl(var(--ink))",
+                        paddingBottom: 4,
+                      }}
+                    >
+                      View project
+                      <span aria-hidden="true">→</span>
+                    </span>
                   </div>
-                );
-              })}
-              {filtered.length === 0 && (
-                <div className="bg-paper px-5 py-4 font-mono uppercase text-ink-soft" style={{ fontSize: 12, letterSpacing: "0.14em", border: "1px solid hsl(var(--paper-mid))" }}>
-                  No projects match these filters.
-                </div>
-              )}
+                </Link>
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+
       </div>
     </div>
   );

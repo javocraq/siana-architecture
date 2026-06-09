@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import SiteLayout from "@/components/site/SiteLayout";
 import SEO from "@/components/site/SEO";
+import Reveal from "@/components/site/Reveal";
 
 interface City {
   id: string;
@@ -17,6 +19,7 @@ interface City {
 export default function Cities() {
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -40,6 +43,16 @@ export default function Cities() {
     })();
   }, []);
 
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return cities;
+    return cities.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.country?.toLowerCase().includes(q) ?? false)
+    );
+  }, [cities, query]);
+
   return (
     <SiteLayout>
       <SEO
@@ -53,7 +66,7 @@ export default function Cities() {
           <header className="max-w-3xl mb-10 md:mb-14">
             <h1
               className="font-garamond text-black"
-              style={{ fontWeight: 500, fontSize: "clamp(44px, 7vw, 84px)", lineHeight: 1.04, letterSpacing: "-0.02em" }}
+              style={{ fontWeight: 400, fontSize: "clamp(32px, 5vw, 58px)", lineHeight: 1.08, letterSpacing: "-0.005em" }}
             >
               Atlas Metropolitano
             </h1>
@@ -67,6 +80,43 @@ export default function Cities() {
             </p>
           </header>
 
+          {/* Search — editorial prompt: small mono-caps label sits above
+              a large serif italic field with only a hairline underneath. */}
+          <div className="flex flex-col items-start text-left mb-10 md:mb-14">
+            <label
+              htmlFor="city-search"
+              className="font-grotesk uppercase text-[#4F4534] mb-4 font-semibold"
+              style={{ fontSize: 11, letterSpacing: "0.28em" }}
+            >
+              Looking for
+            </label>
+            <div
+              className="relative w-full"
+              style={{ maxWidth: 520, borderBottom: "1px solid rgba(0,0,0,0.18)" }}
+            >
+              <input
+                id="city-search"
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="a city or a country"
+                className="w-full bg-transparent py-3 text-left font-garamond italic text-black placeholder:text-[#9a8e7e] focus:outline-none"
+                style={{ fontSize: "clamp(22px, 2.8vw, 32px)", lineHeight: 1.3 }}
+                aria-label="Search cities"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  aria-label="Clear search"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 text-[#4F4534] hover:text-black transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Hairline divider (stark-black @ ~10%) */}
           <div className="border-t border-black/10 mb-12 md:mb-20" />
 
@@ -74,10 +124,15 @@ export default function Cities() {
             <p className="font-grotesk text-[13px] font-semibold uppercase tracking-[0.16em] text-[#4F4534]">
               Loading…
             </p>
+          ) : filtered.length === 0 ? (
+            <p className="font-garamond italic text-[#4F4534]" style={{ fontSize: 19, lineHeight: 1.5 }}>
+              No cities match “{query}”.
+            </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 md:gap-x-10 gap-y-14 md:gap-y-24">
-              {cities.map((c) => (
-                <Link key={c.id} to={`/cities/${c.slug}`} className="group block">
+              {filtered.map((c, i) => (
+                <Reveal key={c.id} delay={(i % 6) * 90}>
+                <Link to={`/cities/${c.slug}`} className="group block">
                   {/* Fragment card — fixed rectangle, image shown whole (no destructive crop) */}
                   <div className="relative aspect-[4/5] overflow-hidden bg-[#E5E1DA]">
                     <img
@@ -94,7 +149,7 @@ export default function Cities() {
                     </p>
                     <h2
                       className="font-garamond text-black"
-                      style={{ fontWeight: 500, fontSize: "clamp(28px, 3.2vw, 36px)", lineHeight: 1.1, letterSpacing: "-0.015em" }}
+                      style={{ fontWeight: 400, fontSize: "clamp(22px, 2.4vw, 28px)", lineHeight: 1.15, letterSpacing: "-0.005em" }}
                     >
                       {c.name}
                     </h2>
@@ -108,6 +163,7 @@ export default function Cities() {
                     )}
                   </div>
                 </Link>
+                </Reveal>
               ))}
             </div>
           )}

@@ -51,27 +51,41 @@ export default function AdminCities() {
 
   return (
     <AdminLayout>
-      <div className="px-10 py-10 max-w-[1400px]">
-        <div className="flex items-end justify-between mb-10">
+      <div className="px-10 py-10">
+        <div className="flex items-end justify-between mb-10 gap-6 flex-wrap">
           <div>
-            <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">Manage</p>
-            <h1 className="font-display text-[44px] text-ink leading-none">Cities</h1>
-            <p className="mt-3 text-[12px] text-ink-muted">
-              {loading ? "Loading…" : `${cities.length} total`}
+            <p
+              className="font-mono uppercase text-ink-soft mb-3 font-semibold"
+              style={{ fontSize: 11, letterSpacing: "0.22em" }}
+            >
+              Gestionar
+            </p>
+            <h1
+              className="font-display text-ink"
+              style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.005em" }}
+            >
+              Ciudades
+            </h1>
+            <p
+              className="mt-4 font-mono uppercase text-ink-soft"
+              style={{ fontSize: 11, letterSpacing: "0.18em" }}
+            >
+              {loading ? "Cargando…" : `${cities.length} en total`}
             </p>
           </div>
           <Link
             to="/admin/cities/new"
-            className="inline-flex items-center gap-2 uppercase text-background hover:opacity-90 transition-opacity"
+            className="group font-mono uppercase inline-flex items-center text-ink transition-all hover:gap-3"
             style={{
-              background: "hsl(var(--blue))",
               fontSize: 11,
-              fontWeight: 400,
-              letterSpacing: "0.18em",
-              padding: "10px 22px",
+              letterSpacing: "0.28em",
+              fontWeight: 500,
+              gap: "0.55rem",
+              borderBottom: "1px solid hsl(var(--ink))",
+              paddingBottom: 4,
             }}
           >
-            <Plus className="w-3.5 h-3.5" /> Add city
+            <Plus className="w-3.5 h-3.5" /> Añadir ciudad
           </Link>
         </div>
 
@@ -110,8 +124,8 @@ export default function AdminCities() {
                           style={{
                             fontSize: 9,
                             letterSpacing: "0.16em",
-                            background: published ? "hsl(var(--blue-light))" : "#f1efe8",
-                            color: published ? "hsl(var(--blue))" : "#6b6760",
+                            background: published ? "hsl(var(--paper-mid))" : "#f1efe8",
+                            color: published ? "hsl(var(--ink))" : "#6b6760",
                           }}
                         >
                           {c.status}
@@ -138,7 +152,7 @@ export default function AdminCities() {
                   <tr>
                     <td colSpan={7} className="px-4 py-12 text-center text-[12px] text-ink-faint">
                       No cities yet.{" "}
-                      <Link to="/admin/cities/new" className="underline" style={{ color: "hsl(var(--blue))" }}>
+                      <Link to="/admin/cities/new" className="underline" style={{ color: "hsl(var(--ink))" }}>
                         Create the first one
                       </Link>
                       .

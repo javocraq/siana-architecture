@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SiteLayout from "@/components/site/SiteLayout";
 import SEO from "@/components/site/SEO";
 import RichHtml from "@/components/site/RichHtml";
+import EditorialButton from "@/components/site/EditorialButton";
 import CitySectionsRenderer from "@/components/site/CitySectionsRenderer";
 import type { CitySection } from "@/lib/citySections";
 
@@ -116,19 +117,24 @@ export default function CityDetail() {
           <div className="mx-auto max-w-[1280px] w-full px-6 lg:px-10 text-background">
             <p className="text-[13px] font-semibold tracking-[0.18em] uppercase opacity-95 mb-4">{city.country}</p>
             <h1
-              style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, letterSpacing: "-0.02em", textTransform: "none" }}
-              className="text-[88px] md:text-[160px] leading-[0.9]"
+              style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, letterSpacing: "-0.005em", textTransform: "none" }}
+              className="text-[64px] md:text-[112px] leading-[0.95]"
             >
               {city.name}
             </h1>
             {city.tagline && (
               <p
                 className="italic mt-8 max-w-2xl opacity-95"
-                style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: "clamp(22px, 2.4vw, 32px)", letterSpacing: "0.01em" }}
+                style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: "clamp(22px, 2.4vw, 32px)", letterSpacing: "0.01em" }}
               >
                 {city.tagline}
               </p>
             )}
+            <div className="mt-10">
+              <EditorialButton to={`/atlas?city=${city.slug}`} arrow variant="invert">
+                See {city.name} on the map
+              </EditorialButton>
+            </div>
           </div>
         </div>
       </section>
@@ -156,14 +162,14 @@ export default function CityDetail() {
                   <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-4">Projects</p>
                   <h2
                     className="text-ink"
-                    style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: "clamp(42px, 4.5vw, 56px)", lineHeight: 1.05, letterSpacing: "-0.015em" }}
+                    style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: "clamp(30px, 3.4vw, 42px)", lineHeight: 1.08, letterSpacing: "-0.005em" }}
                   >
                     {projects.length} {projects.length === 1 ? "project" : "projects"} in {city.name}
                   </h2>
                 </div>
-                <Link to="/map" className="hidden md:inline-flex text-[13px] font-semibold tracking-[0.16em] uppercase text-ink hover:opacity-60">
-                  On the map →
-                </Link>
+                <span className="hidden md:inline-flex">
+                  <EditorialButton to={`/atlas?city=${city.slug}`} arrow>On the map</EditorialButton>
+                </span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
@@ -180,14 +186,14 @@ export default function CityDetail() {
                     {p.category && (
                       <p
                         className="italic mb-2"
-                        style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 15, color: "hsl(var(--ink-soft))" }}
+                        style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: 15, color: "hsl(var(--ink-soft))" }}
                       >
                         {p.category}
                       </p>
                     )}
                     <h3
                       className="text-ink leading-tight mb-3 group-hover:opacity-60 transition-opacity"
-                      style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em" }}
+                      style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em" }}
                     >
                       {p.name}
                     </h3>
@@ -217,7 +223,7 @@ export default function CityDetail() {
                   <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-4">Journal</p>
                   <h2
                     className="text-ink"
-                    style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: "clamp(36px, 4vw, 52px)", lineHeight: 1.05, letterSpacing: "-0.015em" }}
+                    style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: "clamp(26px, 3vw, 38px)", lineHeight: 1.08, letterSpacing: "-0.005em" }}
                   >
                     From the Journal
                   </h2>
@@ -233,7 +239,7 @@ export default function CityDetail() {
                       )}
                       {p.category && <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-3">{p.category}</p>}
                       <h3 className="text-ink mb-3 group-hover:opacity-60 transition-opacity"
-                        style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: 24, lineHeight: 1.2, letterSpacing: "-0.01em" }}>
+                        style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 500, fontSize: 24, lineHeight: 1.2, letterSpacing: "-0.01em" }}>
                         {p.title}
                       </h3>
                       {p.excerpt && <p className="text-ink-soft text-[15px] leading-[1.65] line-clamp-3">{p.excerpt}</p>}

@@ -60,7 +60,7 @@ export default function Resources() {
   return (
     <SiteLayout>
       <SEO
-        title="RESOURCES FOR ARCHITECTS — Siana"
+        title="Practice — Siana"
         description="Practical guides, playbooks and tools for architecture, engineering and construction firms."
       />
       <div className="pt-32 md:pt-40 pb-24 md:pb-32 mx-auto max-w-[1280px] px-6 lg:px-10">
@@ -102,11 +102,11 @@ export default function Resources() {
         {loading ? (
           <p className="text-ink-soft text-[13px] font-medium tracking-[0.16em] uppercase">Loading…</p>
         ) : filteredPosts.length === 0 ? (
-          <p className="text-ink-soft text-[13px] font-medium tracking-[0.16em] uppercase">No resources in this category yet.</p>
+          <p className="text-ink-soft text-[13px] font-medium tracking-[0.16em] uppercase">No entries in this category yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-16 gap-y-16 border-t hairline pt-12">
             {filteredPosts.map((p) => (
-              <Link key={p.id} to={`/resources/${p.slug}`} className="group block">
+              <Link key={p.id} to={`/practice/${p.slug}`} className="group block">
                 {p.hero_image_url && (
                   <div className="aspect-[4/3] overflow-hidden bg-stone mb-6">
                     <img src={p.hero_image_url} alt={p.title}
@@ -114,12 +114,12 @@ export default function Resources() {
                   </div>
                 )}
                 {p.category && (
-                  <p className="italic mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: 15, color: "#1d4ed8" }}>
+                  <p className="italic mb-3" style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 500, fontSize: 15, color: "#1d4ed8" }}>
                     {p.category}
                   </p>
                 )}
                 <h3 className="text-ink leading-tight mb-3 group-hover:opacity-60 transition-opacity"
-                  style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em" }}>
+                  style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em" }}>
                   {p.title}
                 </h3>
                 {p.excerpt && <p className="text-[15px] text-ink-soft line-clamp-3 leading-[1.65]">{p.excerpt}</p>}

@@ -5,7 +5,7 @@
 /* ============================================================
    Siana — Editorial Design System
    Type system (all Google Fonts, no licensing required):
-     • Fraunces 700       → primary display / headings (serif, opsz)
+     • Adobe Garamond Pro 400 → primary display / headings (EB Garamond fallback)
      • Manrope 600        → secondary titles (sans)
      • Inter 400          → body text (sans)
      • Instrument Serif   → wordmark (italic)
@@ -131,27 +131,26 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
-    font-optical-sizing: auto;
-    font-weight: 500;
-    letter-spacing: -0.015em;
-    line-height: 1.05;
+    font-family: 'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, 'Times New Roman', serif;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    line-height: 1.08;
     text-transform: none;
   }
 }
 
 @layer utilities {
   .font-display {
-    font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
-    font-optical-sizing: auto;
-    font-weight: 500;
-    letter-spacing: -0.015em;
+    font-family: 'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, 'Times New Roman', serif;
+    font-weight: 400;
+    letter-spacing: -0.005em;
   }
+  /* Kept the "-black" name for backwards compatibility, but per spec
+     the titles use Adobe Garamond Pro Regular (400). */
   .font-display-black {
-    font-family: 'Fraunces', Georgia, serif;
-    font-optical-sizing: auto;
-    font-weight: 500;
-    letter-spacing: -0.02em;
+    font-family: 'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
   }
   .font-title {
     font-family: 'Manrope', system-ui, -apple-system, sans-serif;
@@ -194,10 +193,9 @@
     font-weight: 500;
   }
   .font-serif-display {
-    font-family: 'Fraunces', Georgia, serif;
-    font-optical-sizing: auto;
-    font-weight: 500;
-    letter-spacing: -0.015em;
+    font-family: 'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.005em;
   }
 
   .tracking-editorial { letter-spacing: -0.02em; }
@@ -282,6 +280,40 @@
   @keyframes siana-pulse {
     0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.35; }
     50% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+  }
+
+  /* Scroll reveal — slow, elegant fade + lift inspired by Apple / luxury
+     editorial sites. Pair with the <Reveal> component (or .reveal +
+     .is-revealed manually). Stagger children by setting --reveal-delay. */
+  .reveal {
+    opacity: 0;
+    transform: translate3d(0, 26px, 0);
+    transition:
+      opacity 1100ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 1100ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+    will-change: opacity, transform;
+  }
+  .reveal.is-revealed {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+  }
+
+  /* Slide-in from the right edge — used by the Atlas project card so it
+     feels like it emerges from the map's edge. */
+  .slide-in-right {
+    animation: siana-slide-right 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes siana-slide-right {
+    from { opacity: 0; transform: translate3d(40px, 0, 0); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0); }
   }
 
   .no-scrollbar::-webkit-scrollbar { display: none; }

@@ -249,7 +249,7 @@ export default function AdminJournalEdit() {
 
   return (
     <AdminLayout>
-      <div className="px-10 py-8 max-w-[1100px]">
+      <div className="px-10 py-8">
         <Link to={cfg.adminBase} className="inline-flex items-center gap-2 text-[11px] tracking-tag uppercase text-ink-muted hover:text-ink mb-6">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to {cfg.sectionTitle.toLowerCase()}
         </Link>
@@ -279,7 +279,7 @@ export default function AdminJournalEdit() {
               onClick={() => submit("published")}
               disabled={saving}
               className="text-[11px] tracking-tag uppercase text-background px-5 py-2.5 disabled:opacity-50"
-              style={{ background: "hsl(var(--blue))" }}
+              style={{ background: "hsl(var(--ink))" }}
             >
               {saving ? "Saving…" : form.status === "published" ? "Update" : "Publish"}
             </button>
@@ -297,7 +297,7 @@ export default function AdminJournalEdit() {
             >
               {t.label}
               {tab === t.key && (
-                <span className="absolute left-0 right-0 -bottom-px h-0.5" style={{ background: "hsl(var(--blue))" }} />
+                <span className="absolute left-0 right-0 -bottom-px h-0.5" style={{ background: "hsl(var(--ink))" }} />
               )}
             </button>
           ))}
@@ -366,9 +366,9 @@ export default function AdminJournalEdit() {
                       onClick={() => toggleCity(c.id)}
                       className="text-[11px] tracking-ui px-3 py-1.5 border hairline transition-colors"
                       style={{
-                        background: active ? "hsl(var(--blue))" : "transparent",
+                        background: active ? "hsl(var(--ink))" : "transparent",
                         color: active ? "#fff" : "hsl(var(--ink))",
-                        borderColor: active ? "hsl(var(--blue))" : undefined,
+                        borderColor: active ? "hsl(var(--ink))" : undefined,
                       }}
                     >
                       {c.name}
@@ -460,7 +460,7 @@ export default function AdminJournalEdit() {
               <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">Search preview</p>
               <div className="border hairline bg-background p-5">
                 <p className="text-[11px] text-ink-muted truncate">{serpUrl}</p>
-                <p className="text-[18px] mt-1 truncate" style={{ color: "hsl(var(--blue))" }}>{serpTitle}</p>
+                <p className="text-[18px] mt-1 truncate" style={{ color: "hsl(var(--ink))" }}>{serpTitle}</p>
                 <p className="text-[13px] text-ink-muted mt-1 line-clamp-2">{serpDesc}</p>
               </div>
             </div>

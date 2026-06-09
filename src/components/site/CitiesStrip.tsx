@@ -49,8 +49,8 @@ export default function CitiesStrip() {
             >
               Geography
             </p>
-            <h2 className="font-display-black text-ink" style={{ fontSize: "clamp(2.5rem, 5vw, 5rem)", lineHeight: 0.94 }}>
-              Explore by <em className="italic text-ink-soft">city.</em>
+            <h2 className="font-display-black text-ink" style={{ fontSize: "clamp(1.8rem, 3.5vw, 3.4rem)", lineHeight: 1 }}>
+              Explore by <em className="italic text-ink-soft">city</em>
             </h2>
           </div>
           <Link

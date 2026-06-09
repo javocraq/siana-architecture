@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import Reveal from "@/components/site/Reveal";
+import EditorialButton from "@/components/site/EditorialButton";
 
 const INTERESTS = [
   "Architecture Guides",
   "Architectural Stays",
-  "Resources for Architects",
+  "Practice",
   "AI for Architects",
   "City Guides",
   "Architectural Travel",
@@ -50,7 +52,7 @@ export default function NewsletterCta() {
         }}
       >
         {/* Left — editorial intro, same hierarchy as other home sections */}
-        <div className="flex flex-col">
+        <Reveal className="flex flex-col">
           <p
             className="font-mono uppercase text-accent-terra mb-5 font-semibold"
             style={{ fontSize: "13px", letterSpacing: "0.22em" }}
@@ -59,22 +61,23 @@ export default function NewsletterCta() {
           </p>
           <h2
             className="font-display-black text-ink"
-            style={{ fontSize: "clamp(2rem, 4vw, 4rem)", lineHeight: 0.94 }}
+            style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.6rem)", lineHeight: 1 }}
           >
             The journal,<br />
-            <em className="italic text-accent-terra">in your inbox.</em>
+            <em className="italic text-accent-terra">in your inbox</em>
           </h2>
           <p
             className="font-mono text-ink-soft mt-8"
             style={{ fontSize: "15px", lineHeight: 1.7, maxWidth: 420, letterSpacing: "0.01em" }}
           >
             Sign up for our newsletter to receive curated architecture
-            discoveries, city guides, and resources for architects.
+            discoveries, city guides, and practice resources for architects.
           </p>
-        </div>
+        </Reveal>
 
         {/* Right — form */}
-        <form onSubmit={onSubmit} className="flex flex-col">
+        <Reveal delay={160} className="flex">
+        <form onSubmit={onSubmit} className="flex flex-col w-full">
           <p
             className="font-mono uppercase text-ink-soft mb-4 font-medium"
             style={{ fontSize: "11px", letterSpacing: "0.22em" }}
@@ -143,31 +146,11 @@ export default function NewsletterCta() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="self-start font-mono uppercase inline-flex items-center text-white transition-all font-semibold disabled:opacity-60"
-            style={{
-              background: "hsl(var(--ink))",
-              padding: "1.1rem 2rem",
-              fontSize: "14px",
-              letterSpacing: "0.16em",
-              borderRadius: 0,
-              gap: "0.7rem",
-            }}
-            onMouseEnter={(e) => {
-              if (submitting) return;
-              e.currentTarget.style.background = "hsl(var(--accent))";
-              e.currentTarget.style.gap = "1rem";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "hsl(var(--ink))";
-              e.currentTarget.style.gap = "0.7rem";
-            }}
-          >
-            {submitting ? "Signing up…" : "Sign Up →"}
-          </button>
+          <EditorialButton type="submit" disabled={submitting} arrow className="self-start">
+            {submitting ? "Signing up…" : "Sign Up"}
+          </EditorialButton>
         </form>
+        </Reveal>
       </div>
     </section>
   );

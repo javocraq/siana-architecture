@@ -25,19 +25,19 @@ export const RESOURCE_CATEGORIES = [
 export const kindConfig = (kind: PostKind) =>
   kind === "resource"
     ? {
-        label: "Resource",
-        labelPlural: "RESOURCES FOR ARCHITECTS",
-        sectionTitle: "RESOURCES FOR ARCHITECTS",
+        label: "Entrada de práctica",
+        labelPlural: "Práctica",
+        sectionTitle: "Práctica",
         sectionTagline: "Practical guides, playbooks and tools for architecture, engineering and construction firms.",
-        publicBase: "/resources",
-        adminBase: "/admin/resources",
+        publicBase: "/practice",
+        adminBase: "/admin/practice",
         categories: RESOURCE_CATEGORIES,
         eyebrow: "Library",
       }
     : {
-        label: "Post",
-        labelPlural: "Journal",
-        sectionTitle: "Journal",
+        label: "Recurso",
+        labelPlural: "Recursos",
+        sectionTitle: "Recursos",
         sectionTagline: "Essays and field notes on architecture, slowly written.",
         publicBase: "/journal",
         adminBase: "/admin/journal",
@@ -46,4 +46,6 @@ export const kindConfig = (kind: PostKind) =>
       };
 
 export const detectKindFromPath = (pathname: string): PostKind =>
-  pathname.includes("/resources") ? "resource" : "journal";
+  pathname.includes("/practice") || pathname.includes("/resources")
+    ? "resource"
+    : "journal";

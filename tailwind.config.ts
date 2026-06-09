@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        // Primary serif — Fraunces (Google Fonts, Canela-style).
-        display: ['"Fraunces"', "Georgia", "Times New Roman", "serif"],
+        // Primary serif — Adobe Garamond Pro (commercial) with EB Garamond
+        // as the open-source web fallback (same Claude Garamont specimen).
+        display: ['"Adobe Garamond Pro"', '"EB Garamond"', "Garamond", "Georgia", "Times New Roman", "serif"],
         // Secondary sans for titles — Manrope (Google Fonts, Arboria-style).
         title: ['"Manrope"', "system-ui", "-apple-system", "sans-serif"],
         // Body text — Inter (Google Fonts, Acumin Pro-style).
@@ -25,7 +26,7 @@ export default {
         // Wordmark — Instrument Serif italic.
         logo: ['"Instrument Serif"', "Times New Roman", "serif"],
         // Legacy narrative aliases re-mapped to the current system.
-        garamond: ['"Fraunces"', "Georgia", "serif"],
+        garamond: ['"Adobe Garamond Pro"', '"EB Garamond"', "Garamond", "Georgia", "serif"],
         grotesk: ['"Manrope"', "system-ui", "sans-serif"],
       },
       colors: {

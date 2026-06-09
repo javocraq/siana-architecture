@@ -188,7 +188,7 @@ export default function AdminCityEdit() {
 
   return (
     <AdminLayout>
-      <div className="px-10 py-8 max-w-[1100px]">
+      <div className="px-10 py-8">
         <Link to="/admin/cities" className="inline-flex items-center gap-2 text-[11px] tracking-tag uppercase text-ink-muted hover:text-ink mb-6">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to cities
         </Link>
@@ -210,7 +210,7 @@ export default function AdminCityEdit() {
             </button>
             <button type="button" onClick={() => submit("published")} disabled={saving}
               className="text-[11px] tracking-tag uppercase text-background px-5 py-2.5 disabled:opacity-50"
-              style={{ background: "hsl(var(--blue))" }}>
+              style={{ background: "hsl(var(--ink))" }}>
               {saving ? "Saving…" : form.status === "published" ? "Update" : "Publish"}
             </button>
           </div>
@@ -221,7 +221,7 @@ export default function AdminCityEdit() {
             <button key={t.key} onClick={() => setTab(t.key)}
               className={`pb-3 text-[11px] tracking-tag uppercase transition-colors relative ${tab === t.key ? "text-ink" : "text-ink-muted hover:text-ink"}`}>
               {t.label}
-              {tab === t.key && <span className="absolute left-0 right-0 -bottom-px h-0.5" style={{ background: "hsl(var(--blue))" }} />}
+              {tab === t.key && <span className="absolute left-0 right-0 -bottom-px h-0.5" style={{ background: "hsl(var(--ink))" }} />}
             </button>
           ))}
         </div>
@@ -300,7 +300,7 @@ export default function AdminCityEdit() {
               <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">Search preview</p>
               <div className="border hairline bg-background p-5">
                 <p className="text-[11px] text-ink-muted truncate">{serpUrl}</p>
-                <p className="text-[18px] mt-1 truncate" style={{ color: "hsl(var(--blue))" }}>{serpTitle}</p>
+                <p className="text-[18px] mt-1 truncate" style={{ color: "hsl(var(--ink))" }}>{serpTitle}</p>
                 <p className="text-[13px] text-ink-muted mt-1 line-clamp-2">{serpDesc}</p>
               </div>
             </div>

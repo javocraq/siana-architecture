@@ -25,7 +25,7 @@ const Eyebrow = ({ text }: { text?: string }) =>
 const Heading = ({ text }: { text?: string }) =>
   text ? (
     <h2 className="text-ink mb-10"
-      style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: "clamp(36px, 4vw, 52px)", lineHeight: 1.05, letterSpacing: "-0.015em" }}>
+      style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: "clamp(26px, 3vw, 38px)", lineHeight: 1.08, letterSpacing: "-0.005em" }}>
       {text}
     </h2>
   ) : null;
@@ -77,10 +77,10 @@ function ProjectsBlock({ s, cityId }: { s: ProjectsSection; cityId: string }) {
                   className="photo-thumb w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" loading="lazy" />
               </div>
               {p.category && (
-                <p className="italic mb-2" style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 14, color: "hsl(var(--ink-soft))" }}>{p.category}</p>
+                <p className="italic mb-2" style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontSize: 14, color: "hsl(var(--ink-soft))" }}>{p.category}</p>
               )}
               <h3 className="text-ink mb-3 group-hover:opacity-60 transition-opacity"
-                style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em" }}>
+                style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em" }}>
                 {p.name}
               </h3>
               {p.architect && (
@@ -135,7 +135,7 @@ function JournalBlock({ s, cityId }: { s: JournalSection; cityId: string }) {
                 <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-3">{p.category}</p>
               )}
               <h3 className="text-ink mb-3 group-hover:opacity-60 transition-opacity"
-                style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: 24, lineHeight: 1.2, letterSpacing: "-0.01em" }}>
+                style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 500, fontSize: 24, lineHeight: 1.2, letterSpacing: "-0.01em" }}>
                 {p.title}
               </h3>
               {p.excerpt && (

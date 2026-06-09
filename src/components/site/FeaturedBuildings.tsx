@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import Reveal from "@/components/site/Reveal";
 
 interface Project {
   id: string;
@@ -18,19 +19,17 @@ interface Project {
  */
 export default function FeaturedBuildings() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [total, setTotal] = useState<number>(0);
 
   useEffect(() => {
     (async () => {
-      const { data, count } = await supabase
+      const { data } = await supabase
         .from("projects")
-        .select("id, name, slug, cover_image_url, hero_image_url, city:cities(name)", { count: "exact" })
+        .select("id, name, slug, cover_image_url, hero_image_url, city:cities(name)")
         .eq("status", "published")
         .eq("featured", true)
         .order("created_at", { ascending: false })
         .limit(5);
       if (data) setProjects(data as any);
-      if (count != null) setTotal(count);
     })();
   }, []);
 
@@ -44,25 +43,18 @@ export default function FeaturedBuildings() {
       className="bg-paper"
       style={{ padding: "6rem 0", borderTop: "1px solid hsl(var(--paper-mid))" }}
     >
-      <div
-        className="mx-auto max-w-[1400px] flex items-start justify-between flex-wrap gap-6"
+      <Reveal
+        className="mx-auto max-w-[1400px]"
         style={{ padding: "0 2.5rem 3rem" }}
       >
         <h2
           className="font-display-black text-ink"
-          style={{ fontSize: "clamp(2.4rem, 4.5vw, 4.5rem)", lineHeight: 0.94 }}
+          style={{ fontSize: "clamp(1.7rem, 3.2vw, 3rem)", lineHeight: 1 }}
         >
           Featured<br />
-          <em className="italic text-accent-terra">Buildings.</em>
+          <em className="italic text-accent-terra">Buildings</em>
         </h2>
-        <Link
-          to="/cities"
-          className="font-mono uppercase text-ink-soft hover:text-ink transition-colors border-b border-paper-mid hover:border-ink pb-[2px] whitespace-nowrap mt-3 font-medium"
-          style={{ fontSize: "13px", letterSpacing: "0.16em" }}
-        >
-          View all {total || projects.length} →
-        </Link>
-      </div>
+      </Reveal>
 
       <div
         className="mx-auto max-w-[1400px]"
@@ -75,10 +67,11 @@ export default function FeaturedBuildings() {
         }}
       >
         {/* Hero — spans both rows */}
+        <Reveal style={{ gridRow: "1 / 3" }}>
         <Link
           to={`/projects/${hero.slug}`}
-          className="group relative overflow-hidden bg-paper-mid"
-          style={{ borderRadius: 0, gridRow: "1 / 3", minHeight: 500 }}
+          className="group relative overflow-hidden bg-paper-mid block h-full"
+          style={{ borderRadius: 0, minHeight: 500 }}
         >
           <img
             src={hero.cover_image_url || hero.hero_image_url || ""}
@@ -107,13 +100,14 @@ export default function FeaturedBuildings() {
             </h3>
           </div>
         </Link>
+        </Reveal>
 
         {/* Smaller cards */}
-        {rest.map((p) => (
+        {rest.map((p, i) => (
+          <Reveal key={p.id} delay={120 + i * 110}>
           <Link
-            key={p.id}
             to={`/projects/${p.slug}`}
-            className="group relative overflow-hidden bg-paper-mid"
+            className="group relative overflow-hidden bg-paper-mid block h-full"
             style={{ borderRadius: 0, minHeight: 240 }}
           >
             <img
@@ -143,6 +137,7 @@ export default function FeaturedBuildings() {
               </h3>
             </div>
           </Link>
+          </Reveal>
         ))}
       </div>
     </section>

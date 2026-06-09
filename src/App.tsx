@@ -26,6 +26,8 @@ import AdminCities from "./pages/admin/AdminCities.tsx";
 import AdminCityEdit from "./pages/admin/AdminCityEdit.tsx";
 import AdminSEO from "./pages/admin/AdminSEO.tsx";
 import AdminSettings from "./pages/admin/AdminSettings.tsx";
+import AdminIntegrations from "./pages/admin/AdminIntegrations.tsx";
+import AdminAbout from "./pages/admin/AdminAbout.tsx";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +61,9 @@ const App = () => (
             <Route path="/projects/:slug" element={<ProjectDetail />} />
             <Route path="/journal" element={<Journal />} />
             <Route path="/journal/:slug" element={<JournalArticle />} />
+            <Route path="/practice" element={<Resources />} />
+            <Route path="/practice/:slug" element={<JournalArticle />} />
+            {/* Legacy paths — keep old URLs working */}
             <Route path="/resources" element={<Resources />} />
             <Route path="/resources/:slug" element={<JournalArticle />} />
             <Route path="/admin" element={<AdminProjects />} />
@@ -72,11 +77,16 @@ const App = () => (
             <Route path="/admin/journal" element={<AdminJournal />} />
             <Route path="/admin/journal/new" element={<AdminJournalEdit />} />
             <Route path="/admin/journal/:id" element={<AdminJournalEdit />} />
+            <Route path="/admin/practice" element={<AdminJournal />} />
+            <Route path="/admin/practice/new" element={<AdminJournalEdit />} />
+            <Route path="/admin/practice/:id" element={<AdminJournalEdit />} />
             <Route path="/admin/resources" element={<AdminJournal />} />
             <Route path="/admin/resources/new" element={<AdminJournalEdit />} />
             <Route path="/admin/resources/:id" element={<AdminJournalEdit />} />
             <Route path="/admin/seo" element={<AdminSEO />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/settings/integrations" element={<AdminIntegrations />} />
+            <Route path="/admin/about" element={<AdminAbout />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

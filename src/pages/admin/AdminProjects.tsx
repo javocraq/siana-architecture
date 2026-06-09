@@ -90,28 +90,42 @@ export default function AdminProjects() {
 
   return (
     <AdminLayout>
-      <div className="px-10 py-10 max-w-[1400px]">
-        {/* Header */}
-        <div className="flex items-end justify-between mb-10">
+      <div className="px-10 py-10">
+        {/* Header — same editorial hierarchy as the public site */}
+        <div className="flex items-end justify-between mb-10 gap-6 flex-wrap">
           <div>
-            <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">Manage</p>
-            <h1 className="font-display text-[44px] text-ink leading-none">Projects</h1>
-            <p className="mt-3 text-[12px] text-ink-muted">
-              {loading ? "Loading…" : `${filteredProjects.length} of ${projects.length}`}
+            <p
+              className="font-mono uppercase text-ink-soft mb-3 font-semibold"
+              style={{ fontSize: 11, letterSpacing: "0.22em" }}
+            >
+              Gestionar
+            </p>
+            <h1
+              className="font-display text-ink"
+              style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.005em" }}
+            >
+              Proyectos
+            </h1>
+            <p
+              className="mt-4 font-mono uppercase text-ink-soft"
+              style={{ fontSize: 11, letterSpacing: "0.18em" }}
+            >
+              {loading ? "Cargando…" : `${filteredProjects.length} de ${projects.length}`}
             </p>
           </div>
           <Link
             to="/admin/projects/new"
-            className="inline-flex items-center gap-2 uppercase text-background hover:opacity-90 transition-opacity"
+            className="group font-mono uppercase inline-flex items-center text-ink transition-all hover:gap-3"
             style={{
-              background: "hsl(var(--blue))",
               fontSize: 11,
-              fontWeight: 400,
-              letterSpacing: "0.18em",
-              padding: "10px 22px",
+              letterSpacing: "0.28em",
+              fontWeight: 500,
+              gap: "0.55rem",
+              borderBottom: "1px solid hsl(var(--ink))",
+              paddingBottom: 4,
             }}
           >
-            <Plus className="w-3.5 h-3.5" /> Add project
+            <Plus className="w-3.5 h-3.5" /> Añadir proyecto
           </Link>
         </div>
 
@@ -185,7 +199,7 @@ export default function AdminProjects() {
                             width: 32,
                             height: 18,
                             borderRadius: 9999,
-                            background: p.featured ? "hsl(var(--blue))" : "rgba(0,0,0,0.15)",
+                            background: p.featured ? "hsl(var(--ink))" : "rgba(0,0,0,0.15)",
                             transition: "background 0.2s ease",
                             position: "relative",
                           }}
@@ -211,8 +225,8 @@ export default function AdminProjects() {
                           style={{
                             fontSize: 9,
                             letterSpacing: "0.16em",
-                            background: published ? "hsl(var(--blue-light))" : "#f1efe8",
-                            color: published ? "hsl(var(--blue))" : "#6b6760",
+                            background: published ? "hsl(var(--paper-mid))" : "#f1efe8",
+                            color: published ? "hsl(var(--ink))" : "#6b6760",
                           }}
                         >
                           {p.status}
@@ -248,7 +262,7 @@ export default function AdminProjects() {
                 {!loading && projects.length === 0 && (
                   <tr>
                     <td colSpan={10} className="px-4 py-12 text-center text-[12px] text-ink-faint">
-                      No projects yet. <Link to="/admin/projects/new" className="underline" style={{ color: "hsl(var(--blue))" }}>Create the first one</Link>.
+                      No projects yet. <Link to="/admin/projects/new" className="underline" style={{ color: "hsl(var(--ink))" }}>Create the first one</Link>.
                     </td>
                   </tr>
                 )}

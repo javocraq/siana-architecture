@@ -46,7 +46,7 @@ export default function ArchitectureAISection() {
           <h2
             className="mt-6"
             style={{
-              fontFamily: "'Fraunces', Georgia, serif",
+              fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif",
               fontWeight: 500,
               fontSize: "clamp(36px, 5vw, 48px)",
               color: "#ffffff",
@@ -103,7 +103,7 @@ export default function ArchitectureAISection() {
                 <h3
                   className="group-hover:opacity-70 transition-opacity"
                   style={{
-                    fontFamily: "'Fraunces', Georgia, serif",
+                    fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif",
                     fontWeight: 500,
                     fontSize: 20,
                     color: "#ffffff",

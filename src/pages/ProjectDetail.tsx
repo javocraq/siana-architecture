@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SiteLayout from "@/components/site/SiteLayout";
 import SEO from "@/components/site/SEO";
 import RichHtml from "@/components/site/RichHtml";
+import EditorialButton from "@/components/site/EditorialButton";
 
 
 interface Project {
@@ -31,7 +32,7 @@ interface Project {
 }
 
 const cormorant: React.CSSProperties = {
-  fontFamily: "'Fraunces', Georgia, serif",
+  fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif",
   fontWeight: 500,
   letterSpacing: "-0.015em",
   textTransform: "none",
@@ -122,8 +123,8 @@ export default function ProjectDetail() {
           className="text-ink"
           style={{
             ...cormorant,
-            fontSize: "clamp(40px, 7vw, 72px)",
-            lineHeight: 1.05,
+            fontSize: "clamp(30px, 5vw, 52px)",
+            lineHeight: 1.08,
           }}
         >
           {project.name}
@@ -245,11 +246,12 @@ export default function ProjectDetail() {
         </section>
       )}
 
-      {/* Back link */}
+      {/* Back link + map CTA */}
       <section className="pb-24 md:pb-32 mx-auto max-w-[1280px] px-6 lg:px-10">
-        <Link to="/cities" className="text-[13px] font-semibold tracking-[0.16em] uppercase text-ink hover:opacity-60 border-t hairline pt-8 inline-block w-full">
-          ← Explore more
-        </Link>
+        <div className="border-t hairline pt-8 flex items-center justify-between gap-6 flex-wrap">
+          <EditorialButton to="/cities" variant="muted" leadingArrow>Explore more</EditorialButton>
+          <EditorialButton to={`/atlas?project=${project.slug}`} arrow>See on the map</EditorialButton>
+        </div>
       </section>
     </SiteLayout>
   );

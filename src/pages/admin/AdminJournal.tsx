@@ -63,27 +63,41 @@ export default function AdminJournal() {
 
   return (
     <AdminLayout>
-      <div className="px-10 py-10 max-w-[1400px]">
-        <div className="flex items-end justify-between mb-10">
+      <div className="px-10 py-10">
+        <div className="flex items-end justify-between mb-10 gap-6 flex-wrap">
           <div>
-            <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">Manage</p>
-            <h1 className="font-display text-[44px] text-ink leading-none">{cfg.sectionTitle}</h1>
-            <p className="mt-3 text-[12px] text-ink-muted">
-              {loading ? "Loading…" : `${posts.length} total`}
+            <p
+              className="font-mono uppercase text-ink-soft mb-3 font-semibold"
+              style={{ fontSize: 11, letterSpacing: "0.22em" }}
+            >
+              Gestionar
+            </p>
+            <h1
+              className="font-display text-ink"
+              style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.005em" }}
+            >
+              {cfg.sectionTitle}
+            </h1>
+            <p
+              className="mt-4 font-mono uppercase text-ink-soft"
+              style={{ fontSize: 11, letterSpacing: "0.18em" }}
+            >
+              {loading ? "Cargando…" : `${posts.length} en total`}
             </p>
           </div>
           <Link
             to={`${cfg.adminBase}/new`}
-            className="inline-flex items-center gap-2 uppercase text-background hover:opacity-90 transition-opacity"
+            className="group font-mono uppercase inline-flex items-center text-ink transition-all hover:gap-3"
             style={{
-              background: "hsl(var(--blue))",
               fontSize: 11,
-              fontWeight: 400,
-              letterSpacing: "0.18em",
-              padding: "10px 22px",
+              letterSpacing: "0.28em",
+              fontWeight: 500,
+              gap: "0.55rem",
+              borderBottom: "1px solid hsl(var(--ink))",
+              paddingBottom: 4,
             }}
           >
-            <Plus className="w-3.5 h-3.5" /> Add {kind === "resource" ? "resource" : "post"}
+            <Plus className="w-3.5 h-3.5" /> Añadir {kind === "resource" ? "entrada" : "recurso"}
           </Link>
         </div>
 
@@ -124,8 +138,8 @@ export default function AdminJournal() {
                           style={{
                             fontSize: 9,
                             letterSpacing: "0.16em",
-                            background: published ? "hsl(var(--blue-light))" : "#f1efe8",
-                            color: published ? "hsl(var(--blue))" : "#6b6760",
+                            background: published ? "hsl(var(--paper-mid))" : "#f1efe8",
+                            color: published ? "hsl(var(--ink))" : "#6b6760",
                           }}
                         >
                           {p.status}
@@ -164,7 +178,7 @@ export default function AdminJournal() {
                 {!loading && posts.length === 0 && (
                   <tr>
                     <td colSpan={8} className="px-4 py-12 text-center text-[12px] text-ink-faint">
-                      No entries yet. <Link to={`${cfg.adminBase}/new`} className="underline" style={{ color: "hsl(var(--blue))" }}>Create the first one</Link>.
+                      No entries yet. <Link to={`${cfg.adminBase}/new`} className="underline" style={{ color: "hsl(var(--ink))" }}>Create the first one</Link>.
                     </td>
                   </tr>
                 )}

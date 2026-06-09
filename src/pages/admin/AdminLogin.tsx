@@ -51,10 +51,15 @@ export default function AdminLogin() {
         <title>Admin · Siana</title>
         <meta name="robots" content="noindex,nofollow" />
       </Helmet>
-      <div className="min-h-screen flex items-center justify-center bg-background px-6">
-        <div className="w-full max-w-[380px] border hairline bg-background p-10">
-          <h1 className="font-display italic text-[24px] text-ink text-center">siana</h1>
-          <p className="mt-1 text-center text-[10px] tracking-tag uppercase text-ink-faint">
+      <div className="min-h-screen flex items-center justify-center bg-paper-warm px-6">
+        <div className="w-full max-w-[380px] bg-paper p-10" style={{ border: "1px solid hsl(var(--paper-mid))" }}>
+          <h1 className="font-logo text-ink text-center leading-none" style={{ fontSize: "1.8rem" }}>
+            siana
+          </h1>
+          <p
+            className="mt-2 text-center font-mono uppercase text-ink-soft font-semibold"
+            style={{ fontSize: 10, letterSpacing: "0.28em" }}
+          >
             Admin
           </p>
 
@@ -93,7 +98,7 @@ export default function AdminLogin() {
               disabled={submitting}
               className="w-full uppercase text-background mt-6 disabled:opacity-60"
               style={{
-                background: "hsl(var(--blue))",
+                background: "hsl(var(--ink))",
                 fontSize: 11,
                 fontWeight: 300,
                 letterSpacing: "0.18em",

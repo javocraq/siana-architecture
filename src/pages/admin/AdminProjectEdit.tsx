@@ -238,7 +238,7 @@ export default function AdminProjectEdit() {
 
   return (
     <AdminLayout>
-      <div className="px-10 py-8 max-w-[1100px]">
+      <div className="px-10 py-8">
         <Link to="/admin/projects" className="inline-flex items-center gap-2 text-[11px] tracking-tag uppercase text-ink-muted hover:text-ink mb-6">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to projects
         </Link>
@@ -267,7 +267,7 @@ export default function AdminProjectEdit() {
               onClick={() => submit("published")}
               disabled={saving}
               className="text-[11px] tracking-tag uppercase text-background px-5 py-2.5 disabled:opacity-50"
-              style={{ background: "hsl(var(--blue))" }}
+              style={{ background: "hsl(var(--ink))" }}
             >
               {saving ? "Saving…" : form.status === "published" ? "Update" : "Publish"}
             </button>
@@ -286,7 +286,7 @@ export default function AdminProjectEdit() {
             >
               {t.label}
               {tab === t.key && (
-                <span className="absolute left-0 right-0 -bottom-px h-0.5" style={{ background: "hsl(var(--blue))" }} />
+                <span className="absolute left-0 right-0 -bottom-px h-0.5" style={{ background: "hsl(var(--ink))" }} />
               )}
             </button>
           ))}
@@ -316,14 +316,6 @@ export default function AdminProjectEdit() {
 
             <Field label="Tagline" hint="One short sentence shown under the title">
               <input className={inputCls} value={form.tagline} onChange={(e) => set("tagline", e.target.value)} />
-            </Field>
-
-            <Field label="Description">
-              <RichTextEditor
-                value={form.description}
-                onChange={(html) => set("description", html)}
-                placeholder="Tell the story of this project…"
-              />
             </Field>
 
             <div className="grid grid-cols-2 gap-6">
@@ -358,7 +350,7 @@ export default function AdminProjectEdit() {
                   className="inline-flex items-center"
                   style={{
                     width: 36, height: 20, borderRadius: 9999,
-                    background: form.featured ? "hsl(var(--blue))" : "rgba(0,0,0,0.15)",
+                    background: form.featured ? "hsl(var(--ink))" : "rgba(0,0,0,0.15)",
                     position: "relative", transition: "background 0.2s ease",
                   }}
                 >
@@ -372,6 +364,14 @@ export default function AdminProjectEdit() {
             </div>
 
             <Field label="Address"><input className={inputCls} value={form.address} onChange={(e) => set("address", e.target.value)} /></Field>
+
+            <Field label="Description">
+              <RichTextEditor
+                value={form.description}
+                onChange={(html) => set("description", html)}
+                placeholder="Tell the story of this project…"
+              />
+            </Field>
 
             <Field label="Location" hint={form.latitude && form.longitude ? `${form.latitude}, ${form.longitude}` : "Click on the map to place the pin"}>
               <MapPicker
@@ -435,7 +435,7 @@ export default function AdminProjectEdit() {
               <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">Search preview</p>
               <div className="border hairline bg-background p-5">
                 <p className="text-[11px] text-ink-muted truncate">{serpUrl}</p>
-                <p className="text-[18px] mt-1 truncate" style={{ color: "hsl(var(--blue))" }}>{serpTitle}</p>
+                <p className="text-[18px] mt-1 truncate" style={{ color: "hsl(var(--ink))" }}>{serpTitle}</p>
                 <p className="text-[13px] text-ink-muted mt-1 line-clamp-2">{serpDesc}</p>
               </div>
             </div>

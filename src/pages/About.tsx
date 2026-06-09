@@ -1,13 +1,37 @@
+import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import SiteLayout from "@/components/site/SiteLayout";
 import FeaturedProjects from "@/components/site/FeaturedProjects";
 import CitiesStrip from "@/components/site/CitiesStrip";
 import LatestJournal from "@/components/site/LatestJournal";
-import CtaStrip from "@/components/site/CtaStrip";
 import ArchitectureAISection from "@/components/site/ArchitectureAISection";
-import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import EditorialButton from "@/components/site/EditorialButton";
+import { supabase } from "@/integrations/supabase/client";
+import { ABOUT_DEFAULTS, type AboutContent } from "@/lib/aboutContent";
 
 const About = () => {
+  const [content, setContent] = useState<AboutContent>(ABOUT_DEFAULTS);
+
+  // Pull from site_pages where key='about'. Falls back to the defaults if
+  // the row is missing or the table doesn't exist yet.
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from("site_pages")
+        .select("content")
+        .eq("key", "about")
+        .maybeSingle();
+      if (error || !data?.content) return;
+      const c = data.content as Partial<AboutContent>;
+      setContent({
+        eyebrow: c.eyebrow ?? ABOUT_DEFAULTS.eyebrow,
+        headline: c.headline ?? ABOUT_DEFAULTS.headline,
+        body: Array.isArray(c.body) && c.body.length > 0 ? c.body : ABOUT_DEFAULTS.body,
+        cta_label: c.cta_label ?? ABOUT_DEFAULTS.cta_label,
+      });
+    })();
+  }, []);
+
   return (
     <SiteLayout>
       <Helmet>
@@ -22,39 +46,36 @@ const About = () => {
       {/* Manifesto */}
       <section className="pt-40 pb-24 md:pt-48 md:pb-32">
         <div className="mx-auto max-w-[820px] px-6 lg:px-10">
-          <p className="text-[13px] font-semibold tracking-[0.18em] uppercase text-ink-soft mb-8">Siana — Manifesto</p>
+          <p className="text-[13px] font-semibold tracking-[0.18em] uppercase text-ink-soft mb-8">{content.eyebrow}</p>
           <h1
             className="text-ink"
-            style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontSize: "clamp(48px, 7vw, 84px)", lineHeight: 1.05, letterSpacing: "-0.015em" }}
+            style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: "clamp(34px, 5vw, 58px)", lineHeight: 1.08, letterSpacing: "-0.005em" }}
           >
-            The city as architecture.
+            {content.headline}
           </h1>
           <div className="mt-12 space-y-6 text-[17px] md:text-[18px] leading-[1.7] text-ink-soft max-w-[640px]">
-            <p>
-              Siana is an architectural magazine that lives on a map. We believe
-              the most interesting building in any city is rarely the most
-              famous one — and that the best way to understand a place is to
-              walk it, slowly, with someone pointing.
-            </p>
-            <p>
-              We curate projects across cities, write about them with the care
-              of an editor and the eye of an architect, and put them on a map
-              you can actually use. No ads. No clutter. No infinite scroll.
-            </p>
-            <p
-              className="text-ink italic"
-              style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26 }}
-            >
-              Made for those who look.
-            </p>
+            {content.body.map((para, i) => {
+              // The last paragraph styles as a serif italic pull-quote, matching
+              // the original "Made for those who look." treatment.
+              const isLast = i === content.body.length - 1;
+              if (isLast && content.body.length > 1) {
+                return (
+                  <p
+                    key={i}
+                    className="text-ink italic"
+                    style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: 26 }}
+                  >
+                    {para}
+                  </p>
+                );
+              }
+              return <p key={i}>{para}</p>;
+            })}
           </div>
           <div className="mt-12">
-            <Link
-              to="/"
-              className="inline-flex items-center text-[14px] font-semibold tracking-[0.16em] uppercase text-ink hover:opacity-70 underline underline-offset-[6px] decoration-[1px]"
-            >
-              Open the map →
-            </Link>
+            <EditorialButton to="/atlas" arrow>
+              {content.cta_label.replace(/\s*→\s*$/, "")}
+            </EditorialButton>
           </div>
         </div>
       </section>
@@ -63,7 +84,6 @@ const About = () => {
       <FeaturedProjects />
       <CitiesStrip />
       <LatestJournal />
-      <CtaStrip />
     </SiteLayout>
   );
 };

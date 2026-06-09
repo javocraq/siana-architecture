@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import Reveal from "@/components/site/Reveal";
+import EditorialButton from "@/components/site/EditorialButton";
 
 interface Post {
   id: string;
@@ -38,21 +40,15 @@ export default function LatestJournal() {
 
   return (
     <section className="bg-paper" style={{ padding: "6rem 0" }}>
-      <div
+      <Reveal
         className="mx-auto max-w-[1400px] flex items-baseline justify-between flex-wrap gap-4"
         style={{ padding: "0 2.5rem 3rem" }}
       >
-        <h2 className="font-display-black text-ink" style={{ fontSize: "clamp(2rem, 4vw, 4rem)" }}>
-          From the <em className="italic text-accent-terra">journal.</em>
+        <h2 className="font-display-black text-ink" style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.6rem)" }}>
+          Field <em className="italic text-accent-terra">notes</em>
         </h2>
-        <Link
-          to="/journal"
-          className="font-mono uppercase text-ink-soft hover:text-ink transition-colors border-b border-paper-mid hover:border-ink pb-[2px] whitespace-nowrap font-medium"
-          style={{ fontSize: "13px", letterSpacing: "0.16em" }}
-        >
-          All essays →
-        </Link>
-      </div>
+        <EditorialButton to="/practice" arrow variant="muted">All notes</EditorialButton>
+      </Reveal>
 
       <div
         className="mx-auto max-w-[1400px]"
@@ -65,10 +61,11 @@ export default function LatestJournal() {
         }}
       >
         {/* Featured — spans both rows */}
+        <Reveal style={{ gridRow: "1 / 3" }}>
         <Link
           to={`/journal/${featured.slug}`}
-          className="group relative overflow-hidden bg-paper-mid"
-          style={{ borderRadius: 0, gridRow: "1 / 3", minHeight: "460px" }}
+          className="group relative overflow-hidden bg-paper-mid block h-full"
+          style={{ borderRadius: 0, minHeight: "460px" }}
         >
           <img
             src={featured.hero_image_url || ""}
@@ -101,13 +98,14 @@ export default function LatestJournal() {
             </h3>
           </div>
         </Link>
+        </Reveal>
 
         {/* Smaller items */}
-        {rest.map((p) => (
+        {rest.map((p, i) => (
+          <Reveal key={p.id} delay={120 + i * 110}>
           <Link
-            key={p.id}
             to={`/journal/${p.slug}`}
-            className="group relative overflow-hidden bg-paper-mid"
+            className="group relative overflow-hidden bg-paper-mid block h-full"
             style={{ borderRadius: 0, minHeight: "220px" }}
           >
             <img
@@ -138,6 +136,7 @@ export default function LatestJournal() {
               </h3>
             </div>
           </Link>
+          </Reveal>
         ))}
       </div>
     </section>
