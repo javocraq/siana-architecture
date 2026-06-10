@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, X } from "lucide-react";
-import { detectKindFromPath, kindConfig } from "@/lib/postKind";
+import { kindConfig } from "@/lib/postKind";
 
 type City = { id: string; name: string };
 type Project = { id: string; name: string; slug: string };
@@ -62,9 +62,8 @@ export default function AdminJournalEdit() {
   const { id } = useParams<{ id: string }>();
   const isNew = !id || id === "new";
   const navigate = useNavigate();
-  const location = useLocation();
-  const kind = detectKindFromPath(location.pathname);
-  const cfg = kindConfig(kind);
+  const kind = "resource" as const;
+  const cfg = kindConfig();
   const { toast } = useToast();
 
 

@@ -52,19 +52,16 @@ Deno.serve(async () => {
     ]);
 
     const byNewest = (a: any, b: any) => (b.published_at ?? "").localeCompare(a.published_at ?? "");
-    const journal = posts.filter((p) => p.kind === "journal").sort(byNewest);
-    const resources = posts.filter((p) => p.kind === "resource").sort(byNewest);
+    const practice = posts.sort(byNewest);
 
     const entries = [
       urlEntry("/", today, "weekly", "1.0"),
       urlEntry("/cities", today, "weekly", "0.9"),
-      urlEntry("/journal", today, "weekly", "0.9"),
-      urlEntry("/resources", today, "weekly", "0.7"),
+      urlEntry("/practice", today, "weekly", "0.9"),
       urlEntry("/about", today, "monthly", "0.5"),
       ...cities.map((c) => urlEntry(`/cities/${c.slug}`, dateOnly(c.updated_at), "monthly", "0.8")),
       ...projects.map((p) => urlEntry(`/projects/${p.slug}`, dateOnly(p.updated_at), "monthly", "0.7")),
-      ...journal.map((p) => urlEntry(`/journal/${p.slug}`, dateOnly(p.updated_at), "monthly", "0.7")),
-      ...resources.map((p) => urlEntry(`/resources/${p.slug}`, dateOnly(p.updated_at), "monthly", "0.6")),
+      ...practice.map((p) => urlEntry(`/practice/${p.slug}`, dateOnly(p.updated_at), "monthly", "0.7")),
     ];
 
     const xml =

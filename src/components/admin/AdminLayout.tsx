@@ -5,7 +5,6 @@ import {
   Building2,
   MapPin,
   BookOpen,
-  Library,
   Info,
   Settings as SettingsIcon,
   ChevronLeft,
@@ -18,14 +17,12 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 // Match the visible CMS structure. SEO Global lives under Ajustes as a tab,
-// not as its own top-level item. Práctica = posts (kind: resource) — kept
-// at /admin/practice. Recursos = posts (kind: journal) — restored at
-// /admin/journal under a Spanish label.
+// not as its own top-level item. Práctica unifies the former Práctica + Recursos
+// — all posts share /admin/practice regardless of their legacy `kind` value.
 const navItems = [
   { to: "/admin/projects", label: "Proyectos", icon: Building2 },
   { to: "/admin/cities", label: "Ciudades", icon: MapPin },
   { to: "/admin/practice", label: "Práctica", icon: BookOpen },
-  { to: "/admin/journal", label: "Recursos", icon: Library },
   { to: "/admin/about", label: "About", icon: Info },
 ];
 

@@ -50,10 +50,10 @@ export default function Hero() {
             Explore Munich
           </Link>
           <Link
-            to="/journal"
+            to="/practice"
             className="text-[13px] tracking-tag uppercase text-ink hover:opacity-60 transition-opacity underline-offset-[6px] underline decoration-[1px] font-medium"
           >
-            Read the journal
+            Read Practice
           </Link>
         </div>
       </div>

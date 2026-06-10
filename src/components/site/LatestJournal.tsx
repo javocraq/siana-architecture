@@ -63,7 +63,7 @@ export default function LatestJournal() {
         {/* Featured — spans both rows */}
         <Reveal style={{ gridRow: "1 / 3" }}>
         <Link
-          to={`/journal/${featured.slug}`}
+          to={`/practice/${featured.slug}`}
           className="group relative overflow-hidden bg-paper-mid block h-full"
           style={{ borderRadius: 0, minHeight: "460px" }}
         >
@@ -104,7 +104,7 @@ export default function LatestJournal() {
         {rest.map((p, i) => (
           <Reveal key={p.id} delay={120 + i * 110}>
           <Link
-            to={`/journal/${p.slug}`}
+            to={`/practice/${p.slug}`}
             className="group relative overflow-hidden bg-paper-mid block h-full"
             style={{ borderRadius: 0, minHeight: "220px" }}
           >

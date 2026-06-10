@@ -63,7 +63,7 @@ export default function NewsletterCta() {
             className="font-display-black text-ink"
             style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.6rem)", lineHeight: 1 }}
           >
-            The journal,<br />
+            Practice,<br />
             <em className="italic text-accent-terra">in your inbox</em>
           </h2>
           <p

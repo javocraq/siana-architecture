@@ -5,6 +5,8 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import MapPicker from "@/components/admin/MapPicker";
+import SelectOrCreate from "@/components/admin/SelectOrCreate";
+import { STYLES } from "@/lib/adminTaxonomies";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
 
@@ -85,6 +87,9 @@ export default function AdminProjectEdit() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [slugTouched, setSlugTouched] = useState(!isNew);
+  const [addingCity, setAddingCity] = useState(false);
+  const [cityDraft, setCityDraft] = useState("");
+  const [creatingCity, setCreatingCity] = useState(false);
 
   useEffect(() => {
     supabase.from("cities").select("id,name").order("name").then(({ data }) => {
@@ -133,6 +138,28 @@ export default function AdminProjectEdit() {
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const createCity = async () => {
+    const name = cityDraft.trim();
+    if (!name) return;
+    setCreatingCity(true);
+    const slug = slugify(name);
+    const { data, error } = await supabase
+      .from("cities")
+      .insert({ name, slug, status: "draft" })
+      .select("id, name")
+      .single();
+    setCreatingCity(false);
+    if (error || !data) {
+      toast({ title: "Could not create city", description: error?.message, variant: "destructive" });
+      return;
+    }
+    setCities((cs) => [...cs, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
+    set("city_id", data.id);
+    setAddingCity(false);
+    setCityDraft("");
+    toast({ title: "City created", description: `“${data.name}” added as draft. Edit it later from /admin/cities.` });
+  };
 
   const onNameChange = (v: string) => {
     setForm((f) => ({ ...f, name: v, slug: slugTouched ? f.slug : slugify(v) }));
@@ -324,20 +351,61 @@ export default function AdminProjectEdit() {
             </div>
 
             <div className="grid grid-cols-3 gap-6">
-              <Field label="City">
-                <select
-                  className={inputCls}
-                  value={form.city_id || ""}
-                  onChange={(e) => set("city_id", e.target.value || null)}
-                >
-                  <option value="">— Select —</option>
-                  {cities.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+              <Field label="City" hint="Pick a city or add a new one">
+                {addingCity ? (
+                  <div className="flex gap-2">
+                    <input
+                      autoFocus
+                      className={inputCls}
+                      value={cityDraft}
+                      onChange={(e) => setCityDraft(e.target.value)}
+                      placeholder="New city name…"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { e.preventDefault(); createCity(); }
+                        else if (e.key === "Escape") { setAddingCity(false); setCityDraft(""); }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={createCity}
+                      disabled={creatingCity || !cityDraft.trim()}
+                      className="text-[11px] tracking-tag uppercase border hairline px-3 text-ink hover:bg-off-white whitespace-nowrap disabled:opacity-50"
+                    >
+                      {creatingCity ? "…" : "Create"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setAddingCity(false); setCityDraft(""); }}
+                      className="text-[11px] tracking-tag uppercase px-2 text-ink-muted hover:text-ink whitespace-nowrap"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    className={inputCls}
+                    value={form.city_id || ""}
+                    onChange={(e) => {
+                      if (e.target.value === "__add_city__") setAddingCity(true);
+                      else set("city_id", e.target.value || null);
+                    }}
+                  >
+                    <option value="">— Select —</option>
+                    {cities.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                    <option value="__add_city__">+ Add new city…</option>
+                  </select>
+                )}
               </Field>
               <Field label="Category"><input className={inputCls} value={form.category} onChange={(e) => set("category", e.target.value)} /></Field>
-              <Field label="Style"><input className={inputCls} value={form.style} onChange={(e) => set("style", e.target.value)} /></Field>
+              <Field label="Style">
+                <SelectOrCreate
+                  value={form.style}
+                  onChange={(v) => set("style", v)}
+                  options={STYLES}
+                />
+              </Field>
             </div>
 
             <div className="grid grid-cols-3 gap-6">

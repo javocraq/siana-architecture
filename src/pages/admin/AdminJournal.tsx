@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
-import { detectKindFromPath, kindConfig } from "@/lib/postKind";
+import { kindConfig } from "@/lib/postKind";
 
 type PostRow = {
   id: string;
@@ -20,9 +20,7 @@ type PostRow = {
 };
 
 export default function AdminJournal() {
-  const location = useLocation();
-  const kind = detectKindFromPath(location.pathname);
-  const cfg = kindConfig(kind);
+  const cfg = kindConfig();
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<PostRow | null>(null);
@@ -33,7 +31,6 @@ export default function AdminJournal() {
     const { data } = await supabase
       .from("posts")
       .select("id,slug,title,author,category,status,published_at,updated_at,hero_image_url")
-      .eq("kind", kind)
       .order("updated_at", { ascending: false });
     setPosts((data as PostRow[]) || []);
     setLoading(false);
@@ -41,8 +38,7 @@ export default function AdminJournal() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kind]);
+  }, []);
 
 
   const confirmDelete = async () => {
@@ -97,7 +93,7 @@ export default function AdminJournal() {
               paddingBottom: 4,
             }}
           >
-            <Plus className="w-3.5 h-3.5" /> Añadir {kind === "resource" ? "entrada" : "recurso"}
+            <Plus className="w-3.5 h-3.5" /> Añadir entrada
           </Link>
         </div>
 

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SiteLayout from "@/components/site/SiteLayout";
 import SEO from "@/components/site/SEO";
@@ -29,6 +29,7 @@ interface Project {
   architect: string | null;
   year_completed: number | null;
   category: string | null;
+  style: string | null;
   cover_image_url: string | null;
   hero_image_url: string | null;
 }
@@ -41,6 +42,15 @@ interface Post {
 
 export default function CityDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const styleFilter = searchParams.get("style") || "";
+  const setStyleFilter = (v: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (v) next.set("style", v); else next.delete("style");
+      return next;
+    }, { replace: true });
+  };
   const [city, setCity] = useState<City | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -63,7 +73,7 @@ export default function CityDetail() {
       if (usingDefaults) {
         const { data: ps } = await supabase
           .from("projects")
-          .select("id, name, slug, architect, year_completed, category, cover_image_url, hero_image_url")
+          .select("id, name, slug, architect, year_completed, category, style, cover_image_url, hero_image_url")
           .eq("city_id", c.id).eq("status", "published")
           .order("year_completed", { ascending: false });
         if (ps) setProjects(ps);
@@ -81,6 +91,15 @@ export default function CityDetail() {
       setLoading(false);
     })();
   }, [slug]);
+
+  const projectStyles = useMemo(
+    () => Array.from(new Set(projects.map((p) => p.style).filter(Boolean) as string[])).sort(),
+    [projects]
+  );
+  const filteredProjects = useMemo(
+    () => (styleFilter ? projects.filter((p) => p.style === styleFilter) : projects),
+    [projects, styleFilter]
+  );
 
   if (notFound) {
     return (
@@ -157,14 +176,14 @@ export default function CityDetail() {
 
           <section className="py-24 md:py-32 bg-background">
             <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-              <div className="flex items-end justify-between mb-14 border-t hairline pt-12">
+              <div className="flex items-end justify-between mb-10 border-t hairline pt-12">
                 <div>
                   <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-4">Projects</p>
                   <h2
                     className="text-ink"
                     style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: "clamp(30px, 3.4vw, 42px)", lineHeight: 1.08, letterSpacing: "-0.005em" }}
                   >
-                    {projects.length} {projects.length === 1 ? "project" : "projects"} in {city.name}
+                    {filteredProjects.length} {filteredProjects.length === 1 ? "project" : "projects"} in {city.name}
                   </h2>
                 </div>
                 <span className="hidden md:inline-flex">
@@ -172,8 +191,35 @@ export default function CityDetail() {
                 </span>
               </div>
 
+              {projectStyles.length > 0 && (
+                <div className="flex items-center gap-6 mb-12">
+                  <select
+                    value={styleFilter}
+                    onChange={(e) => setStyleFilter(e.target.value)}
+                    aria-label="Filter projects by style"
+                    className="bg-transparent border-b border-black/15 pb-2 font-grotesk uppercase font-semibold text-ink-soft hover:text-ink focus:outline-none focus:text-ink focus:border-black/40 cursor-pointer transition-colors"
+                    style={{ fontSize: 11, letterSpacing: "0.22em" }}
+                  >
+                    <option value="">Style</option>
+                    {projectStyles.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                  {styleFilter && (
+                    <button
+                      type="button"
+                      onClick={() => setStyleFilter("")}
+                      className="pb-2 font-grotesk uppercase font-semibold text-ink-soft hover:text-ink transition-colors"
+                      style={{ fontSize: 11, letterSpacing: "0.22em" }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-                {projects.map((p) => (
+                {filteredProjects.map((p) => (
                   <Link key={p.id} to={`/projects/${p.slug}`} className="group block">
                     <div className="aspect-[3/4] overflow-hidden bg-stone mb-6" style={{ minHeight: 280 }}>
                       <img
@@ -230,7 +276,7 @@ export default function CityDetail() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                   {posts.map((p) => (
-                    <Link key={p.id} to={`/journal/${p.slug}`} className="group block">
+                    <Link key={p.id} to={`/practice/${p.slug}`} className="group block">
                       {p.hero_image_url && (
                         <div className="aspect-[4/3] overflow-hidden bg-stone mb-5">
                           <img src={p.hero_image_url} alt={p.title}

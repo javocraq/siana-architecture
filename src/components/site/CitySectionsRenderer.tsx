@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import RichHtml from "@/components/site/RichHtml";
 import type {
@@ -46,6 +46,15 @@ function RichTextBlock({ s }: { s: RichTextSection }) {
 
 function ProjectsBlock({ s, cityId }: { s: ProjectsSection; cityId: string }) {
   const [items, setItems] = useState<Project[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const styleFilter = searchParams.get("style") || "";
+  const setStyleFilter = (v: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (v) next.set("style", v); else next.delete("style");
+      return next;
+    }, { replace: true });
+  };
   useEffect(() => {
     (async () => {
       let q = supabase.from("projects")
@@ -61,16 +70,54 @@ function ProjectsBlock({ s, cityId }: { s: ProjectsSection; cityId: string }) {
     })();
   }, [cityId, s.settings.limit, s.settings.featuredOnly, s.settings.category, s.settings.style]);
 
+  // Runtime style filter — only meaningful when the editor hasn't already
+  // pinned a single style for this section.
+  const showStyleFilter = !s.settings.style;
+  const styleOptions = useMemo(
+    () => Array.from(new Set(items.map((p) => p.style).filter(Boolean) as string[])).sort(),
+    [items]
+  );
+  const filtered = useMemo(
+    () => (styleFilter ? items.filter((p) => p.style === styleFilter) : items),
+    [items, styleFilter]
+  );
+
   if (!items.length) return null;
   return (
     <section className="py-24 md:py-32 bg-background">
       <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-        <div className="border-t hairline pt-12 mb-14">
+        <div className="border-t hairline pt-12 mb-10">
           <Eyebrow text={s.settings.eyebrow || "Projects"} />
           <Heading text={s.settings.heading} />
         </div>
+        {showStyleFilter && styleOptions.length > 0 && (
+          <div className="flex items-center gap-6 mb-12">
+            <select
+              value={styleFilter}
+              onChange={(e) => setStyleFilter(e.target.value)}
+              aria-label="Filter projects by style"
+              className="bg-transparent border-b border-black/15 pb-2 font-grotesk uppercase font-semibold text-ink-soft hover:text-ink focus:outline-none focus:text-ink focus:border-black/40 cursor-pointer transition-colors"
+              style={{ fontSize: 11, letterSpacing: "0.22em" }}
+            >
+              <option value="">Style</option>
+              {styleOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+            {styleFilter && (
+              <button
+                type="button"
+                onClick={() => setStyleFilter("")}
+                className="pb-2 font-grotesk uppercase font-semibold text-ink-soft hover:text-ink transition-colors"
+                style={{ fontSize: 11, letterSpacing: "0.22em" }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-          {items.map((p) => (
+          {filtered.map((p) => (
             <Link key={p.id} to={`/projects/${p.slug}`} className="group block">
               <div className="aspect-[3/4] overflow-hidden bg-stone mb-6">
                 <img src={p.cover_image_url || p.hero_image_url || ""} alt={p.name}
@@ -119,12 +166,12 @@ function JournalBlock({ s, cityId }: { s: JournalSection; cityId: string }) {
     <section className="py-24 md:py-32 bg-warm-white">
       <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
         <div className="border-t hairline pt-12 mb-14">
-          <Eyebrow text={s.settings.eyebrow || "Journal"} />
-          <Heading text={s.settings.heading || "From the Journal"} />
+          <Eyebrow text={s.settings.eyebrow || "Practice"} />
+          <Heading text={s.settings.heading || "From Practice"} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {items.map((p) => (
-            <Link key={p.id} to={`/journal/${p.slug}`} className="group block">
+            <Link key={p.id} to={`/practice/${p.slug}`} className="group block">
               {p.hero_image_url && (
                 <div className="aspect-[4/3] overflow-hidden bg-stone mb-5">
                   <img src={p.hero_image_url} alt={p.title}

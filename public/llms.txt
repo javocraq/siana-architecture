@@ -1,8 +1,8 @@
 # Siana — Architecture, city by city
 
-> Siana is an editorial atlas of architecture: a curated guide to significant buildings around the world, mapped city by city, paired with a journal of essays and field notes and a library of resources for architects.
+> Siana is an editorial atlas of architecture: a curated guide to significant buildings around the world, mapped city by city, paired with Practice — essays, field notes, and practical guides for architects.
 
-Siana documents notable architecture across global cities and writes about it with an editorial eye. The site is organized into four areas: **Cities** (city guides with an interactive map of pinned buildings), **Projects** (individual buildings with architect, year and context), the **Journal** (the blog — essays, criticism, profiles, interviews and field notes on architecture), and **Resources** (practical guides for architecture practices).
+Siana documents notable architecture across global cities and writes about it with an editorial eye. The site is organized into three areas: **Cities** (city guides with an interactive map of pinned buildings), **Projects** (individual buildings with architect, year and context), and **Practice** (essays, criticism, profiles, interviews, field notes, and practical guides for architecture, engineering and construction practices).
 
 - Website: https://sianaarchitecture.com
 - Language: English
@@ -17,14 +17,14 @@ Siana documents notable architecture across global cities and writes about it wi
 - [Mexico City](https://sianaarchitecture.com/cities/mexico-city): Architecture guide to Mexico City, Mexico — Barragán's color and the weight of volcanic stone.
 - [Porto](https://sianaarchitecture.com/cities/porto): Architecture guide to Porto, Portugal — Granite, fog, and the precision of Siza.
 
-## Journal (blog)
-- [The Drawing That Thinks Back](https://sianaarchitecture.com/journal/the-drawing-that-thinks-back): Architecture + AI — Generative tools promise infinite variation. What they ask in return is a new kind of authorship.
-- [On the Patience of Stone](https://sianaarchitecture.com/journal/on-the-patience-of-stone): Essay — Why the slowest buildings often outlast the fashions that surround them.
-- [The Museum That Forgot Its Street](https://sianaarchitecture.com/journal/the-museum-that-forgot-its-street): Criticism — A new cultural landmark dazzles from the water and turns its back on the city behind it.
-- [Lina Bo Bardi, In Her Own Light](https://sianaarchitecture.com/journal/lina-bo-bardi-in-her-own-light): Profile — The architect who treated concrete as an invitation rather than a barrier.
-- [A Conversation With the Last Brickmaker](https://sianaarchitecture.com/journal/a-conversation-with-the-last-brickmaker): Interview — Forty years at the kiln, and a quiet argument for materials that age in public.
-- [Lisbon, From the Tile Up](https://sianaarchitecture.com/journal/lisbon-from-the-tile-up): City guide — A walking route through azulejo facades, hillside miradouros and the quiet genius of the pombaline grid.
-- [The Slow Return of the Courtyard](https://sianaarchitecture.com/journal/the-slow-return-of-the-courtyard): Reportage — Across three continents, architects are rediscovering the oldest trick for cooling a city block.
+## Practice
+- [The Drawing That Thinks Back](https://sianaarchitecture.com/practice/the-drawing-that-thinks-back): Architecture + AI — Generative tools promise infinite variation. What they ask in return is a new kind of authorship.
+- [On the Patience of Stone](https://sianaarchitecture.com/practice/on-the-patience-of-stone): Essay — Why the slowest buildings often outlast the fashions that surround them.
+- [The Museum That Forgot Its Street](https://sianaarchitecture.com/practice/the-museum-that-forgot-its-street): Criticism — A new cultural landmark dazzles from the water and turns its back on the city behind it.
+- [Lina Bo Bardi, In Her Own Light](https://sianaarchitecture.com/practice/lina-bo-bardi-in-her-own-light): Profile — The architect who treated concrete as an invitation rather than a barrier.
+- [A Conversation With the Last Brickmaker](https://sianaarchitecture.com/practice/a-conversation-with-the-last-brickmaker): Interview — Forty years at the kiln, and a quiet argument for materials that age in public.
+- [Lisbon, From the Tile Up](https://sianaarchitecture.com/practice/lisbon-from-the-tile-up): City guide — A walking route through azulejo facades, hillside miradouros and the quiet genius of the pombaline grid.
+- [The Slow Return of the Courtyard](https://sianaarchitecture.com/practice/the-slow-return-of-the-courtyard): Reportage — Across three continents, architects are rediscovering the oldest trick for cooling a city block.
 
 ## Projects
 - [8 House](https://sianaarchitecture.com/projects/8-house): BIG, 2010 — Copenhagen.
@@ -45,8 +45,7 @@ Siana documents notable architecture across global cities and writes about it wi
 ## Main sections
 - [Atlas](https://sianaarchitecture.com/atlas): Interactive map — explore every project by city, architect, style and year.
 - [Cities index](https://sianaarchitecture.com/cities): Browse all cities in the atlas.
-- [Journal](https://sianaarchitecture.com/journal): All essays and field notes (the blog).
-- [Resources for architects](https://sianaarchitecture.com/resources): Practical guides for architecture, engineering and construction practices.
+- [Practice](https://sianaarchitecture.com/practice): Essays, field notes, and practical guides for architecture, engineering and construction practices.
 - [About](https://sianaarchitecture.com/about): What Siana is and why it exists.
 
 ## Optional

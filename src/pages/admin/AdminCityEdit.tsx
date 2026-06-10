@@ -6,6 +6,8 @@ import RichTextEditor from "@/components/admin/RichTextEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import MapPicker from "@/components/admin/MapPicker";
 import SectionBuilder from "@/components/admin/SectionBuilder";
+import SelectOrCreate from "@/components/admin/SelectOrCreate";
+import { REGIONS } from "@/lib/adminTaxonomies";
 import type { CitySection } from "@/lib/citySections";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -24,6 +26,7 @@ type FormState = {
   name: string;
   slug: string;
   country: string;
+  region: string;
   tagline: string;
   description: string;
   center_latitude: number | null;
@@ -42,6 +45,7 @@ const empty: FormState = {
   name: "",
   slug: "",
   country: "",
+  region: "",
   tagline: "",
   description: "",
   center_latitude: null,
@@ -82,6 +86,7 @@ export default function AdminCityEdit() {
         name: data.name || "",
         slug: data.slug || "",
         country: data.country || "",
+        region: (data as any).region || "",
         tagline: data.tagline || "",
         description: data.description || "",
         center_latitude: data.center_latitude,
@@ -115,6 +120,7 @@ export default function AdminCityEdit() {
       name: form.name.trim(),
       slug: form.slug.trim(),
       country: form.country || null,
+      region: form.region || null,
       tagline: form.tagline || null,
       description: form.description || null,
       center_latitude: form.center_latitude,
@@ -242,6 +248,14 @@ export default function AdminCityEdit() {
 
             <Field label="Country">
               <input className={inputCls} value={form.country} onChange={(e) => set("country", e.target.value)} />
+            </Field>
+
+            <Field label="Region" hint="Pick from the list or add a new one">
+              <SelectOrCreate
+                value={form.region}
+                onChange={(v) => set("region", v)}
+                options={REGIONS}
+              />
             </Field>
 
             <Field label="Tagline" hint="One short sentence shown under the title">

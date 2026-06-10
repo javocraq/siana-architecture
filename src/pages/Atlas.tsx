@@ -43,13 +43,14 @@ const FILTER_BAR_H = 60;
 
 /** Single active filter — picking a chip from any category activates one
  *  filter, hides the filter bar, and frames the map on the matching set. */
-type FilterType = "city" | "material" | "experience";
+type FilterType = "city" | "material" | "experience" | "style";
 type Active = { type: FilterType; value: string };
 
 const FILTER_LABELS: Record<FilterType, string> = {
   city: "City",
   material: "Material",
   experience: "Experience",
+  style: "Style",
 };
 
 /** A minimal popover filter — a labelled chip that opens a panel of toggle chips.
@@ -269,6 +270,10 @@ export default function Atlas() {
     return m;
   }, [cities]);
   const cityOptions = useMemo(() => cities.map((c) => c.name), [cities]);
+  const styleOptions = useMemo(
+    () => Array.from(new Set(projects.map((p) => p.style).filter(Boolean) as string[])).sort(),
+    [projects]
+  );
 
   const filtered = useMemo(() => {
     if (!active) return projects;
@@ -276,6 +281,7 @@ export default function Atlas() {
       if (active.type === "city") {
         return p.city_id === cityNameToId.get(active.value);
       }
+      if (active.type === "style") return p.style === active.value;
       const t = tagsFor(p.slug);
       if (active.type === "material") return t.materials.includes(active.value);
       if (active.type === "experience") return t.experience.includes(active.value);
@@ -436,6 +442,9 @@ export default function Atlas() {
               <FilterMenu label="Cities" options={cityOptions} selected={[]} onToggle={(v) => activate("city", v)} open={openMenu === "cities"} onToggleOpen={() => toggleMenu("cities")} onClose={closeMenu} stacked />
               <FilterMenu label="Materials" options={MATERIALS} selected={[]} onToggle={(v) => activate("material", v)} open={openMenu === "materials"} onToggleOpen={() => toggleMenu("materials")} onClose={closeMenu} stacked />
               <FilterMenu label="Experience" options={EXPERIENCES} selected={[]} onToggle={(v) => activate("experience", v)} open={openMenu === "experience"} onToggleOpen={() => toggleMenu("experience")} onClose={closeMenu} stacked />
+              {styleOptions.length > 0 && (
+                <FilterMenu label="Style" options={styleOptions} selected={[]} onToggle={(v) => activate("style", v)} open={openMenu === "style"} onToggleOpen={() => toggleMenu("style")} onClose={closeMenu} stacked />
+              )}
             </div>
           )}
         </div>

@@ -79,7 +79,7 @@ export const newSection = (type: SectionType): CitySection => {
     case "projects":
       return { id, type, enabled: true, settings: { heading: "Projects", limit: 6, featuredOnly: false } };
     case "journal":
-      return { id, type, enabled: true, settings: { heading: "From the Journal", limit: 3, onlyTaggedWithCity: true } };
+      return { id, type, enabled: true, settings: { heading: "From Practice", limit: 3, onlyTaggedWithCity: true } };
     case "gallery":
       return { id, type, enabled: true, settings: { images: [], columns: 3 } };
     case "spacer":
@@ -90,7 +90,7 @@ export const newSection = (type: SectionType): CitySection => {
 export const SECTION_LABELS: Record<SectionType, string> = {
   rich_text: "Text block",
   projects: "Projects grid",
-  journal: "Journal entries",
+  journal: "Practice entries",
   gallery: "Image gallery",
   spacer: "Spacer",
 };
