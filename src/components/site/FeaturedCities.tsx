@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Reveal from "@/components/site/Reveal";
+import { useHomeContent } from "@/hooks/useHomeContent";
 
 interface City {
   id: string;
@@ -22,6 +23,7 @@ interface City {
  */
 export default function FeaturedCities() {
   const [cities, setCities] = useState<City[]>([]);
+  const content = useHomeContent();
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragState = useRef({ down: false, startX: 0, scrollLeft: 0 });
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -98,12 +100,12 @@ export default function FeaturedCities() {
 
   return (
     <section
-      className="bg-[#FFF9F2]"
+      className="bg-white"
       style={{ padding: "5rem 0", borderBottom: "1px solid hsl(var(--paper-mid))" }}
     >
       <div
-        className="flex items-center justify-between gap-6 flex-wrap"
-        style={{ padding: "0 2.5rem", marginBottom: "3rem" }}
+        className="flex items-center justify-between gap-6 flex-wrap mx-auto max-w-[1400px] px-6 lg:px-10"
+        style={{ marginBottom: "3rem" }}
       >
         <Reveal
           as="h2"
@@ -115,47 +117,76 @@ export default function FeaturedCities() {
             letterSpacing: "-0.005em",
           }}
         >
-          Cities
+          {content.cities.title}
         </Reveal>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => scrollBy(-1)}
-            disabled={!canScrollLeft}
-            aria-label="Anterior"
-            className="inline-flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/[0.04]"
-            style={{
-              width: 40,
-              height: 40,
-              border: "1px solid hsl(var(--paper-mid))",
-              background: "transparent",
-              color: "hsl(var(--ink))",
-            }}
-          >
-            <ChevronLeft className="w-4 h-4" strokeWidth={1.5} />
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollBy(1)}
-            disabled={!canScrollRight}
-            aria-label="Siguiente"
-            className="inline-flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/[0.04]"
-            style={{
-              width: 40,
-              height: 40,
-              border: "1px solid hsl(var(--paper-mid))",
-              background: "transparent",
-              color: "hsl(var(--ink))",
-            }}
-          >
-            <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
-          </button>
-        </div>
       </div>
+      {/* Strip + overlaid arrows. The relative wrapper anchors the arrow
+          buttons over the photo area (top portion of each card). */}
+      <div className="relative">
+      <button
+        type="button"
+        onClick={() => scrollBy(-1)}
+        disabled={!canScrollLeft}
+        aria-label="Anterior"
+        className="absolute z-10 inline-flex items-center justify-center transition-all disabled:opacity-0 disabled:pointer-events-none hover:bg-white"
+        style={{
+          left: "1.75rem",
+          top: "37%",
+          transform: "translateY(-50%)",
+          width: 52,
+          height: 52,
+          borderRadius: 9999,
+          background: "rgba(255,255,255,0.92)",
+          color: "hsl(var(--ink))",
+          boxShadow: "0 2px 14px rgba(0,0,0,0.10)",
+          backdropFilter: "blur(4px)",
+        }}
+      >
+        <ArrowLeft className="w-4 h-4" strokeWidth={1.25} />
+      </button>
+      <button
+        type="button"
+        onClick={() => scrollBy(1)}
+        disabled={!canScrollRight}
+        aria-label="Siguiente"
+        className="absolute z-10 inline-flex items-center justify-center transition-all disabled:opacity-0 disabled:pointer-events-none hover:bg-white"
+        style={{
+          right: "1.75rem",
+          top: "37%",
+          transform: "translateY(-50%)",
+          width: 52,
+          height: 52,
+          borderRadius: 9999,
+          background: "rgba(255,255,255,0.92)",
+          color: "hsl(var(--ink))",
+          boxShadow: "0 2px 14px rgba(0,0,0,0.10)",
+          backdropFilter: "blur(4px)",
+        }}
+      >
+        <ArrowRight className="w-4 h-4" strokeWidth={1.25} />
+      </button>
       <div
         ref={scrollRef}
-        className="flex no-scrollbar overflow-x-auto scroll-smooth"
-        style={{ gap: "2rem", padding: "0 2.5rem", cursor: "grab" }}
+        className="flex no-scrollbar overflow-x-auto scroll-smooth mx-auto max-w-[1400px] px-6 lg:px-10"
+        style={{
+          gap: "2rem",
+          cursor: "grab",
+          // Prevent the horizontal strip from "stealing" vertical wheel
+          // events from the page (Mac trackpads mix X/Y deltas; Chrome
+          // sometimes consumes vertical scroll here, which feels like the
+          // page is freezing).
+          overscrollBehaviorY: "none",
+          touchAction: "pan-x pan-y",
+        }}
+        onWheel={(e) => {
+          // If the user is scrolling vertically (Y delta dominates), make
+          // sure the page scrolls — never the strip. The strip only
+          // consumes wheel events when the X delta dominates.
+          if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+            window.scrollBy({ top: e.deltaY, behavior: "auto" });
+            e.preventDefault();
+          }
+        }}
         onMouseDown={onDown}
         onMouseLeave={onLeaveOrUp}
         onMouseUp={onLeaveOrUp}
@@ -197,6 +228,7 @@ export default function FeaturedCities() {
           </Link>
           </Reveal>
         ))}
+      </div>
       </div>
     </section>
   );

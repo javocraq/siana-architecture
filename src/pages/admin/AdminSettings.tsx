@@ -50,13 +50,13 @@ export default function AdminSettings() {
             className="font-mono uppercase text-ink-soft mb-3 font-semibold"
             style={{ fontSize: 11, letterSpacing: "0.22em" }}
           >
-            Gestionar
+            Manage
           </p>
           <h1
             className="font-display text-ink"
             style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.005em" }}
           >
-            Ajustes
+            Settings
           </h1>
         </div>
 

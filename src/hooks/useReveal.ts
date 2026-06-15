@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Fires once when the element scrolls into view. Respects
- * prefers-reduced-motion (reveals immediately, no animation).
+ * Toggles `revealed` whenever the element enters or leaves the viewport,
+ * so the slide-up animation re-plays on every pass (scrolling down AND
+ * back up). Respects prefers-reduced-motion (reveals once, no animation).
  */
 export function useReveal<T extends HTMLElement = HTMLElement>(
   options?: IntersectionObserverInit
@@ -20,10 +21,7 @@ export function useReveal<T extends HTMLElement = HTMLElement>(
     }
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setRevealed(true);
-          obs.disconnect();
-        }
+        setRevealed(entry.isIntersecting);
       },
       { threshold: 0.12, rootMargin: "0px 0px -8% 0px", ...options }
     );

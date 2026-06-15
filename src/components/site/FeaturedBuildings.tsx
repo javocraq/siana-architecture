@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Reveal from "@/components/site/Reveal";
+import { useHomeContent } from "@/hooks/useHomeContent";
 
 interface Project {
   id: string;
@@ -19,6 +20,7 @@ interface Project {
  */
 export default function FeaturedBuildings() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const content = useHomeContent();
 
   useEffect(() => {
     (async () => {
@@ -44,30 +46,34 @@ export default function FeaturedBuildings() {
       style={{ padding: "6rem 0", borderTop: "1px solid hsl(var(--paper-mid))" }}
     >
       <Reveal
-        className="mx-auto max-w-[1400px]"
-        style={{ padding: "0 2.5rem 3rem" }}
+        className="mx-auto max-w-[1400px] px-6 lg:px-10"
+        style={{ paddingBottom: "5rem" }}
       >
-        <h2
-          className="font-display-black text-ink"
-          style={{ fontSize: "clamp(1.7rem, 3.2vw, 3rem)", lineHeight: 1 }}
-        >
-          Featured<br />
-          <em className="italic text-accent-terra">Buildings</em>
-        </h2>
+        <div className="text-center max-w-xl mx-auto">
+          <h2
+            className="font-display-black text-ink"
+            style={{ fontSize: "clamp(1.7rem, 3.2vw, 3rem)", lineHeight: 1.05 }}
+          >
+            {content.buildings.headline_lead}
+            {content.buildings.headline_emphasis ? (
+              <> <em className="italic text-accent-terra">{content.buildings.headline_emphasis}</em></>
+            ) : null}
+          </h2>
+          <p
+            className="font-mono text-ink-soft mt-7 mx-auto"
+            style={{ fontSize: 14, lineHeight: 1.7, letterSpacing: "0.01em", maxWidth: 440 }}
+          >
+            {content.buildings.description}
+          </p>
+        </div>
       </Reveal>
 
       <div
-        className="mx-auto max-w-[1400px]"
-        style={{
-          padding: "0 2.5rem",
-          display: "grid",
-          gridTemplateColumns: "1.4fr 1fr 1fr",
-          gridAutoRows: "minmax(240px, auto)",
-          gap: "8px",
-        }}
+        className="mx-auto max-w-[1400px] px-6 lg:px-10 grid grid-cols-1 gap-2 md:grid-cols-[1.4fr_1fr_1fr]"
+        style={{ gridAutoRows: "minmax(240px, auto)" }}
       >
-        {/* Hero — spans both rows */}
-        <Reveal style={{ gridRow: "1 / 3" }}>
+        {/* Hero — spans both rows on desktop; full-width on mobile */}
+        <Reveal className="md:row-span-2">
         <Link
           to={`/projects/${hero.slug}`}
           className="group relative overflow-hidden bg-paper-mid block h-full"

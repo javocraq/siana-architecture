@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Reveal from "@/components/site/Reveal";
 import EditorialButton from "@/components/site/EditorialButton";
+import { useHomeContent } from "@/hooks/useHomeContent";
 
 const INTERESTS = [
   "Architecture Guides",
@@ -14,6 +15,7 @@ const INTERESTS = [
 
 export default function NewsletterCta() {
   const { toast } = useToast();
+  const content = useHomeContent();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
@@ -38,40 +40,32 @@ export default function NewsletterCta() {
 
   return (
     <section
-      className="bg-paper"
+      className="py-20 md:py-28"
       style={{
-        padding: "7rem 2.5rem",
+        background: "#F4F4F4",
         borderTop: "1px solid hsl(var(--paper-mid))",
       }}
     >
-      <div
-        className="mx-auto grid gap-x-16 gap-y-12"
-        style={{
-          maxWidth: 1400,
-          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.1fr)",
-        }}
-      >
+      <div className="mx-auto grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] gap-x-16 gap-y-12 max-w-[1400px] px-6 lg:px-10">
         {/* Left — editorial intro, same hierarchy as other home sections */}
-        <Reveal className="flex flex-col">
+        <Reveal className="flex flex-col text-center md:text-left items-center md:items-start">
           <p
             className="font-mono uppercase text-accent-terra mb-5 font-semibold"
             style={{ fontSize: "13px", letterSpacing: "0.22em" }}
           >
-            Stay in Touch
+            {content.newsletter.eyebrow}
           </p>
           <h2
             className="font-display-black text-ink"
-            style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.6rem)", lineHeight: 1 }}
+            style={{ fontSize: "clamp(1.6rem, 2.8vw, 2.6rem)", lineHeight: 1.05 }}
           >
-            The journal,<br />
-            <em className="italic text-accent-terra">in your inbox</em>
+            {content.newsletter.headline}
           </h2>
           <p
-            className="font-mono text-ink-soft mt-8"
+            className="font-mono text-ink-soft mt-6 md:mt-8"
             style={{ fontSize: "15px", lineHeight: 1.7, maxWidth: 420, letterSpacing: "0.01em" }}
           >
-            Sign up for our newsletter to receive curated architecture
-            discoveries, city guides, and practice resources for architects.
+            {content.newsletter.description}
           </p>
         </Reveal>
 
@@ -146,8 +140,8 @@ export default function NewsletterCta() {
             </div>
           </div>
 
-          <EditorialButton type="submit" disabled={submitting} arrow className="self-start">
-            {submitting ? "Signing up…" : "Sign Up"}
+          <EditorialButton type="submit" disabled={submitting} arrow className="self-center md:self-start">
+            {submitting ? "Subscribing…" : "Subscribe"}
           </EditorialButton>
         </form>
         </Reveal>

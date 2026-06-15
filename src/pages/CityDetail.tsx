@@ -1,12 +1,18 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { supabase } from "@/integrations/supabase/client";
 import SiteLayout from "@/components/site/SiteLayout";
 import SEO from "@/components/site/SEO";
 import RichHtml from "@/components/site/RichHtml";
 import EditorialButton from "@/components/site/EditorialButton";
+import Reveal from "@/components/site/Reveal";
+import { Search, X } from "lucide-react";
 import CitySectionsRenderer from "@/components/site/CitySectionsRenderer";
+import { getMapboxToken } from "@/lib/mapbox";
 import type { CitySection } from "@/lib/citySections";
+import { defaultCityDescriptionHTML, isDescriptionEmpty } from "@/lib/cityDefaults";
 
 interface City {
   id: string;
@@ -16,6 +22,9 @@ interface City {
   tagline: string | null;
   description: string | null;
   hero_image_url: string | null;
+  center_latitude: number | null;
+  center_longitude: number | null;
+  default_zoom: number | null;
   meta_title: string | null;
   meta_description: string | null;
   og_image_url: string | null;
@@ -29,8 +38,11 @@ interface Project {
   architect: string | null;
   year_completed: number | null;
   category: string | null;
+  style: string | null;
   cover_image_url: string | null;
   hero_image_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface Post {
@@ -41,6 +53,15 @@ interface Post {
 
 export default function CityDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const styleFilter = searchParams.get("style") || "";
+  const setStyleFilter = (v: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (v) next.set("style", v); else next.delete("style");
+      return next;
+    }, { replace: true });
+  };
   const [city, setCity] = useState<City | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -52,7 +73,7 @@ export default function CityDetail() {
     (async () => {
       const { data: c } = await supabase
         .from("cities")
-        .select("id, name, slug, country, tagline, description, hero_image_url, meta_title, meta_description, og_image_url, sections")
+        .select("id, name, slug, country, tagline, description, hero_image_url, center_latitude, center_longitude, default_zoom, meta_title, meta_description, og_image_url, sections")
         .eq("slug", slug).eq("status", "published").maybeSingle();
       if (!c) { setNotFound(true); setLoading(false); return; }
       setCity(c as any);
@@ -63,10 +84,10 @@ export default function CityDetail() {
       if (usingDefaults) {
         const { data: ps } = await supabase
           .from("projects")
-          .select("id, name, slug, architect, year_completed, category, cover_image_url, hero_image_url")
+          .select("id, name, slug, architect, year_completed, category, style, cover_image_url, hero_image_url, latitude, longitude")
           .eq("city_id", c.id).eq("status", "published")
           .order("year_completed", { ascending: false });
-        if (ps) setProjects(ps);
+        if (ps) setProjects(ps as any);
 
         const { data: js } = await supabase
           .from("posts")
@@ -81,6 +102,15 @@ export default function CityDetail() {
       setLoading(false);
     })();
   }, [slug]);
+
+  const projectStyles = useMemo(
+    () => Array.from(new Set(projects.map((p) => p.style).filter(Boolean) as string[])).sort(),
+    [projects]
+  );
+  const filteredProjects = useMemo(
+    () => (styleFilter ? projects.filter((p) => p.style === styleFilter) : projects),
+    [projects, styleFilter]
+  );
 
   if (notFound) {
     return (
@@ -107,155 +137,643 @@ export default function CityDetail() {
         image={city.og_image_url || city.hero_image_url}
       />
 
-      {/* Hero (always shown) */}
+      {/* ============================================================
+          1. HERO — large city image, country eyebrow, big serif title,
+          architectural tagline, and a CTA into the Atlas. Mirrors the
+          editorial cover used on Home (dark veil for legibility).
+          ============================================================ */}
       <section className="relative h-[80vh] min-h-[560px] overflow-hidden">
         {city.hero_image_url && (
           <img src={city.hero_image_url} alt={city.name} className="absolute inset-0 w-full h-full object-cover" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-ink/30 via-transparent to-ink/60" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(17,17,16,0.20) 0%, rgba(17,17,16,0.28) 45%, rgba(17,17,16,0.60) 100%)",
+          }}
+        />
         <div className="absolute inset-0 flex flex-col justify-end pb-16 md:pb-24">
-          <div className="mx-auto max-w-[1280px] w-full px-6 lg:px-10 text-background">
-            <p className="text-[13px] font-semibold tracking-[0.18em] uppercase opacity-95 mb-4">{city.country}</p>
+          <div className="mx-auto max-w-[1400px] w-full px-6 lg:px-10 text-background text-center flex flex-col items-center">
+            {city.country && (
+              <p
+                className="font-mono uppercase text-white font-semibold mb-5"
+                style={{ fontSize: 13, letterSpacing: "0.22em", textShadow: "0 1px 8px rgba(0,0,0,0.25)" }}
+              >
+                {city.country}
+              </p>
+            )}
             <h1
-              style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, letterSpacing: "-0.005em", textTransform: "none" }}
-              className="text-[64px] md:text-[112px] leading-[0.95]"
+              className="font-display-black text-white"
+              style={{
+                fontSize: "clamp(2.8rem, 6.5vw, 6.5rem)",
+                lineHeight: 0.94,
+                textShadow: "0 2px 18px rgba(0,0,0,0.25)",
+              }}
             >
               {city.name}
             </h1>
             {city.tagline && (
               <p
-                className="italic mt-8 max-w-2xl opacity-95"
-                style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: "clamp(22px, 2.4vw, 32px)", letterSpacing: "0.01em" }}
+                className="font-mono text-white/85 mt-8 max-w-xl"
+                style={{ fontSize: 15, lineHeight: 1.7, letterSpacing: "0.01em", textShadow: "0 1px 8px rgba(0,0,0,0.25)" }}
               >
                 {city.tagline}
               </p>
             )}
-            <div className="mt-10">
-              <EditorialButton to={`/atlas?city=${city.slug}`} arrow variant="invert">
-                See {city.name} on the map
-              </EditorialButton>
-            </div>
           </div>
         </div>
       </section>
+
+      {/* Editorial intro — a short architectural / historical narrative.
+          Sits before the custom-sections branch so it always renders. */}
+      <CityIntro city={city} projects={projects} projectStyles={projectStyles} />
 
       {hasCustomLayout ? (
         <CitySectionsRenderer sections={city.sections!} cityId={city.id} />
       ) : (
         <>
-          {/* Default layout: description → projects → journal */}
-          {city.description && (
-            <section className="bg-warm-white py-28 md:py-36">
-              <div className="mx-auto max-w-[760px] px-6 lg:px-10">
-                <RichHtml
-                  html={city.description}
-                  className="prose-lg [&_p]:font-serif [&_p]:text-[clamp(20px,2vw,26px)] [&_p]:leading-[1.6] [&_p]:text-ink"
-                />
-              </div>
-            </section>
-          )}
 
-          <section className="py-24 md:py-32 bg-background">
-            <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-              <div className="flex items-end justify-between mb-14 border-t hairline pt-12">
-                <div>
-                  <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-4">Projects</p>
-                  <h2
-                    className="text-ink"
-                    style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: "clamp(30px, 3.4vw, 42px)", lineHeight: 1.08, letterSpacing: "-0.005em" }}
-                  >
-                    {projects.length} {projects.length === 1 ? "project" : "projects"} in {city.name}
-                  </h2>
-                </div>
-                <span className="hidden md:inline-flex">
-                  <EditorialButton to={`/atlas?city=${city.slug}`} arrow>On the map</EditorialButton>
-                </span>
-              </div>
+          {/* ============================================================
+              2. CITY MAP PREVIEW — a small, filtered teaser of the Atlas
+              showing this city's projects. The whole surface links into
+              the full interactive map.
+              ============================================================ */}
+          <CityMapPreview city={city} projects={projects} />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-                {projects.map((p) => (
-                  <Link key={p.id} to={`/projects/${p.slug}`} className="group block">
-                    <div className="aspect-[3/4] overflow-hidden bg-stone mb-6" style={{ minHeight: 280 }}>
-                      <img
-                        src={p.cover_image_url || p.hero_image_url || ""}
-                        alt={p.name}
-                        className="photo-thumb w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                        loading="lazy"
-                      />
-                    </div>
-                    {p.category && (
-                      <p
-                        className="italic mb-2"
-                        style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: 15, color: "hsl(var(--ink-soft))" }}
-                      >
-                        {p.category}
-                      </p>
-                    )}
-                    <h3
-                      className="text-ink leading-tight mb-3 group-hover:opacity-60 transition-opacity"
-                      style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em" }}
-                    >
-                      {p.name}
-                    </h3>
-                    {p.architect && (
-                      <p
-                        style={{
-                          fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-                          fontWeight: 300,
-                          fontSize: 14,
-                          color: "hsl(var(--ink-muted))",
-                          letterSpacing: "0.02em",
-                        }}
-                      >
-                        {p.architect}{p.year_completed ? ` · ${p.year_completed}` : ""}
-                      </p>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </section>
+          {/* ============================================================
+              3. PROJECTS — asymmetric editorial grid (1 hero + 4 small),
+              same visual language as Home's "Featured Buildings".
+              CTA at the bottom: "See all projects".
+              ============================================================ */}
+          <CityProjects
+            city={city}
+            projects={filteredProjects}
+            projectStyles={projectStyles}
+            styleFilter={styleFilter}
+            setStyleFilter={setStyleFilter}
+          />
 
-          {posts.length > 0 && (
-            <section className="py-24 md:py-32 bg-warm-white">
-              <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-                <div className="border-t hairline pt-12 mb-14">
-                  <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-4">Journal</p>
-                  <h2
-                    className="text-ink"
-                    style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: "clamp(26px, 3vw, 38px)", lineHeight: 1.08, letterSpacing: "-0.005em" }}
-                  >
-                    From the Journal
-                  </h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                  {posts.map((p) => (
-                    <Link key={p.id} to={`/journal/${p.slug}`} className="group block">
-                      {p.hero_image_url && (
-                        <div className="aspect-[4/3] overflow-hidden bg-stone mb-5">
-                          <img src={p.hero_image_url} alt={p.title}
-                            className="photo-thumb w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" loading="lazy" />
-                        </div>
-                      )}
-                      {p.category && <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-3">{p.category}</p>}
-                      <h3 className="text-ink mb-3 group-hover:opacity-60 transition-opacity"
-                        style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 500, fontSize: 24, lineHeight: 1.2, letterSpacing: "-0.01em" }}>
-                        {p.title}
-                      </h3>
-                      {p.excerpt && <p className="text-ink-soft text-[15px] leading-[1.65] line-clamp-3">{p.excerpt}</p>}
-                      {p.published_at && (
-                        <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mt-4">
-                          {new Date(p.published_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-                        </p>
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
+          {/* ============================================================
+              4. ARTICLES — Journal entries tagged with this city.
+              Asymmetric photo grid in the spirit of "Field notes" on Home.
+              Falls back to two example posts so the section is never empty
+              while the editorial team is still seeding content.
+              ============================================================ */}
+          <CityArticles city={city} posts={posts.length > 0 ? posts : exampleArticlesFor(city)} />
         </>
       )}
     </SiteLayout>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   City Map Preview
+   ────────────────────────────────────────────────────────────────── */
+function CityMapPreview({ city, projects }: { city: City; projects: Project[] }) {
+  const mapContainer = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const [token] = useState<string>(() => getMapboxToken());
+
+  useEffect(() => {
+    if (!token || !mapContainer.current || mapRef.current) return;
+    mapboxgl.accessToken = token;
+    try {
+      const center: [number, number] =
+        city.center_longitude != null && city.center_latitude != null
+          ? [city.center_longitude, city.center_latitude]
+          : [10, 25];
+      // Preview is centered on the city — close enough that street detail
+      // reads, but not so close that the city label disappears. z=11 keeps
+      // the urban grain visible on light-v11.
+      const PREVIEW_MAX_ZOOM = 11;
+      const baseZoom = city.default_zoom ?? 11;
+      const zoom = Math.min(baseZoom, PREVIEW_MAX_ZOOM);
+      const map = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/light-v11",
+        center,
+        zoom,
+        attributionControl: false,
+        // Interactive but kept calm: drag-pan stays on; scroll-zoom is OFF
+        // so the user can scroll past the section without the page
+        // getting "trapped" by the map. They zoom via the ± control.
+        scrollZoom: false,
+        dragRotate: false,
+        pitchWithRotate: false,
+        touchPitch: false,
+      });
+      map.touchZoomRotate.disableRotation();
+      // Subtle zoom control so users can dial in without external chrome.
+      map.addControl(new mapboxgl.NavigationControl({ showCompass: false, showZoom: true }), "top-right");
+      mapRef.current = map;
+
+      map.on("load", () => {
+        const pts = projects.filter((p) => p.latitude != null && p.longitude != null);
+        // Drop the city's project pins so the preview feels populated.
+        pts.forEach((p) => {
+          const el = document.createElement("span");
+          el.style.cssText =
+            "display:block;width:10px;height:10px;border-radius:9999px;background:#bf3a18;border:2px solid #fff;box-shadow:0 0 0 2px #bf3a18;pointer-events:none;";
+          new mapboxgl.Marker({ element: el, anchor: "center" })
+            .setLngLat([p.longitude!, p.latitude!])
+            .addTo(map);
+        });
+        if (pts.length >= 2) {
+          const b = new mapboxgl.LngLatBounds();
+          pts.forEach((p) => b.extend([p.longitude!, p.latitude!]));
+          // Same reasoning as PREVIEW_MAX_ZOOM above — don't let fitBounds
+          // override the city-label scale.
+          map.fitBounds(b, { padding: 80, maxZoom: PREVIEW_MAX_ZOOM, duration: 0 });
+        }
+      });
+    } catch (e) {
+      console.error("City map preview init failed", e);
+    }
+    return () => {
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, city.id, projects.length]);
+
+  return (
+    <section
+      className="bg-paper-warm"
+      style={{ padding: "6rem 0", borderTop: "1px solid hsl(var(--paper-mid))" }}
+    >
+      <Reveal className="mx-auto max-w-[1400px] px-6 lg:px-10" style={{ paddingBottom: "3rem" }}>
+        <div className="max-w-xl">
+          <p
+            className="font-mono uppercase text-accent-terra font-semibold mb-4"
+            style={{ fontSize: 13, letterSpacing: "0.22em" }}
+          >
+            The Map · {city.name}
+          </p>
+          <h2
+            className="font-display-black text-ink"
+            style={{ fontSize: "clamp(1.7rem, 3.2vw, 3rem)", lineHeight: 1.05 }}
+          >
+            Every project, <em className="italic text-accent-terra">on the map</em>
+          </h2>
+        </div>
+      </Reveal>
+
+      <Reveal delay={120} className="mx-auto max-w-[1400px] px-6 lg:px-10">
+        <div
+          className="relative block w-full"
+          style={{ height: "clamp(420px, 56vh, 560px)", background: "hsl(var(--paper-mid))" }}
+        >
+          {token ? (
+            <div ref={mapContainer} className="absolute inset-0" />
+          ) : (
+            <div
+              className="absolute inset-0 flex items-center justify-center text-ink-soft font-mono uppercase"
+              style={{ fontSize: 13, letterSpacing: "0.16em" }}
+            >
+              Map preview
+            </div>
+          )}
+
+          {/* CTA — sits over the map, centered along the bottom edge.
+              Pointer events are scoped so the button is clickable but the
+              rest of the map remains draggable. */}
+          <div className="absolute left-0 right-0 bottom-6 flex justify-center px-4 pointer-events-none">
+            <span className="pointer-events-auto inline-flex max-w-full">
+              <EditorialButton
+                to={`/atlas?city=${city.slug}`}
+                arrow
+                className="text-center justify-center flex-wrap max-w-full"
+                style={{
+                  background: "hsl(var(--paper-warm) / 0.95)",
+                  padding: "9px 16px 7px",
+                  boxShadow: "0 2px 14px rgba(0,0,0,0.10)",
+                  fontSize: 11,
+                  letterSpacing: "0.16em",
+                }}
+              >
+                Explore {city.name} on the Map
+              </EditorialButton>
+            </span>
+          </div>
+        </div>
+      </Reveal>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   Projects — asymmetric grid in the spirit of FeaturedBuildings
+   ────────────────────────────────────────────────────────────────── */
+function CityProjects({
+  city, projects, projectStyles, styleFilter, setStyleFilter,
+}: {
+  city: City;
+  projects: Project[];
+  projectStyles: string[];
+  styleFilter: string;
+  setStyleFilter: (v: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const matches = q
+    ? projects.filter((p) => p.name.toLowerCase().includes(q) || (p.architect || "").toLowerCase().includes(q))
+    : projects;
+  const searching = q.length > 0;
+
+  if (projects.length === 0) {
+    return (
+      <section className="bg-paper py-24 md:py-32" style={{ borderTop: "1px solid hsl(var(--paper-mid))" }}>
+        <Reveal className="mx-auto max-w-[1400px] px-6 lg:px-10 text-center">
+          <p
+            className="font-mono uppercase text-accent-terra mb-5 font-semibold"
+            style={{ fontSize: 13, letterSpacing: "0.22em" }}
+          >
+            Projects
+          </p>
+          <h2
+            className="font-display-black text-ink"
+            style={{ fontSize: "clamp(1.7rem, 3.2vw, 3rem)", lineHeight: 1.05 }}
+          >
+            Coming <em className="italic text-accent-terra">soon</em>
+          </h2>
+          <p
+            className="font-mono text-ink-soft mt-7 mx-auto"
+            style={{ fontSize: 14, lineHeight: 1.7, letterSpacing: "0.01em", maxWidth: 440 }}
+          >
+            We're still gathering the projects we love in {city.name}. Check back soon.
+          </p>
+        </Reveal>
+      </section>
+    );
+  }
+
+  const hero = projects[0];
+  const rest = projects.slice(1, 5);
+
+  return (
+    <section className="bg-paper" style={{ padding: "6rem 0", borderTop: "1px solid hsl(var(--paper-mid))" }}>
+      <Reveal className="mx-auto max-w-[1400px] px-6 lg:px-10" style={{ paddingBottom: "3rem" }}>
+        <div className="flex items-end justify-between gap-8 flex-wrap">
+          <div className="max-w-xl">
+            <p
+              className="font-mono uppercase text-accent-terra font-semibold mb-4"
+              style={{ fontSize: 13, letterSpacing: "0.22em" }}
+            >
+              Projects
+            </p>
+            <h2
+              className="font-display-black text-ink"
+              style={{ fontSize: "clamp(1.7rem, 3.2vw, 3rem)", lineHeight: 1.05 }}
+            >
+              {projects.length} {projects.length === 1 ? "project" : "projects"} in{" "}
+              <em className="italic text-accent-terra">{city.name}</em>
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-5 flex-wrap">
+            <div className="flex items-center gap-2 border-b border-black/15 pb-2 focus-within:border-black/40 transition-colors">
+              <Search className="w-3.5 h-3.5 text-ink-soft shrink-0" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search projects"
+                aria-label="Search projects by name"
+                className="bg-transparent font-mono text-ink placeholder:text-ink-soft focus:outline-none"
+                style={{ fontSize: 12, letterSpacing: "0.04em", width: 150 }}
+              />
+              {query && (
+                <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="text-ink-soft hover:text-ink shrink-0">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            {projectStyles.length > 0 && (
+              <>
+                <select
+                  value={styleFilter}
+                  onChange={(e) => setStyleFilter(e.target.value)}
+                  aria-label="Filter projects by style"
+                  className="bg-transparent border-b border-black/15 pb-2 font-mono uppercase text-ink-soft hover:text-ink focus:outline-none focus:text-ink focus:border-black/40 cursor-pointer transition-colors"
+                  style={{ fontSize: 11, letterSpacing: "0.22em", fontWeight: 500 }}
+                >
+                  <option value="">Style</option>
+                  {projectStyles.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                {styleFilter && (
+                  <button
+                    type="button"
+                    onClick={() => setStyleFilter("")}
+                    className="pb-2 font-mono uppercase text-ink-soft hover:text-ink transition-colors"
+                    style={{ fontSize: 11, letterSpacing: "0.22em", fontWeight: 500 }}
+                  >
+                    Clear
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </Reveal>
+
+      {/* When searching, show a uniform grid of every match (so any project
+          surfaces, not just the 5 in the hero layout); otherwise the
+          asymmetric editorial grid that mirrors Home's "Featured Buildings". */}
+      {searching ? (
+        matches.length ? (
+          <div
+            className="mx-auto max-w-[1400px] px-6 lg:px-10 grid gap-2"
+            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}
+          >
+            {matches.map((p, i) => (
+              <Reveal key={p.id} delay={Math.min(i, 6) * 70}>
+                <Link
+                  to={`/projects/${p.slug}`}
+                  className="group relative overflow-hidden bg-paper-mid block"
+                  style={{ borderRadius: 0, aspectRatio: "4 / 5" }}
+                >
+                  <img
+                    src={p.cover_image_url || p.hero_image_url || ""}
+                    alt={p.name}
+                    className="photo-thumb absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  <div
+                    className="absolute bottom-0 left-0 right-0"
+                    style={{ padding: "2.2rem 1.2rem 1rem", background: "linear-gradient(transparent, rgba(17,17,16,0.9))" }}
+                  >
+                    {(p.architect || p.year_completed) && (
+                      <p className="font-mono uppercase mb-1.5 font-medium" style={{ fontSize: 12, letterSpacing: "0.16em", color: "#ffffff" }}>
+                        {[p.architect, p.year_completed].filter(Boolean).join(" · ")}
+                      </p>
+                    )}
+                    <h3 className="font-display text-white" style={{ fontSize: "1.3rem", letterSpacing: "-0.01em" }}>
+                      {p.name}
+                    </h3>
+                  </div>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        ) : (
+          <Reveal className="mx-auto max-w-[1400px] px-6 lg:px-10 text-center">
+            <p className="font-mono text-ink-soft" style={{ fontSize: 14, letterSpacing: "0.04em" }}>
+              No projects match “{query}”.
+            </p>
+          </Reveal>
+        )
+      ) : (
+      <div
+        className="mx-auto max-w-[1400px] px-6 lg:px-10 grid grid-cols-1 gap-2 md:grid-cols-[1.4fr_1fr_1fr]"
+        style={{ gridAutoRows: "minmax(240px, auto)" }}
+      >
+        <Reveal className="md:row-span-2">
+          <Link
+            to={`/projects/${hero.slug}`}
+            className="group relative overflow-hidden bg-paper-mid block h-full"
+            style={{ borderRadius: 0, minHeight: 500 }}
+          >
+            <img
+              src={hero.cover_image_url || hero.hero_image_url || ""}
+              alt={hero.name}
+              className="photo-thumb w-full h-full object-cover"
+              loading="lazy"
+            />
+            <div
+              className="absolute bottom-0 left-0 right-0"
+              style={{
+                padding: "3rem 1.8rem 1.5rem",
+                background: "linear-gradient(transparent, rgba(17,17,16,0.9))",
+              }}
+            >
+              {(hero.architect || hero.year_completed) && (
+                <p
+                  className="font-mono uppercase mb-2 font-semibold"
+                  style={{ fontSize: 13, letterSpacing: "0.18em", color: "#ffffff" }}
+                >
+                  {[hero.architect, hero.year_completed].filter(Boolean).join(" · ")}
+                </p>
+              )}
+              <h3 className="font-display text-white" style={{ fontSize: "2rem", letterSpacing: "-0.01em" }}>
+                {hero.name}
+              </h3>
+            </div>
+          </Link>
+        </Reveal>
+
+        {rest.map((p, i) => (
+          <Reveal key={p.id} delay={120 + i * 110}>
+            <Link
+              to={`/projects/${p.slug}`}
+              className="group relative overflow-hidden bg-paper-mid block h-full"
+              style={{ borderRadius: 0, minHeight: 240 }}
+            >
+              <img
+                src={p.cover_image_url || p.hero_image_url || ""}
+                alt={p.name}
+                className="photo-thumb w-full h-full object-cover"
+                loading="lazy"
+              />
+              <div
+                className="absolute bottom-0 left-0 right-0"
+                style={{
+                  padding: "2.2rem 1.2rem 1rem",
+                  background: "linear-gradient(transparent, rgba(17,17,16,0.9))",
+                }}
+              >
+                {(p.architect || p.year_completed) && (
+                  <p
+                    className="font-mono uppercase mb-1.5 font-medium"
+                    style={{ fontSize: 12, letterSpacing: "0.16em", color: "#ffffff" }}
+                  >
+                    {[p.architect, p.year_completed].filter(Boolean).join(" · ")}
+                  </p>
+                )}
+                <h3 className="font-display text-white" style={{ fontSize: "1.3rem", letterSpacing: "-0.01em" }}>
+                  {p.name}
+                </h3>
+              </div>
+            </Link>
+          </Reveal>
+        ))}
+      </div>
+      )}
+
+      <Reveal className="mx-auto max-w-[1400px] flex justify-center" style={{ padding: "4rem 2.5rem 0" }}>
+        <EditorialButton to={`/atlas?city=${city.slug}`} arrow variant="muted">
+          See all projects
+        </EditorialButton>
+      </Reveal>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   Articles — asymmetric Field-notes-style grid scoped to the city
+   ────────────────────────────────────────────────────────────────── */
+function CityArticles({ city, posts }: { city: City; posts: Post[] }) {
+  const featured = posts[0];
+  const rest = posts.slice(1, 5);
+
+  return (
+    <section className="bg-paper-warm" style={{ padding: "6rem 0", borderTop: "1px solid hsl(var(--paper-mid))" }}>
+      <Reveal className="mx-auto max-w-[1400px] px-6 lg:px-10" style={{ paddingBottom: "3rem" }}>
+        <div className="flex items-end justify-between gap-8 flex-wrap">
+          <div className="max-w-xl">
+            <p
+              className="font-mono uppercase text-accent-terra font-semibold mb-4"
+              style={{ fontSize: 13, letterSpacing: "0.22em" }}
+            >
+              Field Notes
+            </p>
+            <h2
+              className="font-display-black text-ink"
+              style={{ fontSize: "clamp(1.7rem, 3.2vw, 3rem)", lineHeight: 1.05 }}
+            >
+              Stories from <em className="italic text-accent-terra">{city.name}</em>
+            </h2>
+          </div>
+          <EditorialButton to={`/practice?city=${city.slug}`} arrow variant="muted">
+            All {city.name} articles
+          </EditorialButton>
+        </div>
+      </Reveal>
+
+      <div
+        className={`mx-auto max-w-[1400px] px-6 lg:px-10 grid grid-cols-1 gap-1 ${rest.length ? "md:grid-cols-[2fr_1fr_1fr]" : ""}`}
+        style={{ gridAutoRows: "minmax(220px, auto)" }}
+      >
+        <Reveal className={rest.length ? "md:row-span-2" : ""}>
+          <Link
+            to={`/practice/${featured.slug}`}
+            className="group relative overflow-hidden bg-paper-mid block h-full"
+            style={{ borderRadius: 0, minHeight: 460 }}
+          >
+            <img
+              src={featured.hero_image_url || ""}
+              alt={featured.title}
+              className="photo-thumb w-full h-full object-cover"
+              style={{ minHeight: 460 }}
+              loading="lazy"
+            />
+            <div
+              className="absolute bottom-0 left-0 right-0"
+              style={{
+                padding: "2.5rem 1.4rem 1.2rem",
+                background: "linear-gradient(transparent, rgba(17,17,16,0.88))",
+              }}
+            >
+              {featured.category && (
+                <p
+                  className="font-mono uppercase mb-1"
+                  style={{ fontSize: 12, letterSpacing: "0.18em", fontWeight: 500, color: "#ffe4dc" }}
+                >
+                  {featured.category}
+                </p>
+              )}
+              <h3 className="font-display text-white" style={{ fontSize: "1.4rem", letterSpacing: "-0.01em" }}>
+                {featured.title}
+              </h3>
+            </div>
+          </Link>
+        </Reveal>
+
+        {rest.map((p, i) => (
+          <Reveal key={p.id} delay={120 + i * 110}>
+            <Link
+              to={`/practice/${p.slug}`}
+              className="group relative overflow-hidden bg-paper-mid block h-full"
+              style={{ borderRadius: 0, minHeight: 220 }}
+            >
+              <img
+                src={p.hero_image_url || ""}
+                alt={p.title}
+                className="photo-thumb w-full h-full object-cover"
+                style={{ minHeight: 220 }}
+                loading="lazy"
+              />
+              <div
+                className="absolute bottom-0 left-0 right-0"
+                style={{
+                  padding: "2rem 1.2rem 1rem",
+                  background: "linear-gradient(transparent, rgba(17,17,16,0.88))",
+                }}
+              >
+                {p.category && (
+                  <p
+                    className="font-mono uppercase mb-1"
+                    style={{ fontSize: 12, letterSpacing: "0.18em", fontWeight: 500, color: "#ffe4dc" }}
+                  >
+                    {p.category}
+                  </p>
+                )}
+                <h3 className="font-display text-white" style={{ fontSize: "1rem", letterSpacing: "-0.01em" }}>
+                  {p.title}
+                </h3>
+              </div>
+            </Link>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   Example articles
+   ──────────────────────────────────────────────────────────────────
+   Two placeholder posts shown when the city has no published posts
+   yet. Slugs match the seed migration (20260610150000_seed_barcelona
+   _articles.sql) so once the migration runs, the same URLs resolve
+   to real, editable content. */
+function exampleArticlesFor(city: City): Post[] {
+  return [
+    {
+      id: `example-best-buildings-${city.id}`,
+      slug: `best-buildings-${city.slug}`,
+      title: `The Best Buildings in ${city.name}`,
+      excerpt: `A walking guide to the buildings that define ${city.name}'s architectural identity — from icons to overlooked gems.`,
+      category: "City Guide",
+      hero_image_url:
+        "https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=1600&q=80",
+      published_at: new Date(Date.now() - 6 * 86400 * 1000).toISOString(),
+    },
+    {
+      id: `example-style-guide-${city.id}`,
+      slug: `style-guide-${city.slug}`,
+      title: `A Field Guide to ${city.name}'s Style`,
+      excerpt: `Materials, motifs and structural moves — a short field guide to recognising ${city.name}'s architectural language on a single walk.`,
+      category: "Style Guide",
+      hero_image_url:
+        "https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=1600&q=80",
+      published_at: new Date(Date.now() - 2 * 86400 * 1000).toISOString(),
+    },
+  ];
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   City Intro
+   ──────────────────────────────────────────────────────────────────
+   A longer-form architectural / historical narrative for the city.
+   Uses the DB `description` when present; otherwise falls back to a
+   short essay so even newly added cities feel finished. */
+function CityIntro({ city }: { city: City; projects: Project[]; projectStyles: string[] }) {
+  // Single source of truth: when the CMS description is empty, the same
+  // default paragraphs that pre-fill the admin editor are rendered here.
+  // Whatever the admin writes (or keeps) becomes the page copy.
+  const html = isDescriptionEmpty(city.description)
+    ? defaultCityDescriptionHTML({ name: city.name, country: city.country })
+    : city.description!;
+  return (
+    <section className="bg-paper py-24 md:py-32" style={{ borderTop: "1px solid hsl(var(--paper-mid))" }}>
+      <Reveal className="mx-auto max-w-[760px] px-6 lg:px-10">
+        <RichHtml
+          html={html}
+          className="[&_p]:font-serif [&_p]:text-ink [&_p+p]:mt-6 [&_p]:leading-[1.65] [&_p]:text-[clamp(19px,1.7vw,24px)] [&_h2]:font-display [&_h2]:text-ink [&_h2]:text-[clamp(24px,2.4vw,34px)] [&_h2]:mt-12 [&_h2]:mb-4 [&_h3]:font-display [&_h3]:text-ink [&_h3]:text-[clamp(20px,2vw,28px)] [&_h3]:mt-10 [&_h3]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:text-ink [&_li]:font-serif [&_li]:text-[clamp(18px,1.5vw,22px)] [&_li]:leading-[1.65] [&_blockquote]:border-l-2 [&_blockquote]:border-ink/30 [&_blockquote]:pl-5 [&_blockquote]:italic [&_blockquote]:text-ink-soft [&_a]:text-ink [&_a]:underline [&_a]:underline-offset-2"
+        />
+      </Reveal>
+    </section>
   );
 }

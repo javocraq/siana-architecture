@@ -7,11 +7,11 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Bold, Italic, Heading2, Heading3, List, ListOrdered, Quote,
   Link as LinkIcon, Image as ImageIcon, Undo2, Redo2, Code2,
-  Table as TableIcon, Rows, Columns, Trash2,
+  Table as TableIcon, Trash2,
 } from "lucide-react";
 
 type Props = {
@@ -23,6 +23,9 @@ type Props = {
 export default function RichTextEditor({ value, onChange, placeholder }: Props) {
   const [mode, setMode] = useState<"visual" | "html">("visual");
   const [htmlBuffer, setHtmlBuffer] = useState(value || "");
+  const [tablePickerOpen, setTablePickerOpen] = useState(false);
+  const [hoverDims, setHoverDims] = useState<{ rows: number; cols: number } | null>(null);
+  const pickerRef = useRef<HTMLDivElement | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -52,6 +55,20 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, mode]);
+
+  // Close the size picker if the user clicks anywhere outside of it.
+  useEffect(() => {
+    if (!tablePickerOpen) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (!pickerRef.current) return;
+      if (!pickerRef.current.contains(e.target as Node)) {
+        setTablePickerOpen(false);
+        setHoverDims(null);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [tablePickerOpen]);
 
   if (!editor) return null;
 
@@ -109,16 +126,96 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
           <ImageIcon className="w-3.5 h-3.5" />
         </Btn>
         <span className="w-px h-4 bg-border mx-1" />
-        <Btn title="Insert table" disabled={mode === "html"}
-          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>
-          <TableIcon className="w-3.5 h-3.5" />
-        </Btn>
+        {/* Insert table — opens a small grid picker so the editor chooses
+            the exact rows × cols before inserting. */}
+        <div className="relative" ref={pickerRef}>
+          <Btn
+            title="Insert table"
+            active={tablePickerOpen}
+            disabled={mode === "html"}
+            onClick={() => setTablePickerOpen((o) => !o)}
+          >
+            <TableIcon className="w-3.5 h-3.5" />
+          </Btn>
+          {tablePickerOpen && (
+            <div
+              className="absolute left-0 top-full mt-1 z-50 bg-background border hairline shadow-lg p-3"
+              style={{ minWidth: 200 }}
+            >
+              <p className="text-[11px] text-ink-muted mb-2 text-center tracking-tag uppercase">
+                {hoverDims ? `${hoverDims.rows} × ${hoverDims.cols}` : "Pick size"}
+              </p>
+              <div
+                className="grid gap-[2px]"
+                style={{ gridTemplateColumns: `repeat(8, 16px)` }}
+                onMouseLeave={() => setHoverDims(null)}
+              >
+                {Array.from({ length: 8 * 8 }).map((_, i) => {
+                  const r = Math.floor(i / 8) + 1;
+                  const c = (i % 8) + 1;
+                  const on = !!hoverDims && r <= hoverDims.rows && c <= hoverDims.cols;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onMouseEnter={() => setHoverDims({ rows: r, cols: c })}
+                      onClick={() => {
+                        editor
+                          .chain()
+                          .focus()
+                          .insertTable({ rows: r, cols: c, withHeaderRow: true })
+                          .run();
+                        setTablePickerOpen(false);
+                        setHoverDims(null);
+                      }}
+                      className="w-4 h-4 border hairline transition-colors"
+                      style={{
+                        background: on ? "hsl(var(--ink))" : "transparent",
+                        borderColor: on ? "hsl(var(--ink))" : "hsl(var(--border))",
+                      }}
+                    />
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-ink-muted mt-2 text-center">
+                Click to insert
+              </p>
+            </div>
+          )}
+        </div>
         {inTable && mode === "visual" && (
           <>
-            <Btn title="Add row below" onClick={() => editor.chain().focus().addRowAfter().run()}><Rows className="w-3.5 h-3.5" /></Btn>
-            <Btn title="Add column right" onClick={() => editor.chain().focus().addColumnAfter().run()}><Columns className="w-3.5 h-3.5" /></Btn>
-            <Btn title="Toggle header row" onClick={() => editor.chain().focus().toggleHeaderRow().run()}>H</Btn>
-            <Btn title="Delete table" onClick={() => editor.chain().focus().deleteTable().run()}><Trash2 className="w-3.5 h-3.5" /></Btn>
+            <span className="w-px h-4 bg-border mx-1" />
+            <Btn title="Add row above" onClick={() => editor.chain().focus().addRowBefore().run()}>
+              <span className="text-[10px] font-mono">R↑</span>
+            </Btn>
+            <Btn title="Add row below" onClick={() => editor.chain().focus().addRowAfter().run()}>
+              <span className="text-[10px] font-mono">R↓</span>
+            </Btn>
+            <Btn title="Delete row" onClick={() => editor.chain().focus().deleteRow().run()}>
+              <span className="text-[10px] font-mono">R✕</span>
+            </Btn>
+            <Btn title="Add column before" onClick={() => editor.chain().focus().addColumnBefore().run()}>
+              <span className="text-[10px] font-mono">C←</span>
+            </Btn>
+            <Btn title="Add column after" onClick={() => editor.chain().focus().addColumnAfter().run()}>
+              <span className="text-[10px] font-mono">C→</span>
+            </Btn>
+            <Btn title="Delete column" onClick={() => editor.chain().focus().deleteColumn().run()}>
+              <span className="text-[10px] font-mono">C✕</span>
+            </Btn>
+            <Btn title="Toggle header row" onClick={() => editor.chain().focus().toggleHeaderRow().run()}>
+              <span className="text-[10px] font-mono">H</span>
+            </Btn>
+            <Btn title="Merge selected cells" onClick={() => editor.chain().focus().mergeCells().run()}>
+              <span className="text-[10px] font-mono">M</span>
+            </Btn>
+            <Btn title="Split cell" onClick={() => editor.chain().focus().splitCell().run()}>
+              <span className="text-[10px] font-mono">S</span>
+            </Btn>
+            <Btn title="Delete table" onClick={() => editor.chain().focus().deleteTable().run()}>
+              <Trash2 className="w-3.5 h-3.5" />
+            </Btn>
           </>
         )}
         <span className="flex-1" />

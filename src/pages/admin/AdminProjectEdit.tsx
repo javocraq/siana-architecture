@@ -5,6 +5,9 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import MapPicker from "@/components/admin/MapPicker";
+import SelectOrCreate from "@/components/admin/SelectOrCreate";
+import { STYLES } from "@/lib/adminTaxonomies";
+import { MATERIALS, EXPERIENCES } from "@/lib/atlasFilters";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
 
@@ -30,6 +33,8 @@ type FormState = {
   city_id: string | null;
   category: string;
   style: string;
+  materials: string[];
+  experience: string[];
   era: string;
   year_completed: string;
   address: string;
@@ -56,6 +61,8 @@ const empty: FormState = {
   city_id: null,
   category: "",
   style: "",
+  materials: [],
+  experience: [],
   era: "",
   year_completed: "",
   address: "",
@@ -85,6 +92,9 @@ export default function AdminProjectEdit() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [slugTouched, setSlugTouched] = useState(!isNew);
+  const [addingCity, setAddingCity] = useState(false);
+  const [cityDraft, setCityDraft] = useState("");
+  const [creatingCity, setCreatingCity] = useState(false);
 
   useEffect(() => {
     supabase.from("cities").select("id,name").order("name").then(({ data }) => {
@@ -112,6 +122,8 @@ export default function AdminProjectEdit() {
         city_id: data.city_id,
         category: data.category || "",
         style: data.style || "",
+        materials: Array.isArray((data as any).materials) ? (data as any).materials : [],
+        experience: Array.isArray((data as any).experience) ? (data as any).experience : [],
         era: data.era || "",
         year_completed: data.year_completed != null ? String(data.year_completed) : "",
         address: data.address || "",
@@ -133,6 +145,28 @@ export default function AdminProjectEdit() {
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const createCity = async () => {
+    const name = cityDraft.trim();
+    if (!name) return;
+    setCreatingCity(true);
+    const slug = slugify(name);
+    const { data, error } = await supabase
+      .from("cities")
+      .insert({ name, slug, status: "draft" })
+      .select("id, name")
+      .single();
+    setCreatingCity(false);
+    if (error || !data) {
+      toast({ title: "Could not create city", description: error?.message, variant: "destructive" });
+      return;
+    }
+    setCities((cs) => [...cs, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
+    set("city_id", data.id);
+    setAddingCity(false);
+    setCityDraft("");
+    toast({ title: "City created", description: `“${data.name}” added as draft. Edit it later from /admin/cities.` });
+  };
 
   const onNameChange = (v: string) => {
     setForm((f) => ({ ...f, name: v, slug: slugTouched ? f.slug : slugify(v) }));
@@ -161,6 +195,8 @@ export default function AdminProjectEdit() {
       city_id: form.city_id,
       category: form.category || null,
       style: form.style || null,
+      materials: form.materials,
+      experience: form.experience,
       era: form.era || null,
       year_completed: form.year_completed ? parseInt(form.year_completed, 10) : null,
       address: form.address || null,
@@ -177,27 +213,40 @@ export default function AdminProjectEdit() {
       canonical_url: form.canonical_url || null,
     };
     const finalStatus = publishOverride || form.status;
-    if (isNew) {
-      const { data, error } = await supabase.from("projects").insert(payload).select("id").single();
-      setSaving(false);
-      if (error) {
-        setError(error.message);
-        toast({ title: "Could not save project", description: error.message, variant: "destructive" });
-        return;
+
+    const writeOnce = async (pl: any) => {
+      if (isNew) return await supabase.from("projects").insert(pl).select("id").single();
+      const r = await supabase.from("projects").update(pl).eq("id", id!);
+      return { data: null as any, error: r.error };
+    };
+
+    let { data, error } = await writeOnce(payload);
+    // If the materials/experience columns aren't in the DB yet (migration not
+    // applied), save the rest so the editor never breaks.
+    if (error && /materials|experience|schema cache|could not find/i.test(error.message || "")) {
+      const { materials: _m, experience: _e, ...safe } = payload;
+      ({ data, error } = await writeOnce(safe));
+      if (!error) {
+        toast({
+          title: "Materials/Experience not saved yet",
+          description: "Apply the DB migration (project materials/experience columns) to enable those fields.",
+          variant: "destructive",
+        });
       }
+    }
+    setSaving(false);
+    if (error) {
+      setError(error.message);
+      toast({ title: "Could not save project", description: error.message, variant: "destructive" });
+      return;
+    }
+    if (isNew) {
       toast({
         title: finalStatus === "published" ? "Project published" : "Draft saved",
         description: `“${payload.name}” has been ${finalStatus === "published" ? "published" : "saved as a draft"}.`,
       });
       navigate(`/admin/projects/${data.id}`, { replace: true });
     } else {
-      const { error } = await supabase.from("projects").update(payload).eq("id", id!);
-      setSaving(false);
-      if (error) {
-        setError(error.message);
-        toast({ title: "Could not save project", description: error.message, variant: "destructive" });
-        return;
-      }
       if (publishOverride) set("status", publishOverride);
       toast({
         title:
@@ -324,20 +373,61 @@ export default function AdminProjectEdit() {
             </div>
 
             <div className="grid grid-cols-3 gap-6">
-              <Field label="City">
-                <select
-                  className={inputCls}
-                  value={form.city_id || ""}
-                  onChange={(e) => set("city_id", e.target.value || null)}
-                >
-                  <option value="">— Select —</option>
-                  {cities.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+              <Field label="City" hint="Pick a city or add a new one">
+                {addingCity ? (
+                  <div className="flex gap-2">
+                    <input
+                      autoFocus
+                      className={inputCls}
+                      value={cityDraft}
+                      onChange={(e) => setCityDraft(e.target.value)}
+                      placeholder="New city name…"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { e.preventDefault(); createCity(); }
+                        else if (e.key === "Escape") { setAddingCity(false); setCityDraft(""); }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={createCity}
+                      disabled={creatingCity || !cityDraft.trim()}
+                      className="text-[11px] tracking-tag uppercase border hairline px-3 text-ink hover:bg-off-white whitespace-nowrap disabled:opacity-50"
+                    >
+                      {creatingCity ? "…" : "Create"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setAddingCity(false); setCityDraft(""); }}
+                      className="text-[11px] tracking-tag uppercase px-2 text-ink-muted hover:text-ink whitespace-nowrap"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    className={inputCls}
+                    value={form.city_id || ""}
+                    onChange={(e) => {
+                      if (e.target.value === "__add_city__") setAddingCity(true);
+                      else set("city_id", e.target.value || null);
+                    }}
+                  >
+                    <option value="">— Select —</option>
+                    {cities.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                    <option value="__add_city__">+ Add new city…</option>
+                  </select>
+                )}
               </Field>
               <Field label="Category"><input className={inputCls} value={form.category} onChange={(e) => set("category", e.target.value)} /></Field>
-              <Field label="Style"><input className={inputCls} value={form.style} onChange={(e) => set("style", e.target.value)} /></Field>
+              <Field label="Style">
+                <SelectOrCreate
+                  value={form.style}
+                  onChange={(v) => set("style", v)}
+                  options={STYLES}
+                />
+              </Field>
             </div>
 
             <div className="grid grid-cols-3 gap-6">
@@ -360,6 +450,23 @@ export default function AdminProjectEdit() {
                     transition: "left 0.2s ease", boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
                   }} />
                 </button>
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Field label="Materials" hint="Filterable on the Map">
+                <ChipMulti
+                  options={MATERIALS}
+                  selected={form.materials}
+                  onToggle={(v) => set("materials", form.materials.includes(v) ? form.materials.filter((x) => x !== v) : [...form.materials, v])}
+                />
+              </Field>
+              <Field label="Experience" hint="Filterable on the Map">
+                <ChipMulti
+                  options={EXPERIENCES}
+                  selected={form.experience}
+                  onToggle={(v) => set("experience", form.experience.includes(v) ? form.experience.filter((x) => x !== v) : [...form.experience, v])}
+                />
               </Field>
             </div>
 
@@ -448,6 +555,39 @@ export default function AdminProjectEdit() {
 
 const inputCls =
   "w-full bg-background border hairline px-3 py-2 text-[13px] text-ink focus:outline-none focus:border-ink";
+
+function ChipMulti({
+  options,
+  selected,
+  onToggle,
+}: {
+  options: readonly string[];
+  selected: string[];
+  onToggle: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((o) => {
+        const on = selected.includes(o);
+        return (
+          <button
+            key={o}
+            type="button"
+            onClick={() => onToggle(o)}
+            className="uppercase tracking-[0.1em] px-3 py-1.5 border transition-colors"
+            style={
+              on
+                ? { fontSize: 11, background: "hsl(var(--ink))", color: "#fff", borderColor: "hsl(var(--ink))" }
+                : { fontSize: 11, borderColor: "rgba(0,0,0,0.15)", color: "hsl(var(--ink-soft))" }
+            }
+          >
+            {o}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (

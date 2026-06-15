@@ -178,7 +178,7 @@ export default function ProjectDetail() {
                 <blockquote
                   key={i}
                   className="my-12 pl-8 italic text-ink"
-                  style={{ ...cormorant, fontWeight: 400, fontSize: 32, lineHeight: 1.35, borderLeft: "3px solid #2563EB" }}
+                  style={{ ...cormorant, fontWeight: 400, fontSize: 32, lineHeight: 1.35, borderLeft: "3px solid hsl(var(--accent))" }}
                 >
                   {p}
                 </blockquote>

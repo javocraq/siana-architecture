@@ -29,6 +29,7 @@ export type Database = {
           meta_title: string | null
           name: string
           og_image_url: string | null
+          region: string | null
           sections: Json
           slug: string
           status: string
@@ -49,6 +50,7 @@ export type Database = {
           meta_title?: string | null
           name: string
           og_image_url?: string | null
+          region?: string | null
           sections?: Json
           slug: string
           status?: string
@@ -69,6 +71,7 @@ export type Database = {
           meta_title?: string | null
           name?: string
           og_image_url?: string | null
+          region?: string | null
           sections?: Json
           slug?: string
           status?: string

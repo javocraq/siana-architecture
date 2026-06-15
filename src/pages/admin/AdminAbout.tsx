@@ -52,15 +52,15 @@ export default function AdminAbout() {
     setSaving(false);
     if (error) {
       toast({
-        title: "No se pudo guardar",
+        title: "Could not save",
         description: error.message.includes("does not exist")
-          ? "Falta aplicar la migración `site_pages` en Supabase."
+          ? "The `site_pages` migration has not been applied on Supabase yet."
           : error.message,
         variant: "destructive",
       });
       return;
     }
-    toast({ title: "Página About guardada", description: "El texto público se actualizó." });
+    toast({ title: "About page saved", description: "The public copy has been updated." });
   };
 
   return (
@@ -69,7 +69,7 @@ export default function AdminAbout() {
         <div className="mb-10 flex items-end justify-between gap-6 flex-wrap">
           <div>
             <p className="font-mono uppercase text-ink-soft mb-3 font-semibold" style={{ fontSize: 11, letterSpacing: "0.22em" }}>
-              Gestionar
+              Manage
             </p>
             <h1
               className="font-display text-ink"
@@ -78,18 +78,18 @@ export default function AdminAbout() {
               About
             </h1>
             <p className="mt-4 text-[13px] text-ink-soft" style={{ lineHeight: 1.6 }}>
-              Texto del manifiesto en <code className="text-ink">/about</code>. Solo edita las palabras — el layout y los strips de proyectos/ciudades/recursos no se tocan aquí.
+              Manifesto copy on <code className="text-ink">/about</code>. Only edit the words — the layout and the project/city/resource strips are not configured from here.
             </p>
           </div>
         </div>
 
         {loading ? (
           <div className="flex items-center gap-3 text-ink-muted text-[12px]">
-            <Loader2 className="w-4 h-4 animate-spin" /> Cargando…
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading…
           </div>
         ) : (
           <div className="space-y-8 bg-background p-6" style={{ border: "1px solid hsl(var(--paper-mid))" }}>
-            <Field label="Etiqueta superior" hint="Aparece arriba del titular en mayúsculas">
+            <Field label="Eyebrow" hint="Shown above the headline in uppercase">
               <input
                 className={inputCls}
                 value={content.eyebrow}
@@ -97,7 +97,7 @@ export default function AdminAbout() {
               />
             </Field>
 
-            <Field label="Titular">
+            <Field label="Headline">
               <input
                 className={inputCls}
                 value={content.headline}
@@ -107,10 +107,10 @@ export default function AdminAbout() {
 
             <div>
               <label className="block font-mono uppercase text-ink-soft mb-3 font-medium" style={{ fontSize: 10, letterSpacing: "0.22em" }}>
-                Párrafos
+                Paragraphs
               </label>
               <p className="text-[12px] text-ink-soft mb-3" style={{ lineHeight: 1.5 }}>
-                El último párrafo se renderiza como cita destacada (serif italic). Arrastra el ratón sobre uno para borrarlo.
+                The last paragraph is rendered as a pull quote (serif italic). Hover one to delete it.
               </p>
               <div className="space-y-3">
                 {content.body.map((p, i) => (
@@ -126,8 +126,8 @@ export default function AdminAbout() {
                       onClick={() => removeParagraph(i)}
                       disabled={content.body.length <= 1}
                       className="shrink-0 p-2 text-ink-soft hover:text-ink disabled:opacity-30"
-                      aria-label="Eliminar párrafo"
-                      title="Eliminar párrafo"
+                      aria-label="Delete paragraph"
+                      title="Delete paragraph"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -140,11 +140,11 @@ export default function AdminAbout() {
                 className="mt-4 inline-flex items-center gap-2 font-mono uppercase text-ink-soft hover:text-ink transition-colors"
                 style={{ fontSize: 11, letterSpacing: "0.22em" }}
               >
-                <Plus className="w-3.5 h-3.5" /> Añadir párrafo
+                <Plus className="w-3.5 h-3.5" /> Add paragraph
               </button>
             </div>
 
-            <Field label="Etiqueta del botón CTA" hint='Texto del enlace a "Open the map"'>
+            <Field label="CTA button label" hint='Text for the "Open the map" link'>
               <input
                 className={inputCls}
                 value={content.cta_label}
@@ -159,7 +159,7 @@ export default function AdminAbout() {
                 className="font-mono uppercase text-white disabled:opacity-50"
                 style={{ background: "hsl(var(--ink))", fontSize: 11, letterSpacing: "0.22em", padding: "10px 22px" }}
               >
-                {saving ? "Guardando…" : "Guardar cambios"}
+                {saving ? "Saving…" : "Save changes"}
               </button>
             </div>
           </div>

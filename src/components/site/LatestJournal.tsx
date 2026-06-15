@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Reveal from "@/components/site/Reveal";
 import EditorialButton from "@/components/site/EditorialButton";
+import { useHomeContent } from "@/hooks/useHomeContent";
 
 interface Post {
   id: string;
@@ -20,6 +21,7 @@ interface Post {
  */
 export default function LatestJournal() {
   const [posts, setPosts] = useState<Post[]>([]);
+  const content = useHomeContent();
 
   useEffect(() => {
     (async () => {
@@ -41,29 +43,33 @@ export default function LatestJournal() {
   return (
     <section className="bg-paper" style={{ padding: "6rem 0" }}>
       <Reveal
-        className="mx-auto max-w-[1400px] flex items-baseline justify-between flex-wrap gap-4"
-        style={{ padding: "0 2.5rem 3rem" }}
+        className="mx-auto max-w-[1400px] px-6 lg:px-10"
+        style={{ paddingBottom: "5rem" }}
       >
-        <h2 className="font-display-black text-ink" style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.6rem)" }}>
-          Field <em className="italic text-accent-terra">notes</em>
-        </h2>
-        <EditorialButton to="/practice" arrow variant="muted">All notes</EditorialButton>
+        <div className="text-center max-w-xl mx-auto">
+          <h2 className="font-display-black text-ink" style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.6rem)", lineHeight: 1.05 }}>
+            {content.journal.headline_lead}
+            {content.journal.headline_emphasis ? (
+              <> <em className="italic text-accent-terra">{content.journal.headline_emphasis}</em></>
+            ) : null}
+          </h2>
+          <p
+            className="font-mono text-ink-soft mt-7 mx-auto"
+            style={{ fontSize: 14, lineHeight: 1.7, letterSpacing: "0.01em", maxWidth: 440 }}
+          >
+            {content.journal.description}
+          </p>
+        </div>
       </Reveal>
 
       <div
-        className="mx-auto max-w-[1400px]"
-        style={{
-          padding: "0 2.5rem",
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr 1fr",
-          gridAutoRows: "minmax(220px, auto)",
-          gap: "4px",
-        }}
+        className="mx-auto max-w-[1400px] px-6 lg:px-10 grid grid-cols-1 gap-1 md:grid-cols-[2fr_1fr_1fr]"
+        style={{ gridAutoRows: "minmax(220px, auto)" }}
       >
-        {/* Featured — spans both rows */}
-        <Reveal style={{ gridRow: "1 / 3" }}>
+        {/* Featured — spans both rows on desktop; full-width on mobile */}
+        <Reveal className="md:row-span-2">
         <Link
-          to={`/journal/${featured.slug}`}
+          to={`/practice/${featured.slug}`}
           className="group relative overflow-hidden bg-paper-mid block h-full"
           style={{ borderRadius: 0, minHeight: "460px" }}
         >
@@ -104,7 +110,7 @@ export default function LatestJournal() {
         {rest.map((p, i) => (
           <Reveal key={p.id} delay={120 + i * 110}>
           <Link
-            to={`/journal/${p.slug}`}
+            to={`/practice/${p.slug}`}
             className="group relative overflow-hidden bg-paper-mid block h-full"
             style={{ borderRadius: 0, minHeight: "220px" }}
           >
@@ -139,6 +145,10 @@ export default function LatestJournal() {
           </Reveal>
         ))}
       </div>
+
+      <Reveal className="mx-auto max-w-[1400px] flex justify-center" style={{ padding: "4rem 2.5rem 0" }}>
+        <EditorialButton to="/practice" arrow variant="muted">{content.journal.cta}</EditorialButton>
+      </Reveal>
     </section>
   );
 }

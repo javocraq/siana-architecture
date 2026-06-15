@@ -98,19 +98,19 @@ export default function AdminProjects() {
               className="font-mono uppercase text-ink-soft mb-3 font-semibold"
               style={{ fontSize: 11, letterSpacing: "0.22em" }}
             >
-              Gestionar
+              Manage
             </p>
             <h1
               className="font-display text-ink"
               style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.005em" }}
             >
-              Proyectos
+              Projects
             </h1>
             <p
               className="mt-4 font-mono uppercase text-ink-soft"
               style={{ fontSize: 11, letterSpacing: "0.18em" }}
             >
-              {loading ? "Cargando…" : `${filteredProjects.length} de ${projects.length}`}
+              {loading ? "Loading…" : `${filteredProjects.length} of ${projects.length}`}
             </p>
           </div>
           <Link
@@ -125,7 +125,7 @@ export default function AdminProjects() {
               paddingBottom: 4,
             }}
           >
-            <Plus className="w-3.5 h-3.5" /> Añadir proyecto
+            <Plus className="w-3.5 h-3.5" /> Add project
           </Link>
         </div>
 

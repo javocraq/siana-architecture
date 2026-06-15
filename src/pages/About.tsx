@@ -43,27 +43,28 @@ const About = () => {
         <link rel="canonical" href="/about" />
       </Helmet>
 
-      {/* Manifesto */}
-      <section className="pt-40 pb-24 md:pt-48 md:pb-32">
-        <div className="mx-auto max-w-[820px] px-6 lg:px-10">
-          <p className="text-[13px] font-semibold tracking-[0.18em] uppercase text-ink-soft mb-8">{content.eyebrow}</p>
+      {/* Manifesto — centered editorial cover on the neutral gray canvas */}
+      <section className="bg-[#F4F4F4]">
+        <div className="mx-auto max-w-[760px] px-6 lg:px-10 pt-32 md:pt-36 pb-16 md:pb-20 text-center">
+          <p className="font-mono uppercase text-accent-terra mb-5" style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.2em" }}>
+            {content.eyebrow}
+          </p>
           <h1
-            className="text-ink"
-            style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: "clamp(34px, 5vw, 58px)", lineHeight: 1.08, letterSpacing: "-0.005em" }}
+            className="text-black"
+            style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: "clamp(32px, 4.4vw, 52px)", lineHeight: 1.1, letterSpacing: "-0.01em" }}
           >
             {content.headline}
           </h1>
-          <div className="mt-12 space-y-6 text-[17px] md:text-[18px] leading-[1.7] text-ink-soft max-w-[640px]">
+          <div className="mt-7 space-y-4 text-[16px] md:text-[17px] leading-[1.7] max-w-[600px] mx-auto" style={{ color: "#4F4534" }}>
             {content.body.map((para, i) => {
-              // The last paragraph styles as a serif italic pull-quote, matching
-              // the original "Made for those who look." treatment.
+              // The last paragraph styles as a serif italic pull-quote.
               const isLast = i === content.body.length - 1;
               if (isLast && content.body.length > 1) {
                 return (
                   <p
                     key={i}
-                    className="text-ink italic"
-                    style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: 26 }}
+                    className="italic"
+                    style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: 22, color: "#796C5C" }}
                   >
                     {para}
                   </p>
@@ -72,7 +73,7 @@ const About = () => {
               return <p key={i}>{para}</p>;
             })}
           </div>
-          <div className="mt-12">
+          <div className="mt-8 flex justify-center">
             <EditorialButton to="/atlas" arrow>
               {content.cta_label.replace(/\s*→\s*$/, "")}
             </EditorialButton>

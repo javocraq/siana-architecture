@@ -5,12 +5,14 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import MapPicker from "@/components/admin/MapPicker";
-import SectionBuilder from "@/components/admin/SectionBuilder";
+import SelectOrCreate from "@/components/admin/SelectOrCreate";
+import { REGIONS } from "@/lib/adminTaxonomies";
 import type { CitySection } from "@/lib/citySections";
+import { defaultCityDescriptionHTML, isDescriptionEmpty } from "@/lib/cityDefaults";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
-type Tab = "content" | "layout" | "media" | "seo";
+type Tab = "content" | "media" | "seo";
 
 const slugify = (s: string) =>
   s
@@ -24,6 +26,7 @@ type FormState = {
   name: string;
   slug: string;
   country: string;
+  region: string;
   tagline: string;
   description: string;
   center_latitude: number | null;
@@ -42,6 +45,7 @@ const empty: FormState = {
   name: "",
   slug: "",
   country: "",
+  region: "",
   tagline: "",
   description: "",
   center_latitude: null,
@@ -78,12 +82,20 @@ export default function AdminCityEdit() {
         setLoading(false);
         return;
       }
+      // Pre-fill the rich-text description with the same default paragraphs
+      // the public city page shows for empty descriptions, so admins can
+      // see and edit the copy from day one. Saving any change persists it
+      // to the DB and the website automatically reflects the edited copy.
+      const seededDescription = isDescriptionEmpty(data.description)
+        ? defaultCityDescriptionHTML({ name: data.name || "", country: data.country })
+        : data.description;
       setForm({
         name: data.name || "",
         slug: data.slug || "",
         country: data.country || "",
+        region: (data as any).region || "",
         tagline: data.tagline || "",
-        description: data.description || "",
+        description: seededDescription || "",
         center_latitude: data.center_latitude,
         center_longitude: data.center_longitude,
         default_zoom: data.default_zoom ?? 13,
@@ -115,6 +127,7 @@ export default function AdminCityEdit() {
       name: form.name.trim(),
       slug: form.slug.trim(),
       country: form.country || null,
+      region: form.region || null,
       tagline: form.tagline || null,
       description: form.description || null,
       center_latitude: form.center_latitude,
@@ -171,7 +184,6 @@ export default function AdminCityEdit() {
 
   const tabs = useMemo<{ key: Tab; label: string }[]>(() => [
     { key: "content", label: "Content" },
-    { key: "layout", label: "Layout" },
     { key: "media", label: "Media" },
     { key: "seo", label: "SEO" },
   ], []);
@@ -244,6 +256,14 @@ export default function AdminCityEdit() {
               <input className={inputCls} value={form.country} onChange={(e) => set("country", e.target.value)} />
             </Field>
 
+            <Field label="Region" hint="Pick from the list or add a new one">
+              <SelectOrCreate
+                value={form.region}
+                onChange={(v) => set("region", v)}
+                options={REGIONS}
+              />
+            </Field>
+
             <Field label="Tagline" hint="One short sentence shown under the title">
               <input className={inputCls} value={form.tagline} onChange={(e) => set("tagline", e.target.value)} />
             </Field>
@@ -263,17 +283,6 @@ export default function AdminCityEdit() {
                 onChange={(e) => set("default_zoom", parseInt(e.target.value, 10))}
                 className="w-full" />
             </Field>
-          </div>
-        )}
-
-        {tab === "layout" && (
-          <div className="space-y-6">
-            <div className="border hairline bg-off-white px-5 py-4 text-[12px] text-ink-muted leading-relaxed">
-              Build the city landing page from modular blocks. Drag to reorder, toggle to enable/disable.
-              <br />
-              <strong className="text-ink">Tip:</strong> if you leave this empty, the page falls back to the default layout (Description → Projects → Journal).
-            </div>
-            <SectionBuilder value={form.sections} onChange={(s) => set("sections", s)} />
           </div>
         )}
 

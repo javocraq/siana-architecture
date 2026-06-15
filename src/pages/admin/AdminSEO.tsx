@@ -63,10 +63,10 @@ export default function AdminSEO() {
     }).eq("id", row.id);
     setSaving(false);
     if (error) {
-      toast({ title: "No se pudo guardar", description: error.message, variant: "destructive" });
+      toast({ title: "Could not save", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "SEO Global guardado", description: "Los valores globales están actualizados." });
+    toast({ title: "Global SEO saved", description: "Site-wide defaults have been updated." });
   };
 
   return (
@@ -74,10 +74,10 @@ export default function AdminSEO() {
       <div className="px-10 py-10 max-w-[960px]">
         <div className="mb-8">
           <p className="font-mono uppercase text-ink-soft mb-3 font-semibold" style={{ fontSize: 11, letterSpacing: "0.22em" }}>
-            Gestionar
+            Manage
           </p>
           <h1 className="font-display text-ink" style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.005em" }}>
-            Ajustes
+            Settings
           </h1>
         </div>
 
@@ -85,7 +85,7 @@ export default function AdminSEO() {
 
         {loading || !row ? (
           <div className="flex items-center gap-3 text-ink-muted text-[12px]">
-            <Loader2 className="w-4 h-4 animate-spin" /> Cargando…
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading…
           </div>
         ) : (
           <div className="space-y-8">
@@ -93,16 +93,16 @@ export default function AdminSEO() {
             <section className="bg-background p-6" style={{ border: "1px solid hsl(var(--paper-mid))" }}>
               <h2 className="font-display text-ink mb-1" style={{ fontSize: 22, fontWeight: 400 }}>SEO Global</h2>
               <p className="text-[13px] text-ink-soft mb-6" style={{ lineHeight: 1.6 }}>
-                Valores globales del sitio. Cada proyecto, ciudad, práctica o recurso puede sobrescribirlos en su propio formulario.
+                Site-wide defaults. Each project, city, practice or resource can override them in its own form.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-8">
                 <div className="space-y-5">
-                  <Field label="Meta title global" hint={`${(row.meta_title || "").length}/60`}>
+                  <Field label="Global meta title" hint={`${(row.meta_title || "").length}/60`}>
                     <input className={inputCls} value={row.meta_title || ""}
                       onChange={(e) => update({ meta_title: e.target.value })} maxLength={80} />
                   </Field>
-                  <Field label="Meta description global" hint={`${(row.meta_description || "").length}/160`}>
+                  <Field label="Global meta description" hint={`${(row.meta_description || "").length}/160`}>
                     <textarea rows={3} className={inputCls} value={row.meta_description || ""}
                       onChange={(e) => update({ meta_description: e.target.value })} maxLength={200} />
                   </Field>
@@ -117,7 +117,7 @@ export default function AdminSEO() {
                   </Field>
                 </div>
                 <div>
-                  <ImageUpload label="Open Graph global" value={row.og_image_url}
+                  <ImageUpload label="Global Open Graph" value={row.og_image_url}
                     onChange={(url) => update({ og_image_url: url })}
                     aspect="wide" folder="seo" />
                 </div>
@@ -126,17 +126,17 @@ export default function AdminSEO() {
 
             {/* Sitemap + Analytics card (UI-only until DB columns are added) */}
             <section className="bg-background p-6" style={{ border: "1px solid hsl(var(--paper-mid))" }}>
-              <h2 className="font-display text-ink mb-1" style={{ fontSize: 22, fontWeight: 400 }}>Indexación &amp; Analítica</h2>
+              <h2 className="font-display text-ink mb-1" style={{ fontSize: 22, fontWeight: 400 }}>Indexing &amp; Analytics</h2>
               <p className="text-[13px] text-ink-soft mb-6" style={{ lineHeight: 1.6 }}>
-                Estos campos requieren columnas adicionales en <code className="text-ink">seo_globals</code> para persistir. Pueden gestionarse por ahora vía variables de entorno.
+                These fields require additional columns on <code className="text-ink">seo_globals</code> to persist. For now they can be managed via environment variables.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
-                <Field label="Sitemap URL" hint="ej: /sitemap.xml">
+                <Field label="Sitemap URL" hint="e.g. /sitemap.xml">
                   <input className={inputCls} value={sitemapUrl}
                     onChange={(e) => setSitemapUrl(e.target.value)}
                     placeholder="https://siana.com/sitemap.xml" />
                 </Field>
-                <Field label="Google Analytics ID" hint="G-XXXXXXX o UA-XXXXXX">
+                <Field label="Google Analytics ID" hint="G-XXXXXXX or UA-XXXXXX">
                   <input className={inputCls} value={gaId}
                     onChange={(e) => setGaId(e.target.value)} placeholder="G-XXXXXXXXXX" />
                 </Field>
@@ -152,10 +152,10 @@ export default function AdminSEO() {
               <button onClick={save} disabled={saving}
                 className="font-mono uppercase text-white disabled:opacity-50"
                 style={{ background: "hsl(var(--ink))", fontSize: 11, letterSpacing: "0.22em", padding: "10px 22px" }}>
-                {saving ? "Guardando…" : "Guardar cambios"}
+                {saving ? "Saving…" : "Save changes"}
               </button>
               <p className="text-[11px] text-ink-soft">
-                Los campos de indexación y analítica todavía no se guardan en la base de datos.
+                The indexing and analytics fields are not yet persisted to the database.
               </p>
             </div>
           </div>

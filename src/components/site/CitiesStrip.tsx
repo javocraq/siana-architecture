@@ -40,7 +40,7 @@ export default function CitiesStrip() {
 
   return (
     <section className="bg-paper-warm" style={{ paddingTop: "6rem", paddingBottom: 0 }}>
-      <div className="mx-auto max-w-[1400px] px-10">
+      <div className="mx-auto max-w-[1400px] px-6 lg:px-10">
         <div className="flex items-end justify-between mb-12 flex-wrap gap-6">
           <div>
             <p
@@ -65,7 +65,7 @@ export default function CitiesStrip() {
 
       {/* Cities row — flex with thin dividers, accent-light hover */}
       <div
-        className="mx-auto max-w-[1400px] px-10 flex overflow-x-auto no-scrollbar"
+        className="mx-auto max-w-[1400px] px-6 lg:px-10 flex overflow-x-auto no-scrollbar"
         style={{ borderTop: "1px solid hsl(var(--paper-mid))", paddingBottom: "5rem" }}
       >
         {cities.map((c, idx) => (

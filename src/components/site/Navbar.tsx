@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { to: "/atlas", label: "Atlas" },
+  { to: "/atlas", label: "Map" },
   { to: "/cities", label: "Cities" },
   { to: "/practice", label: "Practice" },
   { to: "/about", label: "About" },
@@ -86,12 +86,12 @@ export default function Navbar() {
               </svg>
             </button>
           </div>
-          <nav className="flex-1 flex flex-col items-start justify-center gap-8 px-10">
+          <nav className="flex-1 flex flex-col items-center justify-center gap-6 px-10">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className="font-display text-[40px] text-ink hover:opacity-60"
+                className="font-display text-[24px] text-ink hover:opacity-60"
               >
                 {link.label}
               </Link>

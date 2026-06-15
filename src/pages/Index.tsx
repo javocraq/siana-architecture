@@ -14,6 +14,7 @@ import NewsletterCta from "@/components/site/NewsletterCta";
 import Footer from "@/components/site/Footer";
 import Reveal from "@/components/site/Reveal";
 import EditorialButton from "@/components/site/EditorialButton";
+import { useHomeContent } from "@/hooks/useHomeContent";
 
 type Pin = { latitude: number | null; longitude: number | null };
 
@@ -27,6 +28,7 @@ const Index = () => {
   const [pins, setPins] = useState<Pin[]>([]);
   const [heroImages, setHeroImages] = useState<string[]>([]);
   const [activeHero, setActiveHero] = useState(0);
+  const content = useHomeContent();
 
   // Lightweight: just coordinates, to scatter pins across the preview map
   useEffect(() => {
@@ -185,42 +187,40 @@ const Index = () => {
         </div>
 
         <div
-          className="relative z-10 mx-auto w-full"
-          style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "4rem 2.5rem 4rem", maxWidth: 1400 }}
+          className="relative z-10 mx-auto w-full max-w-[1400px] px-6 lg:px-10 text-center md:text-left"
+          style={{ display: "flex", flexDirection: "column", justifyContent: "center", paddingTop: "10rem", paddingBottom: "4rem" }}
         >
           <p className="fadeup-1 font-mono uppercase text-white font-semibold" style={{ fontSize: "13px", letterSpacing: "0.22em", marginBottom: "1.5rem", textShadow: "0 1px 8px rgba(0,0,0,0.25)" }}>
-            <Link to="/atlas" className="hover:opacity-70 transition-opacity">Architecture</Link>
+            <Link to="/atlas" className="hover:opacity-70 transition-opacity">{content.hero.eyebrow_architecture}</Link>
             {" · "}
-            <Link to="/cities" className="hover:opacity-70 transition-opacity">Cities</Link>
+            <Link to="/cities" className="hover:opacity-70 transition-opacity">{content.hero.eyebrow_cities}</Link>
             {" · "}
-            <Link to="/practice" className="hover:opacity-70 transition-opacity">Practice</Link>
+            <Link to="/practice" className="hover:opacity-70 transition-opacity">{content.hero.eyebrow_practice}</Link>
           </p>
 
           <h1
             className="fadeup-2 font-display-black text-white"
             style={{
-              fontSize: "clamp(2.8rem, 6.5vw, 6.5rem)",
-              lineHeight: 0.94,
+              fontSize: "clamp(2.2rem, 8vw, 6.5rem)",
+              lineHeight: 1.02,
               textShadow: "0 2px 18px rgba(0,0,0,0.25)",
             }}
           >
-            The curated<br />
-            architecture<br />
-            guide
+            {content.hero.headline_line1}
+            {content.hero.headline_line2 ? (<><br />{content.hero.headline_line2}</>) : null}
           </h1>
 
-          <div className="fadeup-3 mt-12 flex items-end justify-between gap-8 flex-wrap">
+          <div className="fadeup-3 mt-10 md:mt-12 flex flex-col md:flex-row items-center md:items-end justify-center md:justify-between gap-8">
             <p
-              className="font-mono text-white/85"
+              className="font-mono text-white/85 mx-auto md:mx-0"
               style={{ fontSize: "15px", lineHeight: 1.7, maxWidth: 360, letterSpacing: "0.01em", textShadow: "0 1px 8px rgba(0,0,0,0.25)" }}
             >
-              Curated architectural projects mapped across the world's greatest cities.
-              Explore by place, by style, by moment.
+              {content.hero.description}
             </p>
 
-            <div className="flex items-center gap-8 flex-wrap">
-              <EditorialButton to="/atlas" arrow variant="invert">Explore the Atlas</EditorialButton>
-              <EditorialButton to="/cities" variant="invert">Browse all cities</EditorialButton>
+            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
+              <EditorialButton to="/atlas" arrow variant="invert">{content.hero.cta_primary}</EditorialButton>
+              <EditorialButton to="/cities" variant="invert">{content.hero.cta_secondary}</EditorialButton>
             </div>
           </div>
         </div>
@@ -232,8 +232,7 @@ const Index = () => {
           lives at /atlas.
           ============================================================ */}
       <section className="relative bg-paper-warm" style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}>
-        <Reveal delay={120}>
-        <Link to="/atlas" aria-label="Open the Atlas" className="group relative block w-screen" style={{ height: "100vh", minHeight: 640, background: "hsl(var(--paper-mid))" }}>
+        <Link to="/atlas" aria-label="Open the Map" className="group relative block w-screen" style={{ height: "100vh", minHeight: 640, background: "hsl(var(--paper-mid))" }}>
           {token ? (
             <div ref={mapContainer} className="absolute inset-0" style={{ pointerEvents: "none" }} />
           ) : (
@@ -242,63 +241,64 @@ const Index = () => {
             </div>
           )}
 
-          {/* Soft editorial veils — top fade gives the copy a calm
-              backdrop, bottom fade lifts the CTA. */}
+          {/* Soft editorial veil — soft radial halo at the center so the
+              centered copy block has a calm, legible backdrop. */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                "linear-gradient(180deg, rgba(247,243,237,0.78) 0%, rgba(247,243,237,0.35) 28%, rgba(247,243,237,0) 50%, rgba(247,243,237,0) 80%, rgba(247,243,237,0.55) 100%)",
+                "radial-gradient(ellipse 55% 45% at 50% 50%, rgba(247,243,237,0.78) 0%, rgba(247,243,237,0.45) 55%, rgba(247,243,237,0) 100%)",
             }}
           />
 
-          {/* Overlaid editorial copy — sits on the map but stays readable
-              thanks to the warm-paper top veil. */}
-          <div
-            className="absolute left-0 right-0 top-0 pointer-events-none"
-            style={{ padding: "4rem 2.5rem 0" }}
+          {/* Overlaid editorial copy — slides up *after* the map is visible
+              (delayed Reveal so the map renders first, then the text lands
+              on top of it). */}
+          <Reveal
+            delay={650}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none px-6 lg:px-10"
           >
-            <div className="mx-auto max-w-[1400px]">
+            <div className="text-center max-w-[680px]">
               <p
                 className="font-mono uppercase text-accent-terra mb-3 font-semibold"
                 style={{ fontSize: "13px", letterSpacing: "0.22em" }}
               >
-                The Atlas
+                {content.map.eyebrow}
               </p>
               <h2
                 className="font-display text-ink"
                 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3.4rem)", fontWeight: 400, lineHeight: 1 }}
               >
-                Every building, <em className="italic text-ink-soft">on the map</em>
+                {content.map.headline_lead}
+                {content.map.headline_emphasis ? (
+                  <> <em className="italic text-ink-soft">{content.map.headline_emphasis}</em></>
+                ) : null}
               </h2>
               <p
-                className="font-mono text-ink-soft mt-5"
+                className="font-mono text-ink-soft mt-5 mx-auto"
                 style={{ fontSize: "15px", lineHeight: 1.65, maxWidth: 520, letterSpacing: "0.01em" }}
               >
-                A living atlas of architecture. Open the Atlas to filter by city,
-                architect, style and year — and discover each project on the map.
+                {content.map.description}
               </p>
-            </div>
-          </div>
 
-          {/* Minimal CTA — thin label-caps with a hairline underline,
-              gap grows on hover. No filled pill. */}
-          <span
-            className="absolute left-1/2 -translate-x-1/2 bottom-10 inline-flex items-center font-mono uppercase text-ink transition-all group-hover:gap-3"
-            style={{
-              fontSize: "12px",
-              letterSpacing: "0.28em",
-              fontWeight: 500,
-              gap: "0.6rem",
-              borderBottom: "1px solid hsl(var(--ink))",
-              paddingBottom: 4,
-            }}
-          >
-            Open the interactive map
-            <span aria-hidden="true">→</span>
-          </span>
+              {/* CTA — minimal hairline underline, gap grows on hover. */}
+              <span
+                className="inline-flex items-center font-mono uppercase text-ink transition-all group-hover:gap-3 mt-10"
+                style={{
+                  fontSize: "12px",
+                  letterSpacing: "0.28em",
+                  fontWeight: 500,
+                  gap: "0.6rem",
+                  borderBottom: "1px solid hsl(var(--ink))",
+                  paddingBottom: 4,
+                }}
+              >
+                {content.map.cta}
+                <span aria-hidden="true">→</span>
+              </span>
+            </div>
+          </Reveal>
         </Link>
-        </Reveal>
       </section>
 
       {/* Cities strip — image, name & project count */}

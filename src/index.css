@@ -282,6 +282,29 @@
     50% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
   }
 
+  /* Atlas pin hover label — minimal editorial tooltip (no tip, sharp corners) */
+  .siana-pin-popup .mapboxgl-popup-content {
+    padding: 5px 10px;
+    border-radius: 0;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.14);
+  }
+  .siana-pin-popup .mapboxgl-popup-tip { display: none; }
+
+  /* Strip the default blue focus ring from the Mapbox canvas — it shows up
+     as a thin blue outline around every embedded map. */
+  .mapboxgl-canvas:focus,
+  .mapboxgl-canvas:focus-visible,
+  .mapboxgl-map:focus,
+  .mapboxgl-map canvas { outline: none !important; }
+  .siana-pin-popup-label {
+    font-family: "DM Mono", ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: #111110;
+    white-space: nowrap;
+  }
+
   /* Scroll reveal — slow, elegant fade + lift inspired by Apple / luxury
      editorial sites. Pair with the <Reveal> component (or .reveal +
      .is-revealed manually). Stagger children by setting --reveal-delay. */

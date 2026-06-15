@@ -5,7 +5,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/site/Navbar";
 import SEO from "@/components/site/SEO";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, X, Search, SlidersHorizontal } from "lucide-react";
 import { getMapboxToken, TOKEN_KEY } from "@/lib/mapbox";
 import { MATERIALS, EXPERIENCES, tagsFor } from "@/lib/atlasFilters";
 
@@ -28,6 +28,8 @@ type Project = {
   year_completed: number | null;
   category: string | null;
   style: string | null;
+  materials: string[] | null;
+  experience: string[] | null;
   latitude: number | null;
   longitude: number | null;
   cover_image_url: string | null;
@@ -43,13 +45,14 @@ const FILTER_BAR_H = 60;
 
 /** Single active filter — picking a chip from any category activates one
  *  filter, hides the filter bar, and frames the map on the matching set. */
-type FilterType = "city" | "material" | "experience";
+type FilterType = "city" | "material" | "experience" | "style";
 type Active = { type: FilterType; value: string };
 
 const FILTER_LABELS: Record<FilterType, string> = {
   city: "City",
   material: "Material",
   experience: "Experience",
+  style: "Style",
 };
 
 /** A minimal popover filter — a labelled chip that opens a panel of toggle chips.
@@ -71,10 +74,10 @@ function FilterMenu({
   const count = selected.length;
   const active = count > 0 || open;
   return (
-    <div className="relative shrink-0">
+    <div className="relative w-full md:w-auto md:shrink-0">
       <button
         onClick={onToggleOpen}
-        className="inline-flex items-center gap-2 font-mono uppercase px-3.5 py-2 border transition-colors whitespace-nowrap"
+        className="inline-flex w-full justify-between md:w-auto md:justify-center items-center gap-2 font-mono uppercase px-3.5 py-2 border transition-colors whitespace-nowrap"
         style={{
           fontSize: 12,
           letterSpacing: "0.14em",
@@ -147,6 +150,145 @@ function FilterMenu({
   );
 }
 
+/** Search box — type a project or city name and jump straight to it on the map.
+ *  Cities filter the map (and open the project list); projects fly in and open
+ *  their card. */
+function SearchBox({
+  projects,
+  cities,
+  onPickCity,
+  onPickProject,
+  autoFocus,
+}: {
+  projects: Project[];
+  cities: City[];
+  onPickCity: (c: City) => void;
+  onPickProject: (p: Project) => void;
+  autoFocus?: boolean;
+}) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const query = q.trim().toLowerCase();
+  const cityMatches = query ? cities.filter((c) => c.name.toLowerCase().includes(query)).slice(0, 4) : [];
+  const projMatches = query
+    ? projects
+        .filter(
+          (p) =>
+            p.name.toLowerCase().includes(query) ||
+            (p.architect || "").toLowerCase().includes(query) ||
+            (p.city?.name || "").toLowerCase().includes(query)
+        )
+        .slice(0, 6)
+    : [];
+  const hasResults = cityMatches.length + projMatches.length > 0;
+  return (
+    <div className="relative w-full">
+      <div
+        className="flex items-center gap-2 px-3 py-2"
+        style={{ background: "hsl(var(--paper-warm) / 0.95)", border: "1px solid rgba(0,0,0,0.14)", boxShadow: "0 2px 10px rgba(0,0,0,0.06)" }}
+      >
+        <Search className="w-3.5 h-3.5 text-ink-soft shrink-0" />
+        <input
+          value={q}
+          autoFocus={autoFocus}
+          onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          placeholder="Search project or city"
+          className="bg-transparent text-ink w-full focus:outline-none placeholder:text-ink-soft"
+          style={{ fontSize: 13 }}
+        />
+        {q && (
+          <button onClick={() => { setQ(""); setOpen(false); }} aria-label="Clear search" className="text-ink-soft hover:text-ink shrink-0">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+      {open && query && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="absolute left-0 right-0 top-full mt-1 z-50 bg-paper overflow-y-auto no-scrollbar fade-in"
+            style={{ maxHeight: "60vh", border: "1px solid hsl(var(--paper-mid))", boxShadow: "0 10px 30px rgba(0,0,0,0.14)" }}
+          >
+            {!hasResults && (
+              <p className="px-3 py-3 font-mono uppercase text-ink-soft" style={{ fontSize: 11, letterSpacing: "0.14em" }}>No matches</p>
+            )}
+            {cityMatches.map((c) => (
+              <button
+                key={"c" + c.id}
+                onClick={() => { onPickCity(c); setQ(""); setOpen(false); }}
+                className="w-full text-left px-3 py-2.5 hover:bg-paper-mid transition-colors flex items-center justify-between gap-2"
+                style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
+              >
+                <span className="font-display text-ink truncate" style={{ fontSize: 15 }}>{c.name}</span>
+                <span className="font-mono uppercase text-ink-soft shrink-0" style={{ fontSize: 10, letterSpacing: "0.16em" }}>City</span>
+              </button>
+            ))}
+            {projMatches.map((p) => (
+              <button
+                key={"p" + p.id}
+                onClick={() => { onPickProject(p); setQ(""); setOpen(false); }}
+                className="w-full text-left px-3 py-2.5 hover:bg-paper-mid transition-colors flex items-center justify-between gap-2"
+                style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
+              >
+                <span className="min-w-0">
+                  <span className="block font-display text-ink truncate" style={{ fontSize: 15 }}>{p.name}</span>
+                  {p.city?.name && (
+                    <span className="block font-mono uppercase text-ink-soft truncate" style={{ fontSize: 10, letterSpacing: "0.14em" }}>{p.city.name}</span>
+                  )}
+                </span>
+                <span className="font-mono uppercase text-ink-soft shrink-0" style={{ fontSize: 10, letterSpacing: "0.16em" }}>Project</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** A single filter category inside the Filters panel — a label and its options
+ *  as toggle chips. Picking one activates that filter (single-select). */
+function FilterGroup({
+  label,
+  type,
+  options,
+  active,
+  onPick,
+}: {
+  label: string;
+  type: FilterType;
+  options: string[];
+  active: Active | null;
+  onPick: (v: string) => void;
+}) {
+  if (!options.length) return null;
+  return (
+    <div className="mb-5 last:mb-0">
+      <p className="font-mono uppercase text-ink-soft mb-2.5" style={{ fontSize: 10, letterSpacing: "0.2em" }}>{label}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((o) => {
+          const on = active?.type === type && active.value === o;
+          return (
+            <button
+              key={o}
+              onClick={() => onPick(o)}
+              className="font-mono uppercase px-3 py-1.5 border transition-colors"
+              style={
+                on
+                  ? { fontSize: 12, letterSpacing: "0.12em", background: "hsl(var(--ink))", color: "#fff", borderColor: "hsl(var(--ink))" }
+                  : { fontSize: 12, letterSpacing: "0.12em", background: "hsl(var(--paper))", color: "hsl(var(--ink))", borderColor: "rgba(0,0,0,0.14)" }
+              }
+            >
+              {o}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Atlas — the dedicated architectural-discovery tool.
  * Cities and all filters sit in a horizontal bar above a full-bleed map.
@@ -155,6 +297,8 @@ export default function Atlas() {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const hoverPopupRef = useRef<mapboxgl.Popup | null>(null);
+  const skipCameraRef = useRef(false);
 
   const [token, setToken] = useState<string>(() => getMapboxToken());
   const [tokenInput, setTokenInput] = useState("");
@@ -164,7 +308,10 @@ export default function Atlas() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [active, setActive] = useState<Active | null>(null);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [selected, setSelected] = useState<Project | null>(null);
+  const [isZoomedIn, setIsZoomedIn] = useState(false);
   const [searchParams] = useSearchParams();
   const cityParam = searchParams.get("city");
   const projectParam = searchParams.get("project");
@@ -200,7 +347,7 @@ export default function Atlas() {
           .order("name"),
         supabase
           .from("projects")
-          .select("id,slug,name,tagline,architect,practice,year_completed,category,style,latitude,longitude,cover_image_url,hero_image_url,city_id,city:cities(name,slug)")
+          .select("*,city:cities(name,slug)")
           .eq("status", "published"),
       ]);
       if (cs) setCities(cs as any);
@@ -213,45 +360,53 @@ export default function Atlas() {
     if (!token || !mapContainer.current || mapRef.current) return;
     mapboxgl.accessToken = token;
     try {
+      // On mobile, use a flat mercator map so every pin stays inside the
+      // frame — on a narrow screen the globe pushes edge / far-side pins
+      // outside the sphere. The spinning globe is reserved for wider screens.
+      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
       const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/light-v11",
+        projection: isMobile ? { name: "mercator" } : { name: "globe" },
         center: [10, 25],
         zoom: 1.5,
         attributionControl: false,
       });
       map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
       map.on("load", () => setMapReady(true));
+      map.on("zoom", () => setIsZoomedIn(map.getZoom() > 3));
       mapRef.current = map;
 
-      // ─── Spinning globe ─────────────────────────────────────────────
+      // ─── Spinning globe (desktop only) ──────────────────────────────
       // The map rotates slowly at low zoom. As soon as the user zooms in
       // (or zoom passes maxSpinZoom for any reason), the spin pauses.
-      const SECONDS_PER_REV = 220;
-      const MAX_SPIN_ZOOM = 4;
-      const SLOW_SPIN_ZOOM = 3;
-      let userInteracting = false;
-      const spinGlobe = () => {
-        const zoom = map.getZoom();
-        if (userInteracting || zoom >= MAX_SPIN_ZOOM) return;
-        let distancePerSecond = 360 / SECONDS_PER_REV;
-        if (zoom > SLOW_SPIN_ZOOM) {
-          const zoomDif = (MAX_SPIN_ZOOM - zoom) / (MAX_SPIN_ZOOM - SLOW_SPIN_ZOOM);
-          distancePerSecond *= zoomDif;
-        }
-        const c = map.getCenter();
-        c.lng -= distancePerSecond;
-        map.easeTo({ center: c, duration: 1000, easing: (n) => n });
-      };
-      map.on("mousedown", () => { userInteracting = true; });
-      map.on("mouseup", () => { userInteracting = false; spinGlobe(); });
-      map.on("touchstart", () => { userInteracting = true; });
-      map.on("touchend", () => { userInteracting = false; spinGlobe(); });
-      map.on("dragend", () => { userInteracting = false; spinGlobe(); });
-      map.on("pitchend", () => { userInteracting = false; spinGlobe(); });
-      map.on("rotateend", () => { userInteracting = false; spinGlobe(); });
-      map.on("moveend", () => { spinGlobe(); });
-      map.on("load", () => spinGlobe());
+      if (!isMobile) {
+        const SECONDS_PER_REV = 220;
+        const MAX_SPIN_ZOOM = 4;
+        const SLOW_SPIN_ZOOM = 3;
+        let userInteracting = false;
+        const spinGlobe = () => {
+          const zoom = map.getZoom();
+          if (userInteracting || zoom >= MAX_SPIN_ZOOM) return;
+          let distancePerSecond = 360 / SECONDS_PER_REV;
+          if (zoom > SLOW_SPIN_ZOOM) {
+            const zoomDif = (MAX_SPIN_ZOOM - zoom) / (MAX_SPIN_ZOOM - SLOW_SPIN_ZOOM);
+            distancePerSecond *= zoomDif;
+          }
+          const c = map.getCenter();
+          c.lng -= distancePerSecond;
+          map.easeTo({ center: c, duration: 1000, easing: (n) => n });
+        };
+        map.on("mousedown", () => { userInteracting = true; });
+        map.on("mouseup", () => { userInteracting = false; spinGlobe(); });
+        map.on("touchstart", () => { userInteracting = true; });
+        map.on("touchend", () => { userInteracting = false; spinGlobe(); });
+        map.on("dragend", () => { userInteracting = false; spinGlobe(); });
+        map.on("pitchend", () => { userInteracting = false; spinGlobe(); });
+        map.on("rotateend", () => { userInteracting = false; spinGlobe(); });
+        map.on("moveend", () => { spinGlobe(); });
+        map.on("load", () => spinGlobe());
+      }
     } catch (e) {
       console.error("Mapbox init failed", e);
     }
@@ -269,6 +424,10 @@ export default function Atlas() {
     return m;
   }, [cities]);
   const cityOptions = useMemo(() => cities.map((c) => c.name), [cities]);
+  const styleOptions = useMemo(
+    () => Array.from(new Set(projects.map((p) => p.style).filter(Boolean) as string[])).sort(),
+    [projects]
+  );
 
   const filtered = useMemo(() => {
     if (!active) return projects;
@@ -276,9 +435,14 @@ export default function Atlas() {
       if (active.type === "city") {
         return p.city_id === cityNameToId.get(active.value);
       }
+      if (active.type === "style") return p.style === active.value;
+      // Prefer the per-project DB tags (editable in the admin); fall back to the
+      // static seed map for projects not yet tagged.
       const t = tagsFor(p.slug);
-      if (active.type === "material") return t.materials.includes(active.value);
-      if (active.type === "experience") return t.experience.includes(active.value);
+      const mats = p.materials && p.materials.length ? p.materials : t.materials;
+      const exps = p.experience && p.experience.length ? p.experience : t.experience;
+      if (active.type === "material") return mats.includes(active.value);
+      if (active.type === "experience") return exps.includes(active.value);
       return true;
     });
   }, [projects, active, cityNameToId]);
@@ -306,6 +470,11 @@ export default function Atlas() {
   // otherwise fit bounds around the matching set.
   useEffect(() => {
     if (!mapReady) return;
+    // A direct project pick handles its own fly-to; skip the auto framing once.
+    if (skipCameraRef.current) {
+      skipCameraRef.current = false;
+      return;
+    }
     if (active?.type === "city") {
       const c = cities.find((x) => x.name === active.value);
       if (c && c.center_latitude != null && c.center_longitude != null) {
@@ -322,6 +491,20 @@ export default function Atlas() {
     if (!mapRef.current || !mapReady) return;
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
+
+    // Shared hover tooltip — shows the project name when you hover a pin.
+    hoverPopupRef.current?.remove();
+    const hoverPopup = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      anchor: "bottom",
+      offset: 16,
+      className: "siana-pin-popup",
+    });
+    hoverPopupRef.current = hoverPopup;
+    const esc = (s: string) =>
+      s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
+
     filtered.forEach((p) => {
       if (p.latitude == null || p.longitude == null) return;
       const el = document.createElement("button");
@@ -336,8 +519,23 @@ export default function Atlas() {
         ev.stopPropagation();
         selectProject(p);
       });
+      el.addEventListener("mouseenter", () => {
+        if (!mapRef.current) return;
+        // Only show the label when the user is zoomed in close enough to
+        // be looking at a city — at the global view the labels would
+        // overlap and clutter the cartography.
+        if (mapRef.current.getZoom() < 8) return;
+        hoverPopup
+          .setLngLat([p.longitude!, p.latitude!])
+          .setHTML(`<span class="siana-pin-popup-label">${esc(p.name)}</span>`)
+          .addTo(mapRef.current);
+      });
+      el.addEventListener("mouseleave", () => hoverPopup.remove());
       markersRef.current.push(new mapboxgl.Marker({ element: el, anchor: "center" }).setLngLat([p.longitude, p.latitude]).addTo(mapRef.current!));
     });
+    return () => {
+      hoverPopup.remove();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtered, selected, mapReady]);
 
@@ -357,10 +555,31 @@ export default function Atlas() {
     setActive({ type, value });
     setOpenMenu(null);
     setSelected(null);
+    setFiltersOpen(false);
   };
   const clearActive = () => {
     setActive(null);
     setSelected(null);
+  };
+  const resetView = () => {
+    setActive(null);
+    setSelected(null);
+    mapRef.current?.flyTo({ center: [10, 25], zoom: 1.5, speed: 1.2, curve: 1.4, essential: true });
+  };
+
+  // Search: jump straight to a city (filter + fly + project list) or a project
+  // (fly to it + open its card).
+  const searchPickCity = (c: City) => {
+    setSelected(null);
+    setActive({ type: "city", value: c.name });
+    setSearchOpen(false);
+  };
+  const searchPickProject = (p: Project) => {
+    skipCameraRef.current = true;
+    setActive(null);
+    selectProject(p);
+    setSearchOpen(false);
+    window.setTimeout(() => { skipCameraRef.current = false; }, 600);
   };
 
   const saveToken = () => {
@@ -372,7 +591,7 @@ export default function Atlas() {
   return (
     <div className="bg-paper">
       <SEO
-        title="Atlas — Explore Architecture on the Map | Siana"
+        title="Map — Explore Architecture | Siana"
         description="An interactive atlas of significant architecture across the world's cities. Filter by city, material, experience, style, era and architect — and explore each project on the map."
       />
       <Navbar />
@@ -397,47 +616,123 @@ export default function Atlas() {
       <div className="relative fade-in" style={{ height: "100vh", width: "100%", overflow: "hidden", background: "hsl(var(--paper-warm))" }}>
         <div ref={mapContainer} className="absolute inset-0" />
 
+        {/* Tap-away backdrop — closes the search / filters panels. */}
+        {(searchOpen || filtersOpen) && (
+          <div
+            className="absolute inset-0 z-[35]"
+            onClick={() => { setSearchOpen(false); setFiltersOpen(false); }}
+          />
+        )}
+
+        {/* Reset-view button — only visible once the user has zoomed in.
+            Sits bottom-left so it doesn't clash with Mapbox's nav controls
+            (top-right) or the selected-project card. */}
+        {isZoomedIn && !selected && !(active?.type === "city" && filtered.length > 0) && (
+          <button
+            onClick={resetView}
+            className="absolute z-40 font-mono uppercase inline-flex items-center gap-1.5 px-2.5 py-1 transition-opacity hover:opacity-100 fade-in"
+            style={{
+              bottom: 18,
+              left: 18,
+              fontSize: 10,
+              letterSpacing: "0.16em",
+              fontWeight: 500,
+              background: "hsl(var(--paper-warm) / 0.85)",
+              border: "1px solid rgba(0,0,0,0.12)",
+              color: "hsl(var(--ink-soft))",
+              opacity: 0.8,
+            }}
+            aria-label="Reset map view"
+          >
+            <span aria-hidden="true">←</span>
+            Back to world
+          </button>
+        )}
+
         {/* Filter bar — floats over the map, just below the navbar.
             High z-index so dropdown panels render above the selected card.
             When a filter is active, the bar collapses into a single
             "Filtering by … ×" pill that returns to the bar on click. */}
         <div
           className="absolute left-0 right-0 z-40"
-          style={{
-            top: NAV_H,
-            height: FILTER_BAR_H,
-            background: "transparent",
-            pointerEvents: "none",
-          }}
+          style={{ top: NAV_H, background: "transparent", pointerEvents: "none" }}
         >
-          {active ? (
-            <div className="inline-flex items-center gap-3 px-5 md:px-8 h-full pointer-events-auto">
-              <span className="font-mono uppercase text-ink" style={{ fontSize: 11, letterSpacing: "0.18em", background: "hsl(var(--paper-warm) / 0.92)", padding: "4px 8px" }}>
-                {FILTER_LABELS[active.type]}
-              </span>
+          <div className="px-5 md:px-8 py-2.5 pointer-events-auto">
+            {/* Compact toolbar — keeps the map clear; search and filters open on tap. */}
+            <div className="flex items-center gap-2 flex-wrap">
               <button
-                onClick={clearActive}
-                className="font-mono uppercase inline-flex items-center gap-2 px-3 py-1.5 transition-colors hover:opacity-90"
+                onClick={() => { setSearchOpen((o) => !o); setFiltersOpen(false); }}
+                aria-label="Search"
+                aria-expanded={searchOpen}
+                className="inline-flex items-center justify-center transition-colors hover:opacity-90"
                 style={{
-                  fontSize: 12,
-                  letterSpacing: "0.12em",
-                  background: "hsl(var(--ink))",
-                  color: "#fff",
-                  border: "1px solid hsl(var(--ink))",
+                  width: 40, height: 40,
+                  background: searchOpen ? "hsl(var(--ink))" : "hsl(var(--paper-warm) / 0.95)",
+                  color: searchOpen ? "#fff" : "hsl(var(--ink))",
+                  border: "1px solid rgba(0,0,0,0.14)",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
                 }}
-                aria-label="Clear filter"
               >
-                {active.value}
-                <X className="w-3.5 h-3.5" />
+                <Search className="w-4 h-4" />
               </button>
+
+              <button
+                onClick={() => { setFiltersOpen((o) => !o); setSearchOpen(false); }}
+                aria-expanded={filtersOpen}
+                className="inline-flex items-center gap-2 font-mono uppercase transition-colors hover:opacity-90"
+                style={{
+                  height: 40, padding: "0 14px",
+                  fontSize: 12, letterSpacing: "0.14em", fontWeight: 500,
+                  background: filtersOpen || active ? "hsl(var(--ink))" : "hsl(var(--paper-warm) / 0.95)",
+                  color: filtersOpen || active ? "#fff" : "hsl(var(--ink))",
+                  border: "1px solid rgba(0,0,0,0.14)",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+                }}
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                Filters
+                <ChevronDown className="w-3 h-3 transition-transform" style={{ transform: filtersOpen ? "rotate(180deg)" : "none" }} />
+              </button>
+
+              {active && (
+                <button
+                  onClick={clearActive}
+                  className="inline-flex items-center gap-2 font-mono uppercase transition-opacity hover:opacity-90"
+                  style={{
+                    height: 40, padding: "0 12px",
+                    fontSize: 12, letterSpacing: "0.12em",
+                    background: "hsl(var(--paper-warm) / 0.95)",
+                    color: "hsl(var(--ink))",
+                    border: "1px solid hsl(var(--ink))",
+                  }}
+                  aria-label="Clear filter"
+                >
+                  {active.value}
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
-          ) : (
-            <div className="inline-flex items-center gap-2 flex-wrap px-5 md:px-8 h-full pointer-events-auto">
-              <FilterMenu label="Cities" options={cityOptions} selected={[]} onToggle={(v) => activate("city", v)} open={openMenu === "cities"} onToggleOpen={() => toggleMenu("cities")} onClose={closeMenu} stacked />
-              <FilterMenu label="Materials" options={MATERIALS} selected={[]} onToggle={(v) => activate("material", v)} open={openMenu === "materials"} onToggleOpen={() => toggleMenu("materials")} onClose={closeMenu} stacked />
-              <FilterMenu label="Experience" options={EXPERIENCES} selected={[]} onToggle={(v) => activate("experience", v)} open={openMenu === "experience"} onToggleOpen={() => toggleMenu("experience")} onClose={closeMenu} stacked />
-            </div>
-          )}
+
+            {/* Search panel — revealed by the magnifier. */}
+            {searchOpen && (
+              <div className="mt-2 w-full max-w-[360px]">
+                <SearchBox projects={projects} cities={cities} onPickCity={searchPickCity} onPickProject={searchPickProject} autoFocus />
+              </div>
+            )}
+
+            {/* Filters panel — all categories in one sheet; pick one to apply. */}
+            {filtersOpen && (
+              <div
+                className="mt-2 w-full max-w-[420px] bg-paper p-4 fade-in overflow-y-auto no-scrollbar"
+                style={{ maxHeight: "min(70vh, 560px)", border: "1px solid hsl(var(--paper-mid))", boxShadow: "0 16px 44px rgba(0,0,0,0.14)" }}
+              >
+                <FilterGroup label="Cities" type="city" options={cityOptions} active={active} onPick={(v) => activate("city", v)} />
+                <FilterGroup label="Materials" type="material" options={MATERIALS} active={active} onPick={(v) => activate("material", v)} />
+                <FilterGroup label="Experience" type="experience" options={EXPERIENCES} active={active} onPick={(v) => activate("experience", v)} />
+                <FilterGroup label="Style" type="style" options={styleOptions} active={active} onPick={(v) => activate("style", v)} />
+              </div>
+            )}
+          </div>
         </div>
 
           {/* Selected project — editorial card that opens the full page on click.
@@ -448,9 +743,8 @@ export default function Atlas() {
             <div
               key={selected.id}
               className="absolute z-30 slide-in-right
-                left-4 right-4
-                md:left-auto md:right-6 md:w-[380px]"
-              style={{ top: NAV_H + 72 }}
+                left-4 right-4 bottom-4 max-h-[72vh] overflow-y-auto no-scrollbar
+                md:left-auto md:right-6 md:bottom-auto md:top-[148px] md:w-[380px] md:max-h-[calc(100vh-180px)]"
             >
               <div className="relative bg-paper" style={{ boxShadow: "0 10px 36px rgba(0,0,0,0.18)" }}>
                 <button
@@ -472,7 +766,7 @@ export default function Atlas() {
                       <img
                         src={selected.cover_image_url || selected.hero_image_url || ""}
                         alt={selected.name}
-                        className="block w-full h-auto transition-transform duration-700 group-hover:scale-[1.03]"
+                        className="block w-full h-auto max-h-[34vh] object-cover md:max-h-none transition-transform duration-700 group-hover:scale-[1.03]"
                       />
                     </div>
                   )}
@@ -512,6 +806,72 @@ export default function Atlas() {
                     </span>
                   </div>
                 </Link>
+              </div>
+            </div>
+          )}
+
+          {/* City project list — when a city is active, list its projects with
+              an editorial thumbnail; clicking one selects it on the map. Sits
+              on the left so it doesn't collide with the selected-project card
+              (right); becomes a bottom sheet on mobile. */}
+          {active?.type === "city" && filtered.length > 0 && (
+            <div
+              className={`absolute z-30 bg-paper overflow-hidden flex-col fade-in
+                ${selected ? "hidden md:flex" : "flex"}
+                left-4 right-4 bottom-4 max-h-[38vh]
+                md:left-4 md:right-auto md:bottom-auto md:top-[148px] md:w-[324px] md:max-h-[calc(100vh-180px)]`}
+              style={{ border: "1px solid hsl(var(--paper-mid))", boxShadow: "0 16px 44px rgba(0,0,0,0.16)" }}
+            >
+              <div className="flex items-start justify-between gap-3 px-4 py-3.5 shrink-0" style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}>
+                <div className="min-w-0">
+                  <p className="font-mono uppercase text-accent-terra font-semibold" style={{ fontSize: 10, letterSpacing: "0.2em" }}>Projects in</p>
+                  <p className="font-display text-ink leading-tight mt-1 truncate" style={{ fontSize: 20 }}>{active.value}</p>
+                  <p className="font-mono text-ink-soft mt-1" style={{ fontSize: 11, letterSpacing: "0.04em" }}>
+                    {filtered.length} {filtered.length === 1 ? "building" : "buildings"}
+                  </p>
+                </div>
+                <button onClick={clearActive} aria-label="Close list" className="p-1 -mr-1 text-ink-soft hover:text-ink transition-colors shrink-0">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="overflow-y-auto no-scrollbar">
+                {filtered.map((p) => {
+                  const on = selected?.id === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => selectProject(p)}
+                      className="group w-full text-left flex items-center gap-3.5 px-4 py-3 transition-colors hover:bg-paper-warm"
+                      style={{ borderBottom: "1px solid hsl(var(--paper-mid))", background: on ? "hsl(var(--paper-warm))" : undefined }}
+                    >
+                      <span className="overflow-hidden shrink-0 bg-paper-mid" style={{ width: 66, height: 50 }}>
+                        {(p.cover_image_url || p.hero_image_url) && (
+                          <img
+                            src={p.cover_image_url || p.hero_image_url || ""}
+                            alt=""
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            loading="lazy"
+                          />
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-display text-ink truncate" style={{ fontSize: 15, fontWeight: 400, lineHeight: 1.25 }}>{p.name}</span>
+                        {(p.architect || p.year_completed) && (
+                          <span className="block font-mono text-ink-soft truncate mt-1" style={{ fontSize: 11 }}>
+                            {[p.architect, p.year_completed].filter(Boolean).join(" · ")}
+                          </span>
+                        )}
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className={"shrink-0 text-ink transition-all " + (on ? "opacity-100" : "opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0")}
+                        style={{ fontSize: 14 }}
+                      >
+                        →
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -12,7 +12,6 @@ import NotFound from "./pages/NotFound.tsx";
 import Cities from "./pages/Cities.tsx";
 import CityDetail from "./pages/CityDetail.tsx";
 import ProjectDetail from "./pages/ProjectDetail.tsx";
-import Journal from "./pages/Journal.tsx";
 import JournalArticle from "./pages/JournalArticle.tsx";
 import Resources from "./pages/Resources.tsx";
 
@@ -28,12 +27,23 @@ import AdminSEO from "./pages/admin/AdminSEO.tsx";
 import AdminSettings from "./pages/admin/AdminSettings.tsx";
 import AdminIntegrations from "./pages/admin/AdminIntegrations.tsx";
 import AdminAbout from "./pages/admin/AdminAbout.tsx";
+import AdminHome from "./pages/admin/AdminHome.tsx";
 
 const queryClient = new QueryClient();
 
 // Reset scroll to the top on every route change — otherwise navigating
 // from a scrolled page leaves the next page scrolled to the same offset
 // (e.g. landing on /cities already scrolled to the bottom).
+// Forwarders that preserve :slug / :id while sending the user to the new path.
+function PracticeRedirect() {
+  const { slug } = useParams();
+  return <Navigate to={`/practice${slug ? `/${slug}` : ""}`} replace />;
+}
+function AdminPracticeRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/admin/practice${id ? `/${id}` : ""}`} replace />;
+}
+
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
   useEffect(() => {
@@ -59,13 +69,13 @@ const App = () => (
             <Route path="/cities" element={<Cities />} />
             <Route path="/cities/:slug" element={<CityDetail />} />
             <Route path="/projects/:slug" element={<ProjectDetail />} />
-            <Route path="/journal" element={<Journal />} />
-            <Route path="/journal/:slug" element={<JournalArticle />} />
             <Route path="/practice" element={<Resources />} />
             <Route path="/practice/:slug" element={<JournalArticle />} />
-            {/* Legacy paths — keep old URLs working */}
-            <Route path="/resources" element={<Resources />} />
-            <Route path="/resources/:slug" element={<JournalArticle />} />
+            {/* Legacy paths — redirect to /practice */}
+            <Route path="/journal" element={<PracticeRedirect />} />
+            <Route path="/journal/:slug" element={<PracticeRedirect />} />
+            <Route path="/resources" element={<PracticeRedirect />} />
+            <Route path="/resources/:slug" element={<PracticeRedirect />} />
             <Route path="/admin" element={<AdminProjects />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/projects" element={<AdminProjects />} />
@@ -74,19 +84,21 @@ const App = () => (
             <Route path="/admin/cities" element={<AdminCities />} />
             <Route path="/admin/cities/new" element={<AdminCityEdit />} />
             <Route path="/admin/cities/:id" element={<AdminCityEdit />} />
-            <Route path="/admin/journal" element={<AdminJournal />} />
-            <Route path="/admin/journal/new" element={<AdminJournalEdit />} />
-            <Route path="/admin/journal/:id" element={<AdminJournalEdit />} />
             <Route path="/admin/practice" element={<AdminJournal />} />
             <Route path="/admin/practice/new" element={<AdminJournalEdit />} />
             <Route path="/admin/practice/:id" element={<AdminJournalEdit />} />
-            <Route path="/admin/resources" element={<AdminJournal />} />
-            <Route path="/admin/resources/new" element={<AdminJournalEdit />} />
-            <Route path="/admin/resources/:id" element={<AdminJournalEdit />} />
+            {/* Legacy admin paths — redirect to /admin/practice */}
+            <Route path="/admin/journal" element={<AdminPracticeRedirect />} />
+            <Route path="/admin/journal/new" element={<AdminPracticeRedirect />} />
+            <Route path="/admin/journal/:id" element={<AdminPracticeRedirect />} />
+            <Route path="/admin/resources" element={<AdminPracticeRedirect />} />
+            <Route path="/admin/resources/new" element={<AdminPracticeRedirect />} />
+            <Route path="/admin/resources/:id" element={<AdminPracticeRedirect />} />
             <Route path="/admin/seo" element={<AdminSEO />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/settings/integrations" element={<AdminIntegrations />} />
             <Route path="/admin/about" element={<AdminAbout />} />
+            <Route path="/admin/home" element={<AdminHome />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

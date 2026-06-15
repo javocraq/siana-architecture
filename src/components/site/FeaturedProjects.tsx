@@ -64,15 +64,15 @@ export default function FeaturedProjects() {
       style={{ padding: "4rem 0", borderBottom: "1px solid hsl(var(--paper-mid))" }}
     >
       <p
-        className="font-mono uppercase text-ink-soft section-label-line font-medium"
-        style={{ padding: "0 2.5rem 1.5rem", fontSize: "13px", letterSpacing: "0.22em" }}
+        className="font-mono uppercase text-ink-soft section-label-line font-medium mx-auto max-w-[1400px] px-6 lg:px-10"
+        style={{ paddingBottom: "1.5rem", fontSize: "13px", letterSpacing: "0.22em" }}
       >
         Recently added
       </p>
       <div
         ref={scrollRef}
-        className="flex no-scrollbar overflow-x-auto"
-        style={{ gap: "4px", padding: "0 2.5rem", cursor: "grab" }}
+        className="flex no-scrollbar overflow-x-auto mx-auto max-w-[1400px] px-6 lg:px-10"
+        style={{ gap: "4px", cursor: "grab" }}
         onMouseDown={onDown}
         onMouseLeave={onLeaveOrUp}
         onMouseUp={onLeaveOrUp}

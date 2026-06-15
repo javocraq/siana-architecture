@@ -5,8 +5,8 @@ import {
   Building2,
   MapPin,
   BookOpen,
-  Library,
   Info,
+  Home as HomeIcon,
   Settings as SettingsIcon,
   ChevronLeft,
   ChevronRight,
@@ -17,15 +17,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Match the visible CMS structure. SEO Global lives under Ajustes as a tab,
-// not as its own top-level item. Práctica = posts (kind: resource) — kept
-// at /admin/practice. Recursos = posts (kind: journal) — restored at
-// /admin/journal under a Spanish label.
+// Match the visible CMS structure. SEO Global lives under Settings as a tab,
+// not as its own top-level item. Practice unifies the former Practice + Resources
+// — all posts share /admin/practice regardless of their legacy `kind` value.
 const navItems = [
-  { to: "/admin/projects", label: "Proyectos", icon: Building2 },
-  { to: "/admin/cities", label: "Ciudades", icon: MapPin },
-  { to: "/admin/practice", label: "Práctica", icon: BookOpen },
-  { to: "/admin/journal", label: "Recursos", icon: Library },
+  { to: "/admin/home", label: "Home", icon: HomeIcon },
+  { to: "/admin/projects", label: "Projects", icon: Building2 },
+  { to: "/admin/cities", label: "Cities", icon: MapPin },
+  { to: "/admin/practice", label: "Practice", icon: BookOpen },
   { to: "/admin/about", label: "About", icon: Info },
 ];
 
@@ -173,9 +172,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             ) : (
               <button
                 onClick={() => setCollapsed((c) => !c)}
-                aria-label={collapsed ? "Expandir barra lateral" : "Colapsar barra lateral"}
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                 className="p-2 text-ink-soft hover:text-ink transition-colors"
-                title={collapsed ? "Expandir" : "Colapsar"}
+                title={collapsed ? "Expand" : "Collapse"}
               >
                 {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
               </button>
@@ -240,7 +239,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             })}
           </nav>
 
-          {/* Footer — Ajustes + Cerrar sesión live here, separated from the
+          {/* Footer — Settings + Sign out live here, separated from the
               main nav so the sidebar reads as "content / settings". */}
           <div
             style={{
@@ -248,7 +247,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               padding: showExpanded ? "12px 0 20px" : "12px 0",
             }}
           >
-            {/* Ajustes — styled exactly like the other nav items */}
+            {/* Settings — styled exactly like the other nav items */}
             {(() => {
               const onSettings =
                 location.pathname.startsWith("/admin/settings") ||
@@ -275,7 +274,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     justifyContent: showExpanded ? "flex-start" : "center",
                     gap: 12,
                   }}
-                  title={!showExpanded ? "Ajustes" : undefined}
+                  title={!showExpanded ? "Settings" : undefined}
                 >
                   {onSettings && (
                     <span
@@ -284,7 +283,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     />
                   )}
                   <SettingsIcon className="w-4 h-4 shrink-0" strokeWidth={1.5} />
-                  {showExpanded && <span>Ajustes</span>}
+                  {showExpanded && <span>Settings</span>}
                 </NavLink>
               );
             })()}
@@ -295,7 +294,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 onClick={signOut}
                 className="w-full font-mono uppercase text-ink-soft hover:text-ink transition-colors flex items-center justify-center py-2 mt-2"
                 style={{ fontSize: 10, letterSpacing: "0.18em" }}
-                title="Cerrar sesión"
+                title="Sign out"
               >
                 ⎋
               </button>
@@ -314,7 +313,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   className="mt-2 font-mono uppercase text-ink-soft hover:text-ink transition-colors"
                   style={{ fontSize: 10, letterSpacing: "0.22em" }}
                 >
-                  Cerrar sesión
+                  Sign out
                 </button>
               </div>
             )}

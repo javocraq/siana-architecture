@@ -3,10 +3,10 @@ import { NavLink } from "react-router-dom";
 const tabs = [
   { to: "/admin/settings", label: "General", end: true },
   { to: "/admin/seo", label: "SEO Global" },
-  { to: "/admin/settings/integrations", label: "Integraciones" },
+  { to: "/admin/settings/integrations", label: "Integrations" },
 ];
 
-/** Tabs shared across the three Ajustes sub-pages. */
+/** Tabs shared across the three Settings sub-pages. */
 export default function SettingsTabs() {
   return (
     <div className="flex gap-1 mb-10" style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}>

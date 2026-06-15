@@ -124,7 +124,7 @@ function labelFor(s: CitySection) {
   switch (s.type) {
     case "rich_text": return s.settings.heading || "Untitled text";
     case "projects":  return `${s.settings.heading || "Projects"} · ${s.settings.limit} items${s.settings.featuredOnly ? " · featured" : ""}`;
-    case "journal":   return `${s.settings.heading || "Journal"} · ${s.settings.limit} posts`;
+    case "journal":   return `${s.settings.heading || "Practice"} · ${s.settings.limit} posts`;
     case "gallery":   return `${s.settings.images?.length || 0} images · ${s.settings.columns} cols`;
     case "spacer":    return `${s.settings.height}px`;
   }

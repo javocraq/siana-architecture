@@ -1,6 +1,11 @@
+// Posts (journal + recursos) were unified into a single "Práctica" section.
+// The `kind` column on the table still exists for legacy rows, but the UI
+// no longer distinguishes between them — both feed the same Práctica list
+// and detail pages.
+
 export type PostKind = "journal" | "resource";
 
-export const JOURNAL_CATEGORIES = [
+export const PRACTICE_CATEGORIES = [
   "Architecture + AI",
   "Criticism",
   "Profile",
@@ -8,9 +13,6 @@ export const JOURNAL_CATEGORIES = [
   "Essay",
   "Interview",
   "City guide",
-];
-
-export const RESOURCE_CATEGORIES = [
   "Practice Management",
   "BIM & Tech",
   "AI in AEC",
@@ -22,30 +24,23 @@ export const RESOURCE_CATEGORIES = [
   "Tools & Software",
 ];
 
-export const kindConfig = (kind: PostKind) =>
-  kind === "resource"
-    ? {
-        label: "Entrada de práctica",
-        labelPlural: "Práctica",
-        sectionTitle: "Práctica",
-        sectionTagline: "Practical guides, playbooks and tools for architecture, engineering and construction firms.",
-        publicBase: "/practice",
-        adminBase: "/admin/practice",
-        categories: RESOURCE_CATEGORIES,
-        eyebrow: "Library",
-      }
-    : {
-        label: "Recurso",
-        labelPlural: "Recursos",
-        sectionTitle: "Recursos",
-        sectionTagline: "Essays and field notes on architecture, slowly written.",
-        publicBase: "/journal",
-        adminBase: "/admin/journal",
-        categories: JOURNAL_CATEGORIES,
-        eyebrow: "Reading",
-      };
+// Back-compat alias for existing imports.
+export const JOURNAL_CATEGORIES = PRACTICE_CATEGORIES;
+export const RESOURCE_CATEGORIES = PRACTICE_CATEGORIES;
 
-export const detectKindFromPath = (pathname: string): PostKind =>
-  pathname.includes("/practice") || pathname.includes("/resources")
-    ? "resource"
-    : "journal";
+const PRACTICE_CONFIG = {
+  label: "Practice entry",
+  labelPlural: "Practice",
+  // Public-facing section name — the site renders this in English ("Practice"),
+  // matching the navbar and the /practice URL.
+  sectionTitle: "Practice",
+  sectionTagline:
+    "Practical guides, essays, and field notes for architecture, engineering, and construction firms.",
+  publicBase: "/practice",
+  adminBase: "/admin/practice",
+  categories: PRACTICE_CATEGORIES,
+  eyebrow: "Library",
+};
+
+export const kindConfig = (_kind?: PostKind) => PRACTICE_CONFIG;
+export const detectKindFromPath = (_pathname: string): PostKind => "resource";

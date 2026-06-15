@@ -58,19 +58,19 @@ export default function AdminCities() {
               className="font-mono uppercase text-ink-soft mb-3 font-semibold"
               style={{ fontSize: 11, letterSpacing: "0.22em" }}
             >
-              Gestionar
+              Manage
             </p>
             <h1
               className="font-display text-ink"
               style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.005em" }}
             >
-              Ciudades
+              Cities
             </h1>
             <p
               className="mt-4 font-mono uppercase text-ink-soft"
               style={{ fontSize: 11, letterSpacing: "0.18em" }}
             >
-              {loading ? "Cargando…" : `${cities.length} en total`}
+              {loading ? "Loading…" : `${cities.length} total`}
             </p>
           </div>
           <Link
@@ -85,7 +85,7 @@ export default function AdminCities() {
               paddingBottom: 4,
             }}
           >
-            <Plus className="w-3.5 h-3.5" /> Añadir ciudad
+            <Plus className="w-3.5 h-3.5" /> Add city
           </Link>
         </div>
 
