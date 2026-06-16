@@ -14,6 +14,9 @@ export default function AdminSettings() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPw, setSavingPw] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -42,6 +45,27 @@ export default function AdminSettings() {
     toast({ title: "Profile saved", description: "Your profile has been updated." });
   };
 
+  const changePassword = async () => {
+    if (newPassword.length < 8) {
+      toast({ title: "Password too short", description: "Use at least 8 characters.", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Passwords don't match", description: "Make sure both fields are identical.", variant: "destructive" });
+      return;
+    }
+    setSavingPw(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setSavingPw(false);
+    if (error) {
+      toast({ title: "Could not update password", description: error.message, variant: "destructive" });
+      return;
+    }
+    setNewPassword("");
+    setConfirmPassword("");
+    toast({ title: "Password updated", description: "Use your new password the next time you sign in." });
+  };
+
   return (
     <AdminLayout>
       <div className="px-10 py-10 max-w-[960px]">
@@ -67,6 +91,7 @@ export default function AdminSettings() {
             <Loader2 className="w-4 h-4 animate-spin" /> Loading…
           </div>
         ) : (
+          <div className="space-y-8">
           <div className="border hairline bg-background p-6 space-y-6">
             <div>
               <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-2">Account</p>
@@ -93,6 +118,30 @@ export default function AdminSettings() {
                 {saving ? "Saving…" : "Save changes"}
               </button>
             </div>
+          </div>
+
+          <div className="border hairline bg-background p-6 space-y-6">
+            <div>
+              <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-2">Security</p>
+              <h2 className="font-display text-[22px] text-ink">Change password</h2>
+              <p className="mt-1 text-[12px] text-ink-faint">Set a new password for {user?.email}.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[640px]">
+              <Field label="New password" hint="At least 8 characters.">
+                <input type="password" autoComplete="new-password" className={inputCls} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+              </Field>
+              <Field label="Confirm new password">
+                <input type="password" autoComplete="new-password" className={inputCls} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+              </Field>
+            </div>
+            <div className="pt-2">
+              <button onClick={changePassword} disabled={savingPw || !newPassword}
+                className="text-[11px] tracking-tag uppercase text-background px-5 py-2.5 disabled:opacity-50"
+                style={{ background: "hsl(var(--ink))" }}>
+                {savingPw ? "Updating…" : "Update password"}
+              </button>
+            </div>
+          </div>
           </div>
         )}
       </div>
