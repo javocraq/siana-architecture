@@ -156,18 +156,23 @@ function FilterMenu({
 function SearchBox({
   projects,
   cities,
+  token,
   onPickCity,
   onPickProject,
+  onPickPlace,
   autoFocus,
 }: {
   projects: Project[];
   cities: City[];
+  token: string;
   onPickCity: (c: City) => void;
   onPickProject: (p: Project) => void;
+  onPickPlace: (lng: number, lat: number, bbox?: number[]) => void;
   autoFocus?: boolean;
 }) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [places, setPlaces] = useState<{ name: string; lng: number; lat: number; bbox?: number[] }[]>([]);
   const query = q.trim().toLowerCase();
   const cityMatches = query ? cities.filter((c) => c.name.toLowerCase().includes(query)).slice(0, 4) : [];
   const projMatches = query
@@ -180,7 +185,36 @@ function SearchBox({
         )
         .slice(0, 6)
     : [];
-  const hasResults = cityMatches.length + projMatches.length > 0;
+
+  // Geocoder — find ANY place (city, country, avenue, address…) via Mapbox so
+  // the map can fly anywhere, not just to registered cities/projects.
+  useEffect(() => {
+    const qq = q.trim();
+    if (!qq || !token) { setPlaces([]); return; }
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        const url =
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(qq)}.json` +
+          `?access_token=${token}&limit=5&language=en`;
+        const res = await fetch(url, { signal: ctrl.signal });
+        const data = await res.json();
+        setPlaces(
+          (data.features || []).map((f: any) => ({
+            name: f.place_name as string,
+            lng: f.center[0] as number,
+            lat: f.center[1] as number,
+            bbox: f.bbox as number[] | undefined,
+          }))
+        );
+      } catch {
+        /* aborted or network error — ignore */
+      }
+    }, 300);
+    return () => { clearTimeout(t); ctrl.abort(); };
+  }, [q, token]);
+
+  const hasResults = cityMatches.length + projMatches.length + places.length > 0;
   return (
     <div className="relative w-full">
       <div
@@ -238,6 +272,17 @@ function SearchBox({
                   )}
                 </span>
                 <span className="font-mono uppercase text-ink-soft shrink-0" style={{ fontSize: 10, letterSpacing: "0.16em" }}>Project</span>
+              </button>
+            ))}
+            {places.map((pl, i) => (
+              <button
+                key={"pl" + i}
+                onClick={() => { onPickPlace(pl.lng, pl.lat, pl.bbox); setQ(""); setOpen(false); }}
+                className="w-full text-left px-3 py-2.5 hover:bg-paper-mid transition-colors flex items-center justify-between gap-3"
+                style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
+              >
+                <span className="text-ink truncate" style={{ fontSize: 13, lineHeight: 1.3 }}>{pl.name}</span>
+                <span className="font-mono uppercase text-ink-soft shrink-0" style={{ fontSize: 10, letterSpacing: "0.16em" }}>Place</span>
               </button>
             ))}
           </div>
@@ -313,8 +358,8 @@ export default function Atlas() {
   const [selected, setSelected] = useState<Project | null>(null);
   const [isZoomedIn, setIsZoomedIn] = useState(false);
   // At world-view zoom levels, individual project pins from the same city stack
-  // into illegible blobs (Barcelona's 3 projects sit on the same pixel). When
-  // true, render one pin per city instead of per project so the map is clean.
+  // into illegible blobs (Barcelona's 3 projects sit on the same pixel). Hide
+  // the pins entirely until the user zooms in to a city-readable scale.
   const [isCityCluster, setIsCityCluster] = useState(true);
   const [searchParams] = useSearchParams();
   const cityParam = searchParams.get("city");
@@ -514,57 +559,11 @@ export default function Atlas() {
       s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
     const dot = "#bf3a18";
 
-    // ─── World-view: one pin per city ────────────────────────────────
+    // ─── World-view: no pins ─────────────────────────────────────────
     // At low zoom, individual project pins from the same city collapse to
-    // the same pixel and pile up. Render a single pin per city instead,
-    // centred on the city itself, with the project count inside.
+    // the same pixel and pile up. The map stays clean until the user zooms
+    // in enough to read individual locations.
     if (isCityCluster) {
-      const byCity = new Map<string, { city: City; count: number }>();
-      filtered.forEach((p) => {
-        if (!p.city_id || p.latitude == null || p.longitude == null) return;
-        const city = cities.find((c) => c.id === p.city_id);
-        if (!city || city.center_latitude == null || city.center_longitude == null) return;
-        const existing = byCity.get(city.id);
-        if (existing) existing.count += 1;
-        else byCity.set(city.id, { city, count: 1 });
-      });
-      byCity.forEach(({ city, count }) => {
-        const el = document.createElement("button");
-        el.setAttribute("aria-label", `${city.name} — ${count} ${count === 1 ? "project" : "projects"}`);
-        el.style.cssText = [
-          "all:unset",
-          "cursor:pointer",
-          "display:inline-flex",
-          "align-items:center",
-          "justify-content:center",
-          "box-sizing:border-box",
-          "min-width:22px",
-          "height:22px",
-          "padding:0 7px",
-          "border-radius:9999px",
-          `background:${dot}`,
-          "color:#fff",
-          "font-family:'DM Mono',ui-monospace,monospace",
-          "font-size:11px",
-          "font-weight:600",
-          "letter-spacing:0.02em",
-          "border:2px solid #fff",
-          "box-shadow:0 1px 6px rgba(0,0,0,0.18)",
-        ].join(";");
-        el.textContent = String(count);
-        el.addEventListener("click", (ev) => {
-          ev.stopPropagation();
-          // Switching the city filter zooms the camera in, which will trip
-          // the zoom listener and swap clusters for individual project pins.
-          setActive({ type: "city", value: city.name });
-          setSelected(null);
-        });
-        markersRef.current.push(
-          new mapboxgl.Marker({ element: el, anchor: "center" })
-            .setLngLat([city.center_longitude!, city.center_latitude!])
-            .addTo(mapRef.current!)
-        );
-      });
       return () => { hoverPopup.remove(); };
     }
 
@@ -630,7 +629,7 @@ export default function Atlas() {
       hoverPopup.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered, selected, mapReady, isCityCluster, cities]);
+  }, [filtered, selected, mapReady, isCityCluster]);
 
   const selectProject = (p: Project) => {
     setSelected(p);
@@ -673,6 +672,27 @@ export default function Atlas() {
     selectProject(p);
     setSearchOpen(false);
     window.setTimeout(() => { skipCameraRef.current = false; }, 600);
+  };
+  // A geocoded place (not a registered project/city) — just fly the map there,
+  // like any map search. Fit the bbox when available, else zoom to the point.
+  const searchPickPlace = (lng: number, lat: number, bbox?: number[]) => {
+    skipCameraRef.current = true;
+    setActive(null);
+    setSelected(null);
+    setSearchOpen(false);
+    const map = mapRef.current;
+    if (map) {
+      if (bbox && bbox.length === 4) {
+        map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], {
+          padding: { top: NAV_H + FILTER_BAR_H + 40, bottom: 80, left: 80, right: 80 },
+          maxZoom: 15,
+          duration: 1100,
+        });
+      } else {
+        map.flyTo({ center: [lng, lat], zoom: 14, essential: true });
+      }
+    }
+    window.setTimeout(() => { skipCameraRef.current = false; }, 900);
   };
 
   const saveToken = () => {
@@ -809,7 +829,7 @@ export default function Atlas() {
             {/* Search panel — revealed by the magnifier. */}
             {searchOpen && (
               <div className="mt-2 w-full max-w-[360px]">
-                <SearchBox projects={projects} cities={cities} onPickCity={searchPickCity} onPickProject={searchPickProject} autoFocus />
+                <SearchBox projects={projects} cities={cities} token={token} onPickCity={searchPickCity} onPickProject={searchPickProject} onPickPlace={searchPickPlace} autoFocus />
               </div>
             )}
 
@@ -831,7 +851,7 @@ export default function Atlas() {
               chips in a row (the compact search/Filters toolbar above is mobile-only). */}
           <div className="hidden md:flex items-start gap-3 flex-wrap px-8 py-2.5 pointer-events-auto">
             <div className="w-[260px] shrink-0">
-              <SearchBox projects={projects} cities={cities} onPickCity={searchPickCity} onPickProject={searchPickProject} />
+              <SearchBox projects={projects} cities={cities} token={token} onPickCity={searchPickCity} onPickProject={searchPickProject} onPickPlace={searchPickPlace} />
             </div>
             {active ? (
               <div className="inline-flex items-center gap-3" style={{ minHeight: 40 }}>
