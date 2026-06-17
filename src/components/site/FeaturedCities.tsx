@@ -112,7 +112,7 @@ export default function FeaturedCities() {
           as="h2"
           className="font-display text-ink"
           style={{
-            fontSize: "clamp(1.7rem, 3.2vw, 3rem)",
+            fontSize: "clamp(2rem, 3.7vw, 3.4rem)",
             fontWeight: 400,
             lineHeight: 1,
             letterSpacing: "-0.005em",

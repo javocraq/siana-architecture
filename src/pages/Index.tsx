@@ -218,7 +218,7 @@ const Index = () => {
           <h1
             className="fadeup-2 font-display-black text-white"
             style={{
-              fontSize: "clamp(2.2rem, 8vw, 6.5rem)",
+              fontSize: "clamp(2.5rem, 8.2vw, 7rem)",
               lineHeight: 1.02,
               textShadow: "0 2px 18px rgba(0,0,0,0.25)",
             }}
@@ -230,7 +230,7 @@ const Index = () => {
           <div className="fadeup-3 mt-10 md:mt-12 flex flex-col md:flex-row items-center md:items-end justify-center md:justify-between gap-8">
             <p
               className="font-mono text-white/85 mx-auto md:mx-0"
-              style={{ fontSize: "15px", lineHeight: 1.7, maxWidth: 360, letterSpacing: "0.01em", textShadow: "0 1px 8px rgba(0,0,0,0.25)" }}
+              style={{ fontSize: "16.5px", lineHeight: 1.7, maxWidth: 380, letterSpacing: "0.01em", textShadow: "0 1px 8px rgba(0,0,0,0.25)" }}
             >
               {content.hero.description}
             </p>
@@ -284,7 +284,7 @@ const Index = () => {
               </p>
               <h2
                 className="font-display text-ink"
-                style={{ fontSize: "clamp(1.8rem, 3.5vw, 3.4rem)", fontWeight: 400, lineHeight: 1 }}
+                style={{ fontSize: "clamp(2.1rem, 4vw, 3.8rem)", fontWeight: 400, lineHeight: 1 }}
               >
                 {content.map.headline_lead}
                 {content.map.headline_emphasis ? (
@@ -293,7 +293,7 @@ const Index = () => {
               </h2>
               <p
                 className="font-mono text-ink-soft mt-5 mx-auto"
-                style={{ fontSize: "15px", lineHeight: 1.65, maxWidth: 520, letterSpacing: "0.01em" }}
+                style={{ fontSize: "16.5px", lineHeight: 1.65, maxWidth: 540, letterSpacing: "0.01em" }}
               >
                 {content.map.description}
               </p>

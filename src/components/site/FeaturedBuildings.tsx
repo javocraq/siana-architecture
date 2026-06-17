@@ -52,7 +52,7 @@ export default function FeaturedBuildings() {
         <div className="text-center max-w-xl mx-auto">
           <h2
             className="font-display-black text-ink"
-            style={{ fontSize: "clamp(1.7rem, 3.2vw, 3rem)", lineHeight: 1.05 }}
+            style={{ fontSize: "clamp(2rem, 3.7vw, 3.4rem)", lineHeight: 1.05 }}
           >
             {content.buildings.headline_lead}
             {content.buildings.headline_emphasis ? (
@@ -61,7 +61,7 @@ export default function FeaturedBuildings() {
           </h2>
           <p
             className="font-mono text-ink-soft mt-7 mx-auto"
-            style={{ fontSize: 14, lineHeight: 1.7, letterSpacing: "0.01em", maxWidth: 440 }}
+            style={{ fontSize: 16, lineHeight: 1.7, letterSpacing: "0.01em", maxWidth: 460 }}
           >
             {content.buildings.description}
           </p>

@@ -687,12 +687,15 @@ export default function Atlas() {
   };
 
   // Search: jump straight to a city (filter + fly + project list) or a project
-  // (fly to it + open its card).
+  // (fly to it + open its card). After picking, the chosen name stays in the
+  // search input so the user knows what they're looking at; tapping the × in
+  // the pill resets everything back to neutral.
   const searchPickCity = (c: City) => {
     setSelected(null);
     setActive({ type: "city", value: c.name });
     setSearchOpen(false);
-    setMobileQ("");
+    setMobileQ(c.name);
+    setMobilePlaces([]);
     setSheetSnap("medium");
     if (c.center_longitude != null && c.center_latitude != null) {
       placeSearchMarker(c.center_longitude, c.center_latitude);
@@ -703,19 +706,23 @@ export default function Atlas() {
     setActive(null);
     selectProject(p);
     setSearchOpen(false);
-    setMobileQ("");
+    setMobileQ(p.name);
+    setMobilePlaces([]);
     setSheetSnap("medium");
-    clearSearchMarker();
+    if (p.longitude != null && p.latitude != null) {
+      placeSearchMarker(p.longitude, p.latitude);
+    }
     window.setTimeout(() => { skipCameraRef.current = false; }, 600);
   };
   // A geocoded place (not a registered project/city) — just fly the map there,
   // like any map search. Fit the bbox when available, else zoom to the point.
-  const searchPickPlace = (lng: number, lat: number, bbox?: number[]) => {
+  const searchPickPlace = (lng: number, lat: number, bbox?: number[], name?: string) => {
     skipCameraRef.current = true;
     setActive(null);
     setSelected(null);
     setSearchOpen(false);
-    setMobileQ("");
+    setMobileQ(name ?? "");
+    setMobilePlaces([]);
     placeSearchMarker(lng, lat);
     const map = mapRef.current;
     if (map) {
@@ -730,6 +737,16 @@ export default function Atlas() {
       }
     }
     window.setTimeout(() => { skipCameraRef.current = false; }, 900);
+  };
+  // The pill's × button: reset everything to neutral — clear text, filter,
+  // selected project and the dropped search marker.
+  const clearMobileSearch = () => {
+    setMobileQ("");
+    setMobilePlaces([]);
+    setSearchOpen(false);
+    setActive(null);
+    setSelected(null);
+    clearSearchMarker();
   };
 
   const saveToken = () => {
@@ -943,8 +960,11 @@ export default function Atlas() {
                 : [];
               const hasResults = cityMatches.length + projMatches.length + mobilePlaces.length > 0;
               const showDropdown = searchOpen && q.length > 0;
-              const rightIcon =
-                mobileQ ? "clear-query" : active ? "clear-filter" : searchOpen ? "close-search" : "filters";
+              // Single rule: as long as there's anything "active" — text in
+              // the input, an applied filter, a selected project or the
+              // search panel open — show a × that clears everything. Else
+              // show the filters icon.
+              const showClear = !!mobileQ || !!active || !!selected || searchOpen;
               return (
                 <>
                   <div
@@ -964,43 +984,22 @@ export default function Atlas() {
                       value={mobileQ}
                       onChange={(e) => { setMobileQ(e.target.value); setSearchOpen(true); }}
                       onFocus={() => { setSearchOpen(true); setFiltersOpen(false); }}
-                      placeholder={active ? active.value : "Buscar aquí"}
+                      placeholder="Buscar aquí"
                       className="flex-1 min-w-0 bg-transparent text-ink focus:outline-none placeholder:text-ink-soft"
                       style={{ fontSize: 14, height: 40 }}
                       aria-label="Search project, city or place"
                     />
 
-                    {rightIcon === "clear-query" && (
+                    {showClear ? (
                       <button
-                        onClick={() => { setMobileQ(""); setMobilePlaces([]); }}
-                        aria-label="Clear search"
+                        onClick={clearMobileSearch}
+                        aria-label="Clear"
                         className="inline-flex items-center justify-center shrink-0"
                         style={{ width: 36, height: 36, borderRadius: 9999, color: "hsl(var(--ink))" }}
                       >
                         <X className="w-4 h-4" />
                       </button>
-                    )}
-                    {rightIcon === "clear-filter" && (
-                      <button
-                        onClick={clearActive}
-                        aria-label="Clear filter"
-                        className="inline-flex items-center justify-center shrink-0"
-                        style={{ width: 36, height: 36, borderRadius: 9999, color: "hsl(var(--ink))" }}
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                    {rightIcon === "close-search" && (
-                      <button
-                        onClick={() => { setSearchOpen(false); setMobileQ(""); setMobilePlaces([]); }}
-                        aria-label="Close search"
-                        className="inline-flex items-center justify-center shrink-0"
-                        style={{ width: 36, height: 36, borderRadius: 9999, color: "hsl(var(--ink))" }}
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                    {rightIcon === "filters" && (
+                    ) : (
                       <button
                         onClick={() => { setFiltersOpen((o) => !o); setSearchOpen(false); }}
                         aria-label="Filters"
@@ -1056,7 +1055,7 @@ export default function Atlas() {
                       {mobilePlaces.map((pl, i) => (
                         <button
                           key={"pl" + i}
-                          onClick={() => searchPickPlace(pl.lng, pl.lat, pl.bbox)}
+                          onClick={() => searchPickPlace(pl.lng, pl.lat, pl.bbox, pl.name)}
                           className="w-full text-left px-3 py-2.5 active:bg-paper-mid transition-colors flex items-center justify-between gap-3"
                           style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
                         >
@@ -1253,11 +1252,11 @@ export default function Atlas() {
             </div>
           )}
 
-          {/* ─── Mobile bottom sheet ────────────────────────────────────
-              Renders BOTH the city projects list and the selected-project
-              detail. Three snap points (collapsed/medium/expanded) with a
-              draggable handle at the top, Google-Maps style. */}
-          {((active?.type === "city" && filtered.length > 0) || selected) && (
+          {/* ─── Mobile bottom sheet — city projects list ───────────────
+              Draggable Google-Maps style sheet with 3 snap points. Only
+              renders the list view; the selected-project detail lives in
+              its own centred overlay below so it stays fully visible. */}
+          {active?.type === "city" && filtered.length > 0 && !selected && (
             <div
               ref={sheetEl}
               className="md:hidden absolute left-0 right-0 bottom-0 z-30 bg-paper flex flex-col"
@@ -1270,7 +1269,6 @@ export default function Atlas() {
                 touchAction: "none",
               }}
             >
-              {/* Drag handle — entire header is grabbable */}
               <div
                 onTouchStart={onSheetTouchStart}
                 onTouchMove={onSheetTouchMove}
@@ -1284,116 +1282,126 @@ export default function Atlas() {
                   style={{ width: 44, height: 4, borderRadius: 9999, background: "hsl(var(--paper-mid))" }}
                   aria-hidden="true"
                 />
-
-                {selected ? (
-                  <div className="flex items-start justify-between gap-3 px-5 pt-3">
-                    <div className="min-w-0">
-                      {selected.city?.name && (
-                        <p className="font-mono uppercase text-accent-terra font-semibold truncate" style={{ fontSize: 10, letterSpacing: "0.2em" }}>
-                          {selected.city.name}
-                        </p>
-                      )}
-                      <p className="font-display text-ink leading-tight mt-1 truncate" style={{ fontSize: 20 }}>{selected.name}</p>
-                    </div>
-                    <button
-                      onClick={() => { setSelected(null); if (active?.type === "city") setSheetSnap("collapsed"); }}
-                      aria-label="Close project"
-                      className="p-1 -mr-1 text-ink-soft hover:text-ink transition-colors shrink-0"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                <div className="flex items-start justify-between gap-3 px-5 pt-3">
+                  <div className="min-w-0">
+                    <p className="font-mono uppercase text-accent-terra font-semibold" style={{ fontSize: 10, letterSpacing: "0.2em" }}>Projects in</p>
+                    <p className="font-display text-ink leading-tight mt-1 truncate" style={{ fontSize: 20 }}>{active?.value}</p>
+                    <p className="font-mono text-ink-soft mt-1" style={{ fontSize: 11, letterSpacing: "0.04em" }}>
+                      {filtered.length} {filtered.length === 1 ? "project" : "projects"}
+                    </p>
                   </div>
-                ) : (
-                  <div className="flex items-start justify-between gap-3 px-5 pt-3">
-                    <div className="min-w-0">
-                      <p className="font-mono uppercase text-accent-terra font-semibold" style={{ fontSize: 10, letterSpacing: "0.2em" }}>Projects in</p>
-                      <p className="font-display text-ink leading-tight mt-1 truncate" style={{ fontSize: 20 }}>{active?.value}</p>
-                      <p className="font-mono text-ink-soft mt-1" style={{ fontSize: 11, letterSpacing: "0.04em" }}>
-                        {filtered.length} {filtered.length === 1 ? "project" : "projects"}
-                      </p>
-                    </div>
-                    <button onClick={clearActive} aria-label="Close list" className="p-1 -mr-1 text-ink-soft hover:text-ink transition-colors shrink-0">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
+                  <button onClick={clearMobileSearch} aria-label="Close list" className="p-1 -mr-1 text-ink-soft hover:text-ink transition-colors shrink-0">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              {/* Body — scrollable. Project detail when one is selected, else
-                  the city projects list. */}
               <div className="flex-1 overflow-y-auto no-scrollbar" style={{ overscrollBehavior: "contain" }}>
-                {selected ? (
-                  <div>
-                    {(selected.cover_image_url || selected.hero_image_url) && (
-                      <div className="overflow-hidden">
+                {filtered.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => selectProject(p)}
+                    className="w-full text-left flex items-center gap-3.5 px-5 py-3 transition-colors active:bg-paper-warm"
+                    style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
+                  >
+                    <span className="overflow-hidden shrink-0 bg-paper-mid" style={{ width: 64, height: 64, borderRadius: 8 }}>
+                      {(p.cover_image_url || p.hero_image_url) && (
                         <img
-                          src={selected.cover_image_url || selected.hero_image_url || ""}
-                          alt={selected.name}
-                          className="block w-full h-auto object-cover"
-                          style={{ maxHeight: "42vh" }}
+                          src={p.cover_image_url || p.hero_image_url || ""}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          loading="lazy"
                         />
-                      </div>
-                    )}
-                    <div className="px-5 pt-4 pb-8">
-                      {(selected.architect || selected.year_completed) && (
-                        <p className="font-mono text-ink-soft" style={{ fontSize: 12, letterSpacing: "0.02em" }}>
-                          {[selected.architect, selected.year_completed].filter(Boolean).join(" · ")}
-                        </p>
                       )}
-                      {selected.tagline && (
-                        <p className="mt-3 text-ink-soft leading-[1.55]" style={{ fontSize: 14 }}>
-                          {selected.tagline}
-                        </p>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-display text-ink truncate" style={{ fontSize: 16, fontWeight: 400, lineHeight: 1.25 }}>{p.name}</span>
+                      {(p.architect || p.year_completed) && (
+                        <span className="block font-mono text-ink-soft truncate mt-1" style={{ fontSize: 12 }}>
+                          {[p.architect, p.year_completed].filter(Boolean).join(" · ")}
+                        </span>
                       )}
-                      <Link
-                        to={`/projects/${selected.slug}`}
-                        className="mt-5 inline-flex items-center justify-center w-full font-mono uppercase text-white transition-opacity hover:opacity-90"
-                        style={{
-                          background: "hsl(var(--ink))",
-                          height: 48,
-                          fontSize: 12,
-                          letterSpacing: "0.22em",
-                          fontWeight: 500,
-                          borderRadius: 9999,
-                        }}
-                      >
-                        View project
-                        <span aria-hidden="true" className="ml-2">→</span>
-                      </Link>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    {filtered.map((p) => (
-                      <button
-                        key={p.id}
-                        onClick={() => { selectProject(p); setSheetSnap("medium"); }}
-                        className="w-full text-left flex items-center gap-3.5 px-5 py-3 transition-colors active:bg-paper-warm"
-                        style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
-                      >
-                        <span className="overflow-hidden shrink-0 bg-paper-mid" style={{ width: 64, height: 64, borderRadius: 8 }}>
-                          {(p.cover_image_url || p.hero_image_url) && (
-                            <img
-                              src={p.cover_image_url || p.hero_image_url || ""}
-                              alt=""
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                          )}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block font-display text-ink truncate" style={{ fontSize: 16, fontWeight: 400, lineHeight: 1.25 }}>{p.name}</span>
-                          {(p.architect || p.year_completed) && (
-                            <span className="block font-mono text-ink-soft truncate mt-1" style={{ fontSize: 12 }}>
-                              {[p.architect, p.year_completed].filter(Boolean).join(" · ")}
-                            </span>
-                          )}
-                        </span>
-                        <span aria-hidden="true" className="shrink-0 text-ink-soft" style={{ fontSize: 16 }}>→</span>
-                      </button>
-                    ))}
-                  </div>
+                    </span>
+                    <span aria-hidden="true" className="shrink-0 text-ink-soft" style={{ fontSize: 16 }}>→</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ─── Mobile project card — centred overlay ──────────────────
+              Compact card that sits over the map (not pinned to the
+              bottom) so the whole project preview is visible at a glance:
+              cover image, name, short description and a CTA to open the
+              full project page. */}
+          {selected && (
+            <div
+              className="md:hidden absolute z-40 fade-in"
+              style={{ top: 140, right: 12, width: "58%", maxWidth: 240 }}
+            >
+              <div
+                className="relative bg-paper overflow-hidden"
+                style={{ borderRadius: 12, boxShadow: "0 14px 36px rgba(0,0,0,0.22)" }}
+              >
+                <button
+                  onClick={() => { setSelected(null); clearSearchMarker(); }}
+                  aria-label="Close project"
+                  className="absolute z-10 inline-flex items-center justify-center"
+                  style={{
+                    top: 6, right: 6,
+                    width: 26, height: 26, borderRadius: 9999,
+                    background: "rgba(255,255,255,0.94)",
+                    color: "hsl(var(--ink))",
+                    boxShadow: "0 1px 5px rgba(0,0,0,0.18)",
+                  }}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+
+                {(selected.cover_image_url || selected.hero_image_url) && (
+                  <img
+                    src={selected.cover_image_url || selected.hero_image_url || ""}
+                    alt={selected.name}
+                    className="block w-full object-cover"
+                    style={{ height: 110 }}
+                  />
                 )}
+
+                <div className="px-3.5 pt-3 pb-3.5">
+                  {selected.city?.name && (
+                    <p className="font-mono uppercase text-accent-terra font-semibold truncate" style={{ fontSize: 9.5, letterSpacing: "0.2em" }}>
+                      {selected.city.name}
+                    </p>
+                  )}
+                  <h3 className="font-display text-ink leading-tight mt-1" style={{ fontSize: 16, fontWeight: 400, letterSpacing: "-0.005em" }}>
+                    {selected.name}
+                  </h3>
+                  {(selected.architect || selected.year_completed) && (
+                    <p className="mt-1 font-mono text-ink-soft truncate" style={{ fontSize: 11 }}>
+                      {[selected.architect, selected.year_completed].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                  {selected.tagline && (
+                    <p className="mt-2 text-ink-soft leading-[1.45]" style={{ fontSize: 12, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      {selected.tagline}
+                    </p>
+                  )}
+                  <Link
+                    to={`/projects/${selected.slug}`}
+                    className="mt-3 inline-flex items-center justify-center w-full font-mono uppercase text-white"
+                    style={{
+                      background: "hsl(var(--ink))",
+                      height: 38,
+                      fontSize: 10,
+                      letterSpacing: "0.2em",
+                      fontWeight: 500,
+                      borderRadius: 9999,
+                    }}
+                  >
+                    View project
+                    <span aria-hidden="true" className="ml-1.5">→</span>
+                  </Link>
+                </div>
               </div>
             </div>
           )}

@@ -47,7 +47,7 @@ export default function LatestJournal() {
         style={{ paddingBottom: "5rem" }}
       >
         <div className="text-center max-w-xl mx-auto">
-          <h2 className="font-display-black text-ink" style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.6rem)", lineHeight: 1.05 }}>
+          <h2 className="font-display-black text-ink" style={{ fontSize: "clamp(1.85rem, 3.3vw, 3rem)", lineHeight: 1.05 }}>
             {content.journal.headline_lead}
             {content.journal.headline_emphasis ? (
               <> <em className="italic text-accent-terra">{content.journal.headline_emphasis}</em></>
@@ -55,7 +55,7 @@ export default function LatestJournal() {
           </h2>
           <p
             className="font-mono text-ink-soft mt-7 mx-auto"
-            style={{ fontSize: 14, lineHeight: 1.7, letterSpacing: "0.01em", maxWidth: 440 }}
+            style={{ fontSize: 16, lineHeight: 1.7, letterSpacing: "0.01em", maxWidth: 460 }}
           >
             {content.journal.description}
           </p>
