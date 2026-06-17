@@ -312,6 +312,10 @@ export default function Atlas() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selected, setSelected] = useState<Project | null>(null);
   const [isZoomedIn, setIsZoomedIn] = useState(false);
+  // At world-view zoom levels, individual project pins from the same city stack
+  // into illegible blobs (Barcelona's 3 projects sit on the same pixel). When
+  // true, render one pin per city instead of per project so the map is clean.
+  const [isCityCluster, setIsCityCluster] = useState(true);
   const [searchParams] = useSearchParams();
   const cityParam = searchParams.get("city");
   const projectParam = searchParams.get("project");
@@ -374,7 +378,11 @@ export default function Atlas() {
       });
       map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
       map.on("load", () => setMapReady(true));
-      map.on("zoom", () => setIsZoomedIn(map.getZoom() > 3));
+      map.on("zoom", () => {
+        const z = map.getZoom();
+        setIsZoomedIn(z > 3);
+        setIsCityCluster(z < 5);
+      });
       mapRef.current = map;
 
       // ─── Spinning globe (desktop only) ──────────────────────────────
@@ -504,17 +512,102 @@ export default function Atlas() {
     hoverPopupRef.current = hoverPopup;
     const esc = (s: string) =>
       s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
+    const dot = "#bf3a18";
 
+    // ─── World-view: one pin per city ────────────────────────────────
+    // At low zoom, individual project pins from the same city collapse to
+    // the same pixel and pile up. Render a single pin per city instead,
+    // centred on the city itself, with the project count inside.
+    if (isCityCluster) {
+      const byCity = new Map<string, { city: City; count: number }>();
+      filtered.forEach((p) => {
+        if (!p.city_id || p.latitude == null || p.longitude == null) return;
+        const city = cities.find((c) => c.id === p.city_id);
+        if (!city || city.center_latitude == null || city.center_longitude == null) return;
+        const existing = byCity.get(city.id);
+        if (existing) existing.count += 1;
+        else byCity.set(city.id, { city, count: 1 });
+      });
+      byCity.forEach(({ city, count }) => {
+        const el = document.createElement("button");
+        el.setAttribute("aria-label", `${city.name} — ${count} ${count === 1 ? "project" : "projects"}`);
+        el.style.cssText = [
+          "all:unset",
+          "cursor:pointer",
+          "display:inline-flex",
+          "align-items:center",
+          "justify-content:center",
+          "box-sizing:border-box",
+          "min-width:22px",
+          "height:22px",
+          "padding:0 7px",
+          "border-radius:9999px",
+          `background:${dot}`,
+          "color:#fff",
+          "font-family:'DM Mono',ui-monospace,monospace",
+          "font-size:11px",
+          "font-weight:600",
+          "letter-spacing:0.02em",
+          "border:2px solid #fff",
+          "box-shadow:0 1px 6px rgba(0,0,0,0.18)",
+        ].join(";");
+        el.textContent = String(count);
+        el.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          // Switching the city filter zooms the camera in, which will trip
+          // the zoom listener and swap clusters for individual project pins.
+          setActive({ type: "city", value: city.name });
+          setSelected(null);
+        });
+        markersRef.current.push(
+          new mapboxgl.Marker({ element: el, anchor: "center" })
+            .setLngLat([city.center_longitude!, city.center_latitude!])
+            .addTo(mapRef.current!)
+        );
+      });
+      return () => { hoverPopup.remove(); };
+    }
+
+    // ─── Zoomed in: individual project pins ──────────────────────────
     filtered.forEach((p) => {
       if (p.latitude == null || p.longitude == null) return;
+      const on = selected?.id === p.id;
+      // The anchor element IS the visible dot — sized exactly like what the
+      // user sees, so Mapbox's `anchor: "center"` lands the dot's geometric
+      // centre on the lat/lng. The pulse ring is a child centred on the dot
+      // via top/left 50% + translate, so it can't drift relative to the dot.
       const el = document.createElement("button");
       el.setAttribute("aria-label", p.name);
-      el.style.cssText = "background:transparent;border:0;padding:0;cursor:pointer;display:block;position:relative;width:16px;height:16px;";
-      const on = selected?.id === p.id;
-      const dot = "#bf3a18";
-      el.innerHTML = `
-        <span style="display:block;width:11px;height:11px;border-radius:9999px;background:${dot};border:2px solid #fff;box-shadow:0 0 0 2px ${dot};position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) ${on ? "scale(1.35)" : "scale(1)"};transition:transform .18s ease;"></span>
-        <span style="position:absolute;top:50%;left:50%;width:24px;height:24px;border-radius:9999px;border:1px solid ${dot};opacity:.35;transform:translate(-50%,-50%);animation:siana-pulse 2.2s infinite;"></span>`;
+      el.style.cssText = [
+        "all:unset",
+        "cursor:pointer",
+        "display:block",
+        "box-sizing:border-box",
+        "width:11px",
+        "height:11px",
+        "border-radius:9999px",
+        `background:${dot}`,
+        "border:2px solid #fff",
+        `box-shadow:0 0 0 2px ${dot}`,
+        `transform:${on ? "scale(1.35)" : "scale(1)"}`,
+        "transition:transform .18s ease",
+        "position:relative",
+      ].join(";");
+      const pulse = document.createElement("span");
+      pulse.style.cssText = [
+        "position:absolute",
+        "top:50%",
+        "left:50%",
+        "width:24px",
+        "height:24px",
+        "border-radius:9999px",
+        `border:1px solid ${dot}`,
+        "opacity:.35",
+        "transform:translate(-50%,-50%)",
+        "animation:siana-pulse 2.2s infinite",
+        "pointer-events:none",
+      ].join(";");
+      el.appendChild(pulse);
       el.addEventListener("click", (ev) => {
         ev.stopPropagation();
         selectProject(p);
@@ -537,7 +630,7 @@ export default function Atlas() {
       hoverPopup.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered, selected, mapReady]);
+  }, [filtered, selected, mapReady, isCityCluster, cities]);
 
   const selectProject = (p: Project) => {
     setSelected(p);
@@ -657,8 +750,8 @@ export default function Atlas() {
           className="absolute left-0 right-0 z-40"
           style={{ top: NAV_H, background: "transparent", pointerEvents: "none" }}
         >
-          <div className="px-5 md:px-8 py-2.5 pointer-events-auto">
-            {/* Compact toolbar — keeps the map clear; search and filters open on tap. */}
+          <div className="md:hidden px-5 py-2.5 pointer-events-auto">
+            {/* Compact toolbar (MOBILE ONLY) — keeps the map clear; search and filters open on tap. */}
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => { setSearchOpen((o) => !o); setFiltersOpen(false); }}
@@ -730,6 +823,39 @@ export default function Atlas() {
                 <FilterGroup label="Materials" type="material" options={MATERIALS} active={active} onPick={(v) => activate("material", v)} />
                 <FilterGroup label="Experience" type="experience" options={EXPERIENCES} active={active} onPick={(v) => activate("experience", v)} />
                 <FilterGroup label="Style" type="style" options={styleOptions} active={active} onPick={(v) => activate("style", v)} />
+              </div>
+            )}
+          </div>
+
+          {/* DESKTOP (md+) — the classic always-visible bar: search box + filter
+              chips in a row (the compact search/Filters toolbar above is mobile-only). */}
+          <div className="hidden md:flex items-start gap-3 flex-wrap px-8 py-2.5 pointer-events-auto">
+            <div className="w-[260px] shrink-0">
+              <SearchBox projects={projects} cities={cities} onPickCity={searchPickCity} onPickProject={searchPickProject} />
+            </div>
+            {active ? (
+              <div className="inline-flex items-center gap-3" style={{ minHeight: 40 }}>
+                <span className="font-mono uppercase text-ink" style={{ fontSize: 11, letterSpacing: "0.18em", background: "hsl(var(--paper-warm) / 0.92)", padding: "4px 8px" }}>
+                  {FILTER_LABELS[active.type]}
+                </span>
+                <button
+                  onClick={clearActive}
+                  className="font-mono uppercase inline-flex items-center gap-2 px-3 py-1.5 transition-colors hover:opacity-90"
+                  style={{ fontSize: 12, letterSpacing: "0.12em", background: "hsl(var(--ink))", color: "#fff", border: "1px solid hsl(var(--ink))" }}
+                  aria-label="Clear filter"
+                >
+                  {active.value}
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2 flex-wrap" style={{ minHeight: 40 }}>
+                <FilterMenu label="Cities" options={cityOptions} selected={[]} onToggle={(v) => activate("city", v)} open={openMenu === "cities"} onToggleOpen={() => toggleMenu("cities")} onClose={closeMenu} stacked />
+                <FilterMenu label="Materials" options={MATERIALS} selected={[]} onToggle={(v) => activate("material", v)} open={openMenu === "materials"} onToggleOpen={() => toggleMenu("materials")} onClose={closeMenu} stacked />
+                <FilterMenu label="Experience" options={EXPERIENCES} selected={[]} onToggle={(v) => activate("experience", v)} open={openMenu === "experience"} onToggleOpen={() => toggleMenu("experience")} onClose={closeMenu} stacked />
+                {styleOptions.length > 0 && (
+                  <FilterMenu label="Style" options={styleOptions} selected={[]} onToggle={(v) => activate("style", v)} open={openMenu === "style"} onToggleOpen={() => toggleMenu("style")} onClose={closeMenu} stacked />
+                )}
               </div>
             )}
           </div>

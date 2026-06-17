@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Reveal from "@/components/site/Reveal";
+import EditorialButton from "@/components/site/EditorialButton";
 import { useHomeContent } from "@/hooks/useHomeContent";
 
 interface City {
@@ -101,10 +102,10 @@ export default function FeaturedCities() {
   return (
     <section
       className="bg-white"
-      style={{ padding: "5rem 0", borderBottom: "1px solid hsl(var(--paper-mid))" }}
+      style={{ padding: "5rem 0" }}
     >
       <div
-        className="flex items-center justify-between gap-6 flex-wrap mx-auto max-w-[1400px] px-6 lg:px-10"
+        className="mx-auto max-w-[1400px] px-6 lg:px-10"
         style={{ marginBottom: "3rem" }}
       >
         <Reveal
@@ -229,6 +230,11 @@ export default function FeaturedCities() {
           </Reveal>
         ))}
       </div>
+      </div>
+      <div className="mx-auto max-w-[1400px] px-6 lg:px-10 flex justify-center" style={{ marginTop: "3rem" }}>
+        <Reveal delay={120}>
+          <EditorialButton to="/cities" arrow>View all cities</EditorialButton>
+        </Reveal>
       </div>
     </section>
   );

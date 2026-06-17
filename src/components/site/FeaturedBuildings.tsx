@@ -43,7 +43,7 @@ export default function FeaturedBuildings() {
   return (
     <section
       className="bg-paper"
-      style={{ padding: "6rem 0", borderTop: "1px solid hsl(var(--paper-mid))" }}
+      style={{ padding: "6rem 0" }}
     >
       <Reveal
         className="mx-auto max-w-[1400px] px-6 lg:px-10"
