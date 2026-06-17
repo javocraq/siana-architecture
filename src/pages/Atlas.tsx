@@ -357,6 +357,14 @@ export default function Atlas() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selected, setSelected] = useState<Project | null>(null);
   const [isZoomedIn, setIsZoomedIn] = useState(false);
+  // Mobile search — single query lifted up so the pill never has to change
+  // shape between "closed" and "typing" states. The dropdown of matches
+  // renders below the pill.
+  const [mobileQ, setMobileQ] = useState("");
+  const [mobilePlaces, setMobilePlaces] = useState<{ name: string; lng: number; lat: number; bbox?: number[] }[]>([]);
+  // A standalone marker the search drops on the picked city/place so the user
+  // can visually locate where they searched, even when there are no projects.
+  const placedMarkerRef = useRef<mapboxgl.Marker | null>(null);
   // At world-view zoom levels, individual project pins from the same city stack
   // into illegible blobs (Barcelona's 3 projects sit on the same pixel). Hide
   // the pins entirely until the user zooms in to a city-readable scale.
@@ -669,10 +677,12 @@ export default function Atlas() {
   const clearActive = () => {
     setActive(null);
     setSelected(null);
+    clearSearchMarker();
   };
   const resetView = () => {
     setActive(null);
     setSelected(null);
+    clearSearchMarker();
     mapRef.current?.flyTo({ center: [10, 25], zoom: 1.5, speed: 1.2, curve: 1.4, essential: true });
   };
 
@@ -682,14 +692,20 @@ export default function Atlas() {
     setSelected(null);
     setActive({ type: "city", value: c.name });
     setSearchOpen(false);
+    setMobileQ("");
     setSheetSnap("medium");
+    if (c.center_longitude != null && c.center_latitude != null) {
+      placeSearchMarker(c.center_longitude, c.center_latitude);
+    }
   };
   const searchPickProject = (p: Project) => {
     skipCameraRef.current = true;
     setActive(null);
     selectProject(p);
     setSearchOpen(false);
+    setMobileQ("");
     setSheetSnap("medium");
+    clearSearchMarker();
     window.setTimeout(() => { skipCameraRef.current = false; }, 600);
   };
   // A geocoded place (not a registered project/city) — just fly the map there,
@@ -699,6 +715,8 @@ export default function Atlas() {
     setActive(null);
     setSelected(null);
     setSearchOpen(false);
+    setMobileQ("");
+    placeSearchMarker(lng, lat);
     const map = mapRef.current;
     if (map) {
       if (bbox && bbox.length === 4) {
@@ -718,6 +736,63 @@ export default function Atlas() {
     if (!tokenInput.trim()) return;
     localStorage.setItem(TOKEN_KEY, tokenInput.trim());
     setToken(tokenInput.trim());
+  };
+
+  // Geocoder for the mobile pill (lifted out of SearchBox so the pill itself
+  // stays the same shape while the user types).
+  useEffect(() => {
+    const qq = mobileQ.trim();
+    if (!qq || !token) { setMobilePlaces([]); return; }
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        const url =
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(qq)}.json` +
+          `?access_token=${token}&limit=5&language=en`;
+        const res = await fetch(url, { signal: ctrl.signal });
+        const data = await res.json();
+        setMobilePlaces(
+          (data.features || []).map((f: any) => ({
+            name: f.place_name as string,
+            lng: f.center[0] as number,
+            lat: f.center[1] as number,
+            bbox: f.bbox as number[] | undefined,
+          }))
+        );
+      } catch { /* aborted or network error — ignore */ }
+    }, 300);
+    return () => { clearTimeout(t); ctrl.abort(); };
+  }, [mobileQ, token]);
+
+  // Drops (or moves) a standalone marker at a lng/lat. Used to highlight a
+  // city or geocoded place the user just searched for.
+  const placeSearchMarker = (lng: number, lat: number) => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (placedMarkerRef.current) {
+      placedMarkerRef.current.setLngLat([lng, lat]);
+      return;
+    }
+    const el = document.createElement("div");
+    el.style.cssText = [
+      "width:18px",
+      "height:26px",
+      "position:relative",
+      "pointer-events:none",
+    ].join(";");
+    // Editorial drop-pin: terracotta teardrop with a white dot inside.
+    el.innerHTML = `
+      <svg viewBox="0 0 18 26" width="18" height="26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M9 0C4.03 0 0 4.03 0 9c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#bf3a18"/>
+        <circle cx="9" cy="9" r="3" fill="#ffffff"/>
+      </svg>`;
+    placedMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "bottom" })
+      .setLngLat([lng, lat])
+      .addTo(map);
+  };
+  const clearSearchMarker = () => {
+    placedMarkerRef.current?.remove();
+    placedMarkerRef.current = null;
   };
 
   // ─── Bottom-sheet snap maths ──────────────────────────────────────
@@ -850,73 +925,150 @@ export default function Atlas() {
           <div className="md:hidden px-4 py-2.5 pointer-events-auto">
             {/* Google-Maps style search pill (MOBILE ONLY) — single rounded
                 input with a search icon on the left and the Filters icon on
-                the right (where the mic sits in Google Maps).
-
-                When the user taps the pill, it morphs into the live SearchBox
-                so we never render two stacked search inputs. */}
-            {searchOpen ? (
-              <div className="w-full">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 min-w-0">
-                    <SearchBox projects={projects} cities={cities} token={token} onPickCity={searchPickCity} onPickProject={searchPickProject} onPickPlace={searchPickPlace} autoFocus />
-                  </div>
-                  <button
-                    onClick={() => setSearchOpen(false)}
-                    className="font-mono uppercase text-ink shrink-0 px-3 h-10"
-                    style={{ fontSize: 11, letterSpacing: "0.16em" }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div
-                className="flex items-center gap-2 w-full"
-                style={{
-                  background: "#fff",
-                  borderRadius: 9999,
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.14)",
-                  paddingLeft: 14,
-                  paddingRight: 6,
-                  height: 48,
-                }}
-              >
-                <Search className="w-4 h-4 text-ink-soft shrink-0" />
-                <button
-                  type="button"
-                  onClick={() => { setSearchOpen(true); setFiltersOpen(false); }}
-                  className="flex-1 text-left bg-transparent text-ink-soft truncate"
-                  style={{ fontSize: 14, height: 40 }}
-                  aria-label="Search project, city or place"
-                >
-                  {active ? active.value : "Buscar aquí"}
-                </button>
-                {active ? (
-                  <button
-                    onClick={clearActive}
-                    aria-label="Clear filter"
-                    className="inline-flex items-center justify-center shrink-0 transition-colors hover:bg-paper-mid"
-                    style={{ width: 36, height: 36, borderRadius: 9999, color: "hsl(var(--ink))" }}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => { setFiltersOpen((o) => !o); setSearchOpen(false); }}
-                    aria-label="Filters"
-                    aria-expanded={filtersOpen}
-                    className="inline-flex items-center justify-center shrink-0 transition-colors"
+                the right (where the mic sits in Google Maps). The pill keeps
+                the same shape whether the user is typing or idle; the results
+                drop down below as a separate overlay. */}
+            {(() => {
+              const q = mobileQ.trim().toLowerCase();
+              const cityMatches = q ? cities.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 4) : [];
+              const projMatches = q
+                ? projects
+                    .filter(
+                      (p) =>
+                        p.name.toLowerCase().includes(q) ||
+                        (p.architect || "").toLowerCase().includes(q) ||
+                        (p.city?.name || "").toLowerCase().includes(q)
+                    )
+                    .slice(0, 6)
+                : [];
+              const hasResults = cityMatches.length + projMatches.length + mobilePlaces.length > 0;
+              const showDropdown = searchOpen && q.length > 0;
+              const rightIcon =
+                mobileQ ? "clear-query" : active ? "clear-filter" : searchOpen ? "close-search" : "filters";
+              return (
+                <>
+                  <div
+                    className="flex items-center gap-2 w-full"
                     style={{
-                      width: 36, height: 36, borderRadius: 9999,
-                      background: filtersOpen ? "hsl(var(--ink))" : "transparent",
-                      color: filtersOpen ? "#fff" : "hsl(var(--ink))",
+                      background: "#fff",
+                      borderRadius: 9999,
+                      boxShadow: "0 2px 12px rgba(0,0,0,0.14)",
+                      paddingLeft: 14,
+                      paddingRight: 6,
+                      height: 48,
                     }}
                   >
-                    <SlidersHorizontal className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            )}
+                    <Search className="w-4 h-4 text-ink-soft shrink-0" />
+                    <input
+                      type="text"
+                      value={mobileQ}
+                      onChange={(e) => { setMobileQ(e.target.value); setSearchOpen(true); }}
+                      onFocus={() => { setSearchOpen(true); setFiltersOpen(false); }}
+                      placeholder={active ? active.value : "Buscar aquí"}
+                      className="flex-1 min-w-0 bg-transparent text-ink focus:outline-none placeholder:text-ink-soft"
+                      style={{ fontSize: 14, height: 40 }}
+                      aria-label="Search project, city or place"
+                    />
+
+                    {rightIcon === "clear-query" && (
+                      <button
+                        onClick={() => { setMobileQ(""); setMobilePlaces([]); }}
+                        aria-label="Clear search"
+                        className="inline-flex items-center justify-center shrink-0"
+                        style={{ width: 36, height: 36, borderRadius: 9999, color: "hsl(var(--ink))" }}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                    {rightIcon === "clear-filter" && (
+                      <button
+                        onClick={clearActive}
+                        aria-label="Clear filter"
+                        className="inline-flex items-center justify-center shrink-0"
+                        style={{ width: 36, height: 36, borderRadius: 9999, color: "hsl(var(--ink))" }}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                    {rightIcon === "close-search" && (
+                      <button
+                        onClick={() => { setSearchOpen(false); setMobileQ(""); setMobilePlaces([]); }}
+                        aria-label="Close search"
+                        className="inline-flex items-center justify-center shrink-0"
+                        style={{ width: 36, height: 36, borderRadius: 9999, color: "hsl(var(--ink))" }}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                    {rightIcon === "filters" && (
+                      <button
+                        onClick={() => { setFiltersOpen((o) => !o); setSearchOpen(false); }}
+                        aria-label="Filters"
+                        aria-expanded={filtersOpen}
+                        className="inline-flex items-center justify-center shrink-0"
+                        style={{
+                          width: 36, height: 36, borderRadius: 9999,
+                          background: filtersOpen ? "hsl(var(--ink))" : "transparent",
+                          color: filtersOpen ? "#fff" : "hsl(var(--ink))",
+                        }}
+                      >
+                        <SlidersHorizontal className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Results dropdown below the pill */}
+                  {showDropdown && (
+                    <div
+                      className="mt-2 w-full bg-paper overflow-y-auto no-scrollbar fade-in"
+                      style={{ maxHeight: "60vh", border: "1px solid hsl(var(--paper-mid))", boxShadow: "0 10px 30px rgba(0,0,0,0.14)", borderRadius: 12 }}
+                    >
+                      {!hasResults && (
+                        <p className="px-3 py-3 font-mono uppercase text-ink-soft" style={{ fontSize: 11, letterSpacing: "0.14em" }}>No matches</p>
+                      )}
+                      {cityMatches.map((c) => (
+                        <button
+                          key={"c" + c.id}
+                          onClick={() => searchPickCity(c)}
+                          className="w-full text-left px-3 py-2.5 active:bg-paper-mid transition-colors flex items-center justify-between gap-2"
+                          style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
+                        >
+                          <span className="font-display text-ink truncate" style={{ fontSize: 15 }}>{c.name}</span>
+                          <span className="font-mono uppercase text-ink-soft shrink-0" style={{ fontSize: 10, letterSpacing: "0.16em" }}>City</span>
+                        </button>
+                      ))}
+                      {projMatches.map((p) => (
+                        <button
+                          key={"p" + p.id}
+                          onClick={() => searchPickProject(p)}
+                          className="w-full text-left px-3 py-2.5 active:bg-paper-mid transition-colors flex items-center justify-between gap-2"
+                          style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
+                        >
+                          <span className="min-w-0">
+                            <span className="block font-display text-ink truncate" style={{ fontSize: 15 }}>{p.name}</span>
+                            {p.city?.name && (
+                              <span className="block font-mono uppercase text-ink-soft truncate" style={{ fontSize: 10, letterSpacing: "0.14em" }}>{p.city.name}</span>
+                            )}
+                          </span>
+                          <span className="font-mono uppercase text-ink-soft shrink-0" style={{ fontSize: 10, letterSpacing: "0.16em" }}>Project</span>
+                        </button>
+                      ))}
+                      {mobilePlaces.map((pl, i) => (
+                        <button
+                          key={"pl" + i}
+                          onClick={() => searchPickPlace(pl.lng, pl.lat, pl.bbox)}
+                          className="w-full text-left px-3 py-2.5 active:bg-paper-mid transition-colors flex items-center justify-between gap-3"
+                          style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
+                        >
+                          <span className="text-ink truncate" style={{ fontSize: 13, lineHeight: 1.3 }}>{pl.name}</span>
+                          <span className="font-mono uppercase text-ink-soft shrink-0" style={{ fontSize: 10, letterSpacing: "0.16em" }}>Place</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {/* Filters panel — opens below the pill on tap. */}
             {filtersOpen && (

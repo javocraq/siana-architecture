@@ -408,11 +408,6 @@
   }
 }
 
-/* Smooth in-page scrolling (anchor jumps) — motion-safe only. */
-@media (prefers-reduced-motion: no-preference) {
-  html { scroll-behavior: smooth; }
-}
-
 /* Accessible keyboard focus — a subtle ink ring for keyboard users only.
    `:where()` keeps specificity at 0 so any component's own focus style wins;
    the Mapbox canvas keeps its outline:none rule above. */

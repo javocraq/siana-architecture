@@ -87,6 +87,7 @@ const Index = () => {
   useEffect(() => {
     if (!token || !mapContainer.current || mapRef.current) return;
     mapboxgl.accessToken = token;
+    let io: IntersectionObserver | null = null;
     try {
       const map = new mapboxgl.Map({
         container: mapContainer.current,
@@ -100,18 +101,34 @@ const Index = () => {
       mapRef.current = map;
 
       // Spinning globe — slower than the Atlas tool since this is decorative.
+      // Pause the spin whenever the hero is scrolled out of view (and for
+      // reduced-motion users). Otherwise the map keeps repainting behind the
+      // rest of the page, which made scrolling stutter.
+      const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+      let visible = true;
       const SECONDS_PER_REV = 120;
       const spinGlobe = () => {
+        if (!visible || reduceMotion) return;
         const c = map.getCenter();
         c.lng -= 360 / SECONDS_PER_REV;
         map.easeTo({ center: c, duration: 1000, easing: (n) => n });
       };
       map.on("moveend", spinGlobe);
       map.on("load", spinGlobe);
+
+      io = new IntersectionObserver(
+        ([entry]) => {
+          visible = entry.isIntersecting;
+          if (visible) spinGlobe(); // restart the loop when it scrolls back in
+        },
+        { threshold: 0 }
+      );
+      io.observe(mapContainer.current);
     } catch (e) {
       console.error("Mapbox preview init failed", e);
     }
     return () => {
+      io?.disconnect();
       mapRef.current?.remove();
       mapRef.current = null;
     };
