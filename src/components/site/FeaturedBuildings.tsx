@@ -76,7 +76,7 @@ export default function FeaturedBuildings() {
         <Reveal className="md:row-span-2">
         <Link
           to={`/projects/${hero.slug}`}
-          className="group relative overflow-hidden bg-paper-mid block h-full"
+          className="group relative overflow-hidden bg-paper-mid block h-full lift"
           style={{ borderRadius: 0, minHeight: 500 }}
         >
           <img
@@ -113,7 +113,7 @@ export default function FeaturedBuildings() {
           <Reveal key={p.id} delay={120 + i * 110}>
           <Link
             to={`/projects/${p.slug}`}
-            className="group relative overflow-hidden bg-paper-mid block h-full"
+            className="group relative overflow-hidden bg-paper-mid block h-full lift"
             style={{ borderRadius: 0, minHeight: 240 }}
           >
             <img

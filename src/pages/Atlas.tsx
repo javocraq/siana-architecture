@@ -361,6 +361,14 @@ export default function Atlas() {
   // into illegible blobs (Barcelona's 3 projects sit on the same pixel). Hide
   // the pins entirely until the user zooms in to a city-readable scale.
   const [isCityCluster, setIsCityCluster] = useState(true);
+  // ─── Mobile bottom sheet ──────────────────────────────────────────
+  // Google-Maps style draggable sheet for the city projects list and the
+  // selected project's detail view. Three snap points: collapsed (header
+  // only), medium (~half screen), expanded (almost full screen).
+  type SheetSnap = "collapsed" | "medium" | "expanded";
+  const [sheetSnap, setSheetSnap] = useState<SheetSnap>("medium");
+  const sheetDragRef = useRef({ active: false, startY: 0, startTranslate: 0, translate: 0 });
+  const sheetEl = useRef<HTMLDivElement | null>(null);
   const [searchParams] = useSearchParams();
   const cityParam = searchParams.get("city");
   const projectParam = searchParams.get("project");
@@ -417,8 +425,11 @@ export default function Atlas() {
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/light-v11",
         projection: isMobile ? { name: "mercator" } : { name: "globe" },
-        center: [10, 25],
-        zoom: 1.5,
+        // On mobile, start framed on the Atlantic so the Americas + Europe sit
+        // in view together — at zoom ~2.2 the country labels are readable and
+        // there are no project pins yet (those appear once the user zooms past 5).
+        center: isMobile ? [-35, 20] : [10, 25],
+        zoom: isMobile ? 2.2 : 1.5,
         attributionControl: false,
       });
       map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
@@ -535,6 +546,11 @@ export default function Atlas() {
         return;
       }
     }
+    // On mobile, keep the initial framed view (Americas + Europe with country
+    // labels visible) instead of auto-fitting to the project bounds — that
+    // would zoom out to include Copenhagen and lose the "first screen" framing.
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    if (isMobile && !active) return;
     fitTo(filtered.length ? filtered : projects);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapReady, active, projects.length, filtered.length]);
@@ -648,6 +664,7 @@ export default function Atlas() {
     setOpenMenu(null);
     setSelected(null);
     setFiltersOpen(false);
+    setSheetSnap("medium");
   };
   const clearActive = () => {
     setActive(null);
@@ -665,12 +682,14 @@ export default function Atlas() {
     setSelected(null);
     setActive({ type: "city", value: c.name });
     setSearchOpen(false);
+    setSheetSnap("medium");
   };
   const searchPickProject = (p: Project) => {
     skipCameraRef.current = true;
     setActive(null);
     selectProject(p);
     setSearchOpen(false);
+    setSheetSnap("medium");
     window.setTimeout(() => { skipCameraRef.current = false; }, 600);
   };
   // A geocoded place (not a registered project/city) — just fly the map there,
@@ -700,6 +719,64 @@ export default function Atlas() {
     localStorage.setItem(TOKEN_KEY, tokenInput.trim());
     setToken(tokenInput.trim());
   };
+
+  // ─── Bottom-sheet snap maths ──────────────────────────────────────
+  // The sheet's outer height is 88vh and it sits flush to the bottom of
+  // the viewport. translateY pushes it down: 0 = fully visible (expanded),
+  // larger values hide more of the sheet. The three snap points are
+  // expressed as pixel offsets so the touch handler can compare them
+  // against the cumulative drag delta.
+  const SHEET_OUTER_VH = 88;
+  const SHEET_COLLAPSED_PX = 96;   // visible height when collapsed
+  const SHEET_MEDIUM_VH = 45;      // visible height when medium
+  const sheetTranslateFor = (snap: SheetSnap) => {
+    if (typeof window === "undefined") return 0;
+    const outer = (SHEET_OUTER_VH / 100) * window.innerHeight;
+    if (snap === "expanded") return 0;
+    if (snap === "medium") return outer - (SHEET_MEDIUM_VH / 100) * window.innerHeight;
+    return outer - SHEET_COLLAPSED_PX;
+  };
+  const applySheetTransform = (translate: number) => {
+    if (sheetEl.current) sheetEl.current.style.transform = `translateY(${translate}px)`;
+  };
+  const onSheetTouchStart = (e: React.TouchEvent) => {
+    sheetDragRef.current.active = true;
+    sheetDragRef.current.startY = e.touches[0].clientY;
+    sheetDragRef.current.startTranslate = sheetTranslateFor(sheetSnap);
+    sheetDragRef.current.translate = sheetDragRef.current.startTranslate;
+    if (sheetEl.current) sheetEl.current.style.transition = "none";
+  };
+  const onSheetTouchMove = (e: React.TouchEvent) => {
+    if (!sheetDragRef.current.active) return;
+    const delta = e.touches[0].clientY - sheetDragRef.current.startY;
+    const max = sheetTranslateFor("collapsed");
+    const next = Math.max(0, Math.min(max, sheetDragRef.current.startTranslate + delta));
+    sheetDragRef.current.translate = next;
+    applySheetTransform(next);
+  };
+  const onSheetTouchEnd = () => {
+    if (!sheetDragRef.current.active) return;
+    sheetDragRef.current.active = false;
+    if (sheetEl.current) sheetEl.current.style.transition = "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)";
+    // Snap to whichever target is closest to the final translate.
+    const current = sheetDragRef.current.translate;
+    const targets: { snap: SheetSnap; y: number }[] = [
+      { snap: "expanded", y: sheetTranslateFor("expanded") },
+      { snap: "medium", y: sheetTranslateFor("medium") },
+      { snap: "collapsed", y: sheetTranslateFor("collapsed") },
+    ];
+    const closest = targets.reduce((best, t) => (Math.abs(t.y - current) < Math.abs(best.y - current) ? t : best));
+    setSheetSnap(closest.snap);
+    applySheetTransform(closest.y);
+  };
+  // Keep the transform in sync when snap is changed programmatically (e.g.
+  // selecting a project or opening the sheet for the first time).
+  useEffect(() => {
+    if (sheetEl.current) {
+      sheetEl.current.style.transition = "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)";
+      applySheetTransform(sheetTranslateFor(sheetSnap));
+    }
+  }, [sheetSnap, active?.value, selected?.id]);
 
   return (
     <div className="bg-paper">
@@ -770,74 +847,82 @@ export default function Atlas() {
           className="absolute left-0 right-0 z-40"
           style={{ top: NAV_H, background: "transparent", pointerEvents: "none" }}
         >
-          <div className="md:hidden px-5 py-2.5 pointer-events-auto">
-            {/* Compact toolbar (MOBILE ONLY) — keeps the map clear; search and filters open on tap. */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={() => { setSearchOpen((o) => !o); setFiltersOpen(false); }}
-                aria-label="Search"
-                aria-expanded={searchOpen}
-                className="inline-flex items-center justify-center transition-colors hover:opacity-90"
+          <div className="md:hidden px-4 py-2.5 pointer-events-auto">
+            {/* Google-Maps style search pill (MOBILE ONLY) — single rounded
+                input with a search icon on the left and the Filters icon on
+                the right (where the mic sits in Google Maps).
+
+                When the user taps the pill, it morphs into the live SearchBox
+                so we never render two stacked search inputs. */}
+            {searchOpen ? (
+              <div className="w-full">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <SearchBox projects={projects} cities={cities} token={token} onPickCity={searchPickCity} onPickProject={searchPickProject} onPickPlace={searchPickPlace} autoFocus />
+                  </div>
+                  <button
+                    onClick={() => setSearchOpen(false)}
+                    className="font-mono uppercase text-ink shrink-0 px-3 h-10"
+                    style={{ fontSize: 11, letterSpacing: "0.16em" }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                className="flex items-center gap-2 w-full"
                 style={{
-                  width: 40, height: 40,
-                  background: searchOpen ? "hsl(var(--ink))" : "hsl(var(--paper-warm) / 0.95)",
-                  color: searchOpen ? "#fff" : "hsl(var(--ink))",
-                  border: "1px solid rgba(0,0,0,0.14)",
-                  boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+                  background: "#fff",
+                  borderRadius: 9999,
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.14)",
+                  paddingLeft: 14,
+                  paddingRight: 6,
+                  height: 48,
                 }}
               >
-                <Search className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={() => { setFiltersOpen((o) => !o); setSearchOpen(false); }}
-                aria-expanded={filtersOpen}
-                className="inline-flex items-center gap-2 font-mono uppercase transition-colors hover:opacity-90"
-                style={{
-                  height: 40, padding: "0 14px",
-                  fontSize: 12, letterSpacing: "0.14em", fontWeight: 500,
-                  background: filtersOpen || active ? "hsl(var(--ink))" : "hsl(var(--paper-warm) / 0.95)",
-                  color: filtersOpen || active ? "#fff" : "hsl(var(--ink))",
-                  border: "1px solid rgba(0,0,0,0.14)",
-                  boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
-                }}
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                Filters
-                <ChevronDown className="w-3 h-3 transition-transform" style={{ transform: filtersOpen ? "rotate(180deg)" : "none" }} />
-              </button>
-
-              {active && (
+                <Search className="w-4 h-4 text-ink-soft shrink-0" />
                 <button
-                  onClick={clearActive}
-                  className="inline-flex items-center gap-2 font-mono uppercase transition-opacity hover:opacity-90"
-                  style={{
-                    height: 40, padding: "0 12px",
-                    fontSize: 12, letterSpacing: "0.12em",
-                    background: "hsl(var(--paper-warm) / 0.95)",
-                    color: "hsl(var(--ink))",
-                    border: "1px solid hsl(var(--ink))",
-                  }}
-                  aria-label="Clear filter"
+                  type="button"
+                  onClick={() => { setSearchOpen(true); setFiltersOpen(false); }}
+                  className="flex-1 text-left bg-transparent text-ink-soft truncate"
+                  style={{ fontSize: 14, height: 40 }}
+                  aria-label="Search project, city or place"
                 >
-                  {active.value}
-                  <X className="w-3.5 h-3.5" />
+                  {active ? active.value : "Buscar aquí"}
                 </button>
-              )}
-            </div>
-
-            {/* Search panel — revealed by the magnifier. */}
-            {searchOpen && (
-              <div className="mt-2 w-full max-w-[360px]">
-                <SearchBox projects={projects} cities={cities} token={token} onPickCity={searchPickCity} onPickProject={searchPickProject} onPickPlace={searchPickPlace} autoFocus />
+                {active ? (
+                  <button
+                    onClick={clearActive}
+                    aria-label="Clear filter"
+                    className="inline-flex items-center justify-center shrink-0 transition-colors hover:bg-paper-mid"
+                    style={{ width: 36, height: 36, borderRadius: 9999, color: "hsl(var(--ink))" }}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setFiltersOpen((o) => !o); setSearchOpen(false); }}
+                    aria-label="Filters"
+                    aria-expanded={filtersOpen}
+                    className="inline-flex items-center justify-center shrink-0 transition-colors"
+                    style={{
+                      width: 36, height: 36, borderRadius: 9999,
+                      background: filtersOpen ? "hsl(var(--ink))" : "transparent",
+                      color: filtersOpen ? "#fff" : "hsl(var(--ink))",
+                    }}
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             )}
 
-            {/* Filters panel — all categories in one sheet; pick one to apply. */}
+            {/* Filters panel — opens below the pill on tap. */}
             {filtersOpen && (
               <div
-                className="mt-2 w-full max-w-[420px] bg-paper p-4 fade-in overflow-y-auto no-scrollbar"
-                style={{ maxHeight: "min(70vh, 560px)", border: "1px solid hsl(var(--paper-mid))", boxShadow: "0 16px 44px rgba(0,0,0,0.14)" }}
+                className="mt-2 w-full bg-paper p-4 fade-in overflow-y-auto no-scrollbar"
+                style={{ maxHeight: "min(70vh, 560px)", border: "1px solid hsl(var(--paper-mid))", boxShadow: "0 16px 44px rgba(0,0,0,0.14)", borderRadius: 12 }}
               >
                 <FilterGroup label="Cities" type="city" options={cityOptions} active={active} onPick={(v) => activate("city", v)} />
                 <FilterGroup label="Materials" type="material" options={MATERIALS} active={active} onPick={(v) => activate("material", v)} />
@@ -881,16 +966,13 @@ export default function Atlas() {
           </div>
         </div>
 
-          {/* Selected project — editorial card that opens the full page on click.
-              Slides in from the right edge of the map. Photo dominates the card,
-              copy sits in a tighter block underneath. Top offset clears the
-              floating filter bar so the card isn't tucked under it. */}
+          {/* Selected project — editorial card (DESKTOP only). On mobile the
+              project detail is rendered inside the bottom sheet instead. */}
           {selected && (
             <div
               key={selected.id}
-              className="absolute z-30 slide-in-right
-                left-4 right-4 bottom-4 max-h-[72vh] overflow-y-auto no-scrollbar
-                md:left-auto md:right-6 md:bottom-auto md:top-[148px] md:w-[380px] md:max-h-[calc(100vh-180px)]"
+              className="absolute z-30 slide-in-right hidden
+                md:flex md:flex-col md:left-auto md:right-6 md:bottom-auto md:top-[148px] md:w-[380px] md:max-h-[calc(100vh-180px)] md:overflow-y-auto no-scrollbar"
             >
               <div className="relative bg-paper" style={{ boxShadow: "0 10px 36px rgba(0,0,0,0.18)" }}>
                 <button
@@ -956,15 +1038,12 @@ export default function Atlas() {
             </div>
           )}
 
-          {/* City project list — when a city is active, list its projects with
-              an editorial thumbnail; clicking one selects it on the map. Sits
-              on the left so it doesn't collide with the selected-project card
-              (right); becomes a bottom sheet on mobile. */}
+          {/* City project list (DESKTOP only) — left column. On mobile the
+              same content lives inside the bottom sheet below. */}
           {active?.type === "city" && filtered.length > 0 && (
             <div
-              className={`absolute z-30 bg-paper overflow-hidden flex-col fade-in
-                ${selected ? "hidden md:flex" : "flex"}
-                left-4 right-4 bottom-4 max-h-[38vh]
+              className={`absolute z-30 bg-paper overflow-hidden flex-col fade-in hidden
+                ${selected ? "md:hidden" : "md:flex"}
                 md:left-4 md:right-auto md:bottom-auto md:top-[148px] md:w-[324px] md:max-h-[calc(100vh-180px)]`}
               style={{ border: "1px solid hsl(var(--paper-mid))", boxShadow: "0 16px 44px rgba(0,0,0,0.16)" }}
             >
@@ -1018,6 +1097,151 @@ export default function Atlas() {
                     </button>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* ─── Mobile bottom sheet ────────────────────────────────────
+              Renders BOTH the city projects list and the selected-project
+              detail. Three snap points (collapsed/medium/expanded) with a
+              draggable handle at the top, Google-Maps style. */}
+          {((active?.type === "city" && filtered.length > 0) || selected) && (
+            <div
+              ref={sheetEl}
+              className="md:hidden absolute left-0 right-0 bottom-0 z-30 bg-paper flex flex-col"
+              style={{
+                height: `${SHEET_OUTER_VH}vh`,
+                borderTopLeftRadius: 18,
+                borderTopRightRadius: 18,
+                boxShadow: "0 -8px 30px rgba(0,0,0,0.18)",
+                transform: `translateY(${sheetTranslateFor(sheetSnap)}px)`,
+                touchAction: "none",
+              }}
+            >
+              {/* Drag handle — entire header is grabbable */}
+              <div
+                onTouchStart={onSheetTouchStart}
+                onTouchMove={onSheetTouchMove}
+                onTouchEnd={onSheetTouchEnd}
+                onTouchCancel={onSheetTouchEnd}
+                className="shrink-0 cursor-grab select-none"
+                style={{ paddingTop: 10, paddingBottom: 12 }}
+              >
+                <div
+                  className="mx-auto"
+                  style={{ width: 44, height: 4, borderRadius: 9999, background: "hsl(var(--paper-mid))" }}
+                  aria-hidden="true"
+                />
+
+                {selected ? (
+                  <div className="flex items-start justify-between gap-3 px-5 pt-3">
+                    <div className="min-w-0">
+                      {selected.city?.name && (
+                        <p className="font-mono uppercase text-accent-terra font-semibold truncate" style={{ fontSize: 10, letterSpacing: "0.2em" }}>
+                          {selected.city.name}
+                        </p>
+                      )}
+                      <p className="font-display text-ink leading-tight mt-1 truncate" style={{ fontSize: 20 }}>{selected.name}</p>
+                    </div>
+                    <button
+                      onClick={() => { setSelected(null); if (active?.type === "city") setSheetSnap("collapsed"); }}
+                      aria-label="Close project"
+                      className="p-1 -mr-1 text-ink-soft hover:text-ink transition-colors shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-3 px-5 pt-3">
+                    <div className="min-w-0">
+                      <p className="font-mono uppercase text-accent-terra font-semibold" style={{ fontSize: 10, letterSpacing: "0.2em" }}>Projects in</p>
+                      <p className="font-display text-ink leading-tight mt-1 truncate" style={{ fontSize: 20 }}>{active?.value}</p>
+                      <p className="font-mono text-ink-soft mt-1" style={{ fontSize: 11, letterSpacing: "0.04em" }}>
+                        {filtered.length} {filtered.length === 1 ? "project" : "projects"}
+                      </p>
+                    </div>
+                    <button onClick={clearActive} aria-label="Close list" className="p-1 -mr-1 text-ink-soft hover:text-ink transition-colors shrink-0">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Body — scrollable. Project detail when one is selected, else
+                  the city projects list. */}
+              <div className="flex-1 overflow-y-auto no-scrollbar" style={{ overscrollBehavior: "contain" }}>
+                {selected ? (
+                  <div>
+                    {(selected.cover_image_url || selected.hero_image_url) && (
+                      <div className="overflow-hidden">
+                        <img
+                          src={selected.cover_image_url || selected.hero_image_url || ""}
+                          alt={selected.name}
+                          className="block w-full h-auto object-cover"
+                          style={{ maxHeight: "42vh" }}
+                        />
+                      </div>
+                    )}
+                    <div className="px-5 pt-4 pb-8">
+                      {(selected.architect || selected.year_completed) && (
+                        <p className="font-mono text-ink-soft" style={{ fontSize: 12, letterSpacing: "0.02em" }}>
+                          {[selected.architect, selected.year_completed].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                      {selected.tagline && (
+                        <p className="mt-3 text-ink-soft leading-[1.55]" style={{ fontSize: 14 }}>
+                          {selected.tagline}
+                        </p>
+                      )}
+                      <Link
+                        to={`/projects/${selected.slug}`}
+                        className="mt-5 inline-flex items-center justify-center w-full font-mono uppercase text-white transition-opacity hover:opacity-90"
+                        style={{
+                          background: "hsl(var(--ink))",
+                          height: 48,
+                          fontSize: 12,
+                          letterSpacing: "0.22em",
+                          fontWeight: 500,
+                          borderRadius: 9999,
+                        }}
+                      >
+                        View project
+                        <span aria-hidden="true" className="ml-2">→</span>
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    {filtered.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => { selectProject(p); setSheetSnap("medium"); }}
+                        className="w-full text-left flex items-center gap-3.5 px-5 py-3 transition-colors active:bg-paper-warm"
+                        style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
+                      >
+                        <span className="overflow-hidden shrink-0 bg-paper-mid" style={{ width: 64, height: 64, borderRadius: 8 }}>
+                          {(p.cover_image_url || p.hero_image_url) && (
+                            <img
+                              src={p.cover_image_url || p.hero_image_url || ""}
+                              alt=""
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-display text-ink truncate" style={{ fontSize: 16, fontWeight: 400, lineHeight: 1.25 }}>{p.name}</span>
+                          {(p.architect || p.year_completed) && (
+                            <span className="block font-mono text-ink-soft truncate mt-1" style={{ fontSize: 12 }}>
+                              {[p.architect, p.year_completed].filter(Boolean).join(" · ")}
+                            </span>
+                          )}
+                        </span>
+                        <span aria-hidden="true" className="shrink-0 text-ink-soft" style={{ fontSize: 16 }}>→</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

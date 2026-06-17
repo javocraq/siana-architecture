@@ -491,7 +491,7 @@ function CityProjects({
               <Reveal key={p.id} delay={Math.min(i, 6) * 70}>
                 <Link
                   to={`/projects/${p.slug}`}
-                  className="group relative overflow-hidden bg-paper-mid block"
+                  className="group relative overflow-hidden bg-paper-mid block lift"
                   style={{ borderRadius: 0, aspectRatio: "4 / 5" }}
                 >
                   <img
@@ -532,7 +532,7 @@ function CityProjects({
         <Reveal className="md:row-span-2">
           <Link
             to={`/projects/${hero.slug}`}
-            className="group relative overflow-hidden bg-paper-mid block h-full"
+            className="group relative overflow-hidden bg-paper-mid block h-full lift"
             style={{ borderRadius: 0, minHeight: 500 }}
           >
             <img
@@ -567,7 +567,7 @@ function CityProjects({
           <Reveal key={p.id} delay={120 + i * 110}>
             <Link
               to={`/projects/${p.slug}`}
-              className="group relative overflow-hidden bg-paper-mid block h-full"
+              className="group relative overflow-hidden bg-paper-mid block h-full lift"
               style={{ borderRadius: 0, minHeight: 240 }}
             >
               <img
@@ -648,7 +648,7 @@ function CityArticles({ city, posts }: { city: City; posts: Post[] }) {
         <Reveal className={rest.length ? "md:row-span-2" : ""}>
           <Link
             to={`/practice/${featured.slug}`}
-            className="group relative overflow-hidden bg-paper-mid block h-full"
+            className="group relative overflow-hidden bg-paper-mid block h-full lift"
             style={{ borderRadius: 0, minHeight: 460 }}
           >
             <img
@@ -684,7 +684,7 @@ function CityArticles({ city, posts }: { city: City; posts: Post[] }) {
           <Reveal key={p.id} delay={120 + i * 110}>
             <Link
               to={`/practice/${p.slug}`}
-              className="group relative overflow-hidden bg-paper-mid block h-full"
+              className="group relative overflow-hidden bg-paper-mid block h-full lift"
               style={{ borderRadius: 0, minHeight: 220 }}
             >
               <img

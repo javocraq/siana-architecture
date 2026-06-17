@@ -41,8 +41,8 @@ export default function Navbar() {
                   key={link.to}
                   to={link.to}
                   className={cn(
-                    "font-mono uppercase px-3 py-2 transition-colors duration-200 text-ink/70 hover:text-ink",
-                    active && "text-ink"
+                    "font-mono uppercase px-3 py-2 transition-colors duration-200 text-ink/70 hover:text-ink link-underline",
+                    active && "text-ink is-active"
                   )}
                   style={{
                     fontSize: "11px",
@@ -57,7 +57,7 @@ export default function Navbar() {
           </nav>
 
           <button
-            className="md:hidden p-2 -mr-2 text-ink"
+            className="md:hidden p-2 -mr-2 text-ink press"
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
           >
@@ -76,7 +76,7 @@ export default function Navbar() {
               siana
             </Link>
             <button
-              className="p-2 -mr-2 text-ink"
+              className="p-2 -mr-2 text-ink press"
               onClick={() => setMobileOpen(false)}
               aria-label="Close menu"
             >
@@ -91,7 +91,7 @@ export default function Navbar() {
               <Link
                 key={link.to}
                 to={link.to}
-                className="font-display text-[24px] text-ink hover:opacity-60"
+                className="font-display text-[24px] text-ink hover:opacity-60 press"
               >
                 {link.label}
               </Link>

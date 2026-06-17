@@ -70,7 +70,7 @@ export default function EditorialButton(props: EditorialButtonProps) {
         : "text-ink hover:opacity-70";
 
   const baseClass =
-    `group font-mono uppercase inline-flex items-center transition-all ` +
+    `group font-mono uppercase inline-flex items-center transition-all active:scale-[0.97] ` +
     `${arrow ? "hover:gap-3" : ""} ${textClass} ${className}`.trim();
 
   const mergedStyle: CSSProperties = {

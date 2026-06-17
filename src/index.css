@@ -363,6 +363,63 @@
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(28,24,20,0.06);
   }
+
+  /* ============ Micro-interactions ============
+     Subtle, editorial, and reduced-motion aware. Hover effects only fire on
+     devices that truly hover (desktop); touch devices get a gentle press so
+     taps feel responsive on mobile too. */
+
+  /* Tap / click feedback for buttons & small controls. */
+  .press { transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .press:active { transform: scale(0.96); }
+
+  /* Card lift — a quiet rise + soft shadow on hover, a small press on tap. */
+  .lift {
+    transition:
+      transform 450ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 450ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (hover: hover) {
+    .lift:hover { transform: translateY(-4px); box-shadow: 0 22px 48px rgba(17, 17, 16, 0.13); }
+  }
+  .lift:active { transform: scale(0.99); }
+
+  /* Nav link — hairline underline that grows from the left on hover/active. */
+  .link-underline { position: relative; }
+  .link-underline::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -3px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (hover: hover) {
+    .link-underline:hover::after { transform: scaleX(1); }
+  }
+  .link-underline.is-active::after { transform: scaleX(1); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .press, .press:active,
+    .lift, .lift:hover, .lift:active { transform: none; transition: none; }
+    .link-underline::after { transition: none; }
+  }
+}
+
+/* Smooth in-page scrolling (anchor jumps) — motion-safe only. */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* Accessible keyboard focus — a subtle ink ring for keyboard users only.
+   `:where()` keeps specificity at 0 so any component's own focus style wins;
+   the Mapbox canvas keeps its outline:none rule above. */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid hsl(var(--ink));
+  outline-offset: 2px;
+  border-radius: 1px;
 }
 
 /* ============ Rich text editor — table styling ============ */
