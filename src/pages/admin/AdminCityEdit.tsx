@@ -6,12 +6,13 @@ import RichTextEditor from "@/components/admin/RichTextEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import MapPicker from "@/components/admin/MapPicker";
 import SelectOrCreate from "@/components/admin/SelectOrCreate";
+import SectionBuilder from "@/components/admin/SectionBuilder";
 import { REGIONS } from "@/lib/adminTaxonomies";
 import type { CitySection } from "@/lib/citySections";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
-type Tab = "content" | "seo";
+type Tab = "content" | "sections" | "seo";
 
 const slugify = (s: string) =>
   s
@@ -176,6 +177,7 @@ export default function AdminCityEdit() {
 
   const tabs = useMemo<{ key: Tab; label: string }[]>(() => [
     { key: "content", label: "Content" },
+    { key: "sections", label: "Sections" },
     { key: "seo", label: "SEO" },
   ], []);
 
@@ -277,6 +279,15 @@ export default function AdminCityEdit() {
                 onChange={(e) => set("default_zoom", parseInt(e.target.value, 10))}
                 className="w-full" />
             </Field>
+          </div>
+        )}
+
+        {tab === "sections" && (
+          <div className="space-y-4">
+            <p className="text-[11px] text-ink-faint max-w-[760px]">
+              Build the city page from reusable blocks: image galleries, text, project grids, practice entries, and spacers. Drag to reorder, toggle to hide.
+            </p>
+            <SectionBuilder value={form.sections} onChange={(next) => set("sections", next)} />
           </div>
         )}
 

@@ -12,7 +12,7 @@ import { Search, X } from "lucide-react";
 import CitySectionsRenderer from "@/components/site/CitySectionsRenderer";
 import { getMapboxToken } from "@/lib/mapbox";
 import type { CitySection } from "@/lib/citySections";
-import { defaultCityDescriptionHTML, isDescriptionEmpty } from "@/lib/cityDefaults";
+import { isDescriptionEmpty } from "@/lib/cityDefaults";
 
 interface City {
   id: string;
@@ -185,9 +185,9 @@ export default function CityDetail() {
         </div>
       </section>
 
-      {/* Editorial intro — a short architectural / historical narrative.
-          Sits before the custom-sections branch so it always renders. */}
-      <CityIntro city={city} projects={projects} projectStyles={projectStyles} />
+      {!isDescriptionEmpty(city.description) && (
+        <CityIntro city={city} projects={projects} projectStyles={projectStyles} />
+      )}
 
       {hasCustomLayout ? (
         <CitySectionsRenderer sections={city.sections!} cityId={city.id} />
@@ -760,12 +760,7 @@ function exampleArticlesFor(city: City): Post[] {
    Uses the DB `description` when present; otherwise falls back to a
    short essay so even newly added cities feel finished. */
 function CityIntro({ city }: { city: City; projects: Project[]; projectStyles: string[] }) {
-  // Single source of truth: when the CMS description is empty, the same
-  // default paragraphs that pre-fill the admin editor are rendered here.
-  // Whatever the admin writes (or keeps) becomes the page copy.
-  const html = isDescriptionEmpty(city.description)
-    ? defaultCityDescriptionHTML({ name: city.name, country: city.country })
-    : city.description!;
+  const html = city.description!;
   return (
     <section className="bg-paper py-24 md:py-32" style={{ borderTop: "1px solid hsl(var(--paper-mid))" }}>
       <Reveal className="mx-auto max-w-[760px] px-6 lg:px-10">

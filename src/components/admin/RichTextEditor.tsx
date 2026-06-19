@@ -7,11 +7,13 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
+import TextAlign from "@tiptap/extension-text-align";
 import { useEffect, useRef, useState } from "react";
 import {
   Bold, Italic, Heading2, Heading3, List, ListOrdered, Quote,
   Link as LinkIcon, Image as ImageIcon, Undo2, Redo2, Code2,
   Table as TableIcon, Trash2,
+  AlignLeft, AlignCenter, AlignRight, AlignJustify,
 } from "lucide-react";
 
 type Props = {
@@ -19,6 +21,35 @@ type Props = {
   onChange: (html: string) => void;
   placeholder?: string;
 };
+
+/** Toolbar button. Defined at module level (NOT inside RichTextEditor) so its
+ *  identity is stable across renders — otherwise every keystroke remounts all
+ *  the buttons, which made them flicker/"tremble", especially in tables. */
+function Btn({
+  active,
+  onClick,
+  children,
+  title,
+  disabled,
+}: {
+  active?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  title: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      disabled={disabled}
+      onClick={onClick}
+      className={`p-1.5 rounded transition-colors disabled:opacity-30 ${active ? "bg-ink text-background" : "text-ink-muted hover:text-ink hover:bg-stone"}`}
+    >
+      {children}
+    </button>
+  );
+}
 
 export default function RichTextEditor({ value, onChange, placeholder }: Props) {
   const [mode, setMode] = useState<"visual" | "html">("visual");
@@ -37,6 +68,11 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
       TableRow,
       TableHeader,
       TableCell,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+        alignments: ["left", "center", "right", "justify"],
+        defaultAlignment: "left",
+      }),
     ],
     content: value || "",
     editorProps: {
@@ -72,18 +108,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
 
   if (!editor) return null;
 
-  const Btn = ({ active, onClick, children, title, disabled }: { active?: boolean; onClick: () => void; children: React.ReactNode; title: string; disabled?: boolean }) => (
-    <button
-      type="button"
-      title={title}
-      disabled={disabled}
-      onClick={onClick}
-      className={`p-1.5 rounded transition-colors disabled:opacity-30 ${active ? "bg-ink text-background" : "text-ink-muted hover:text-ink hover:bg-stone"}`}
-    >
-      {children}
-    </button>
-  );
-
   const inTable = editor.isActive("table");
 
   const switchToHtml = () => {
@@ -108,6 +132,11 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
         <Btn title="Bullet list" active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()} disabled={mode === "html"}><List className="w-3.5 h-3.5" /></Btn>
         <Btn title="Numbered list" active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()} disabled={mode === "html"}><ListOrdered className="w-3.5 h-3.5" /></Btn>
         <Btn title="Quote" active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()} disabled={mode === "html"}><Quote className="w-3.5 h-3.5" /></Btn>
+        <span className="w-px h-4 bg-border mx-1" />
+        <Btn title="Align left" active={editor.isActive({ textAlign: "left" })} onClick={() => editor.chain().focus().setTextAlign("left").run()} disabled={mode === "html"}><AlignLeft className="w-3.5 h-3.5" /></Btn>
+        <Btn title="Align center" active={editor.isActive({ textAlign: "center" })} onClick={() => editor.chain().focus().setTextAlign("center").run()} disabled={mode === "html"}><AlignCenter className="w-3.5 h-3.5" /></Btn>
+        <Btn title="Align right" active={editor.isActive({ textAlign: "right" })} onClick={() => editor.chain().focus().setTextAlign("right").run()} disabled={mode === "html"}><AlignRight className="w-3.5 h-3.5" /></Btn>
+        <Btn title="Justify" active={editor.isActive({ textAlign: "justify" })} onClick={() => editor.chain().focus().setTextAlign("justify").run()} disabled={mode === "html"}><AlignJustify className="w-3.5 h-3.5" /></Btn>
         <span className="w-px h-4 bg-border mx-1" />
         <Btn title="Link" active={editor.isActive("link")} disabled={mode === "html"}
           onClick={() => {
