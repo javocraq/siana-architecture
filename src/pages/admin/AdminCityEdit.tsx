@@ -6,13 +6,12 @@ import RichTextEditor from "@/components/admin/RichTextEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import MapPicker from "@/components/admin/MapPicker";
 import SelectOrCreate from "@/components/admin/SelectOrCreate";
-import SectionBuilder from "@/components/admin/SectionBuilder";
 import { useTaxonomies } from "@/hooks/useTaxonomies";
 import type { CitySection } from "@/lib/citySections";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
-type Tab = "content" | "sections" | "seo";
+type Tab = "content" | "seo";
 
 const slugify = (s: string) =>
   s
@@ -178,7 +177,6 @@ export default function AdminCityEdit() {
 
   const tabs = useMemo<{ key: Tab; label: string }[]>(() => [
     { key: "content", label: "Content" },
-    { key: "sections", label: "Sections" },
     { key: "seo", label: "SEO" },
   ], []);
 
@@ -289,15 +287,6 @@ export default function AdminCityEdit() {
               <RichTextEditor value={form.description} onChange={(html) => set("description", html)}
                 placeholder="Tell the story of this city…" />
             </Field>
-          </div>
-        )}
-
-        {tab === "sections" && (
-          <div className="space-y-4">
-            <p className="text-[11px] text-ink-faint max-w-[760px]">
-              Build the city page from reusable blocks: image galleries, text, project grids, practice entries, and spacers. Drag to reorder, toggle to hide.
-            </p>
-            <SectionBuilder value={form.sections} onChange={(next) => set("sections", next)} />
           </div>
         )}
 

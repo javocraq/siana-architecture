@@ -347,6 +347,9 @@ export default function AdminProjectEdit() {
 
         {tab === "content" && (
           <div className="space-y-8">
+            {/* Details on the left, hero image on the right. */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-8 items-start">
+              <div className="space-y-6">
             <div className="grid grid-cols-2 gap-6">
               <Field label="Name *">
                 <input className={inputCls} value={form.name} onChange={(e) => onNameChange(e.target.value)} />
@@ -473,15 +476,12 @@ export default function AdminProjectEdit() {
             </div>
 
             <Field label="Address"><input className={inputCls} value={form.address} onChange={(e) => set("address", e.target.value)} /></Field>
+              </div>
 
-            <Field label="Description">
-              <RichTextEditor
-                value={form.description}
-                onChange={(html) => set("description", html)}
-                placeholder="Tell the story of this project…"
-              />
-            </Field>
+              <ImageUpload label="Hero image" value={form.hero_image_url} onChange={(url) => set("hero_image_url", url)} aspect="wide" />
+            </div>
 
+            {/* Map — full width, below the details. */}
             <Field label="Location" hint={form.latitude && form.longitude ? `${form.latitude}, ${form.longitude}` : "Click on the map to place the pin"}>
               <MapPicker
                 latitude={form.latitude}
@@ -489,14 +489,23 @@ export default function AdminProjectEdit() {
                 onChange={(lat, lng) => setForm((f) => ({ ...f, latitude: lat, longitude: lng }))}
               />
             </Field>
+
+            {/* Description — below the map. */}
+            <Field label="Description">
+              <RichTextEditor
+                value={form.description}
+                onChange={(html) => set("description", html)}
+                placeholder="Tell the story of this project…"
+              />
+            </Field>
           </div>
         )}
 
         {tab === "media" && (
           <div className="space-y-10">
-            <div className="grid grid-cols-2 gap-6">
-              <ImageUpload label="Hero image" value={form.hero_image_url} onChange={(url) => set("hero_image_url", url)} aspect="wide" />
+            <div className="max-w-[280px]">
               <ImageUpload label="Cover (thumbnail)" value={form.cover_image_url} onChange={(url) => set("cover_image_url", url)} aspect="square" />
+              <p className="mt-2 text-[11px] text-ink-faint">The main hero image is set in the Content tab.</p>
             </div>
 
             <div>
