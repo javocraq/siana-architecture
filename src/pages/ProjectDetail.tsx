@@ -248,7 +248,7 @@ export default function ProjectDetail() {
 
       {/* Back link + map CTA */}
       <section className="pb-24 md:pb-32 mx-auto max-w-[1280px] px-6 lg:px-10">
-        <div className="border-t hairline pt-8 flex items-center justify-between gap-6 flex-wrap">
+        <div className="border-t hairline pt-8 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
           <EditorialButton to="/cities" variant="muted" leadingArrow>Explore more</EditorialButton>
           <EditorialButton to={`/atlas?project=${project.slug}`} arrow>See on the map</EditorialButton>
         </div>

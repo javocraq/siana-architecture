@@ -8,11 +8,10 @@ import MapPicker from "@/components/admin/MapPicker";
 import SelectOrCreate from "@/components/admin/SelectOrCreate";
 import { REGIONS } from "@/lib/adminTaxonomies";
 import type { CitySection } from "@/lib/citySections";
-import { defaultCityDescriptionHTML, isDescriptionEmpty } from "@/lib/cityDefaults";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
-type Tab = "content" | "media" | "seo";
+type Tab = "content" | "seo";
 
 const slugify = (s: string) =>
   s
@@ -82,20 +81,13 @@ export default function AdminCityEdit() {
         setLoading(false);
         return;
       }
-      // Pre-fill the rich-text description with the same default paragraphs
-      // the public city page shows for empty descriptions, so admins can
-      // see and edit the copy from day one. Saving any change persists it
-      // to the DB and the website automatically reflects the edited copy.
-      const seededDescription = isDescriptionEmpty(data.description)
-        ? defaultCityDescriptionHTML({ name: data.name || "", country: data.country })
-        : data.description;
       setForm({
         name: data.name || "",
         slug: data.slug || "",
         country: data.country || "",
         region: (data as any).region || "",
         tagline: data.tagline || "",
-        description: seededDescription || "",
+        description: data.description || "",
         center_latitude: data.center_latitude,
         center_longitude: data.center_longitude,
         default_zoom: data.default_zoom ?? 13,
@@ -184,7 +176,6 @@ export default function AdminCityEdit() {
 
   const tabs = useMemo<{ key: Tab; label: string }[]>(() => [
     { key: "content", label: "Content" },
-    { key: "media", label: "Media" },
     { key: "seo", label: "SEO" },
   ], []);
 
@@ -252,21 +243,24 @@ export default function AdminCityEdit() {
               </Field>
             </div>
 
-            <Field label="Country">
-              <input className={inputCls} value={form.country} onChange={(e) => set("country", e.target.value)} />
-            </Field>
-
-            <Field label="Region" hint="Pick from the list or add a new one">
-              <SelectOrCreate
-                value={form.region}
-                onChange={(v) => set("region", v)}
-                options={REGIONS}
-              />
-            </Field>
+            <div className="grid grid-cols-2 gap-6">
+              <Field label="Country">
+                <input className={inputCls} value={form.country} onChange={(e) => set("country", e.target.value)} />
+              </Field>
+              <Field label="Region" hint="Pick from the list or add a new one">
+                <SelectOrCreate
+                  value={form.region}
+                  onChange={(v) => set("region", v)}
+                  options={REGIONS}
+                />
+              </Field>
+            </div>
 
             <Field label="Tagline" hint="One short sentence shown under the title">
               <input className={inputCls} value={form.tagline} onChange={(e) => set("tagline", e.target.value)} />
             </Field>
+
+            <ImageUpload label="Hero image" value={form.hero_image_url} onChange={(url) => set("hero_image_url", url)} aspect="wide" folder="cities" />
 
             <Field label="Description">
               <RichTextEditor value={form.description} onChange={(html) => set("description", html)}
@@ -283,12 +277,6 @@ export default function AdminCityEdit() {
                 onChange={(e) => set("default_zoom", parseInt(e.target.value, 10))}
                 className="w-full" />
             </Field>
-          </div>
-        )}
-
-        {tab === "media" && (
-          <div className="space-y-10 max-w-[760px]">
-            <ImageUpload label="Hero image" value={form.hero_image_url} onChange={(url) => set("hero_image_url", url)} aspect="wide" folder="cities" />
           </div>
         )}
 

@@ -77,20 +77,24 @@ function FilterMenu({
     <div className="relative w-full md:w-auto md:shrink-0">
       <button
         onClick={onToggleOpen}
-        className="inline-flex w-full justify-between md:w-auto md:justify-center items-center gap-2 font-mono uppercase px-3.5 py-2 border transition-colors whitespace-nowrap"
+        className="atlas-filter-btn inline-flex w-full justify-between md:w-auto md:justify-center items-center gap-2 font-mono uppercase whitespace-nowrap"
         style={{
-          fontSize: 12,
-          letterSpacing: "0.14em",
+          height: 42,
+          padding: "0 16px",
+          borderRadius: 10,
+          fontSize: 11,
+          letterSpacing: "0.18em",
           fontWeight: 500,
-          background: "hsl(var(--paper-warm) / 0.92)",
-          borderColor: active ? "hsl(var(--ink))" : "rgba(0,0,0,0.14)",
-          color: active ? "hsl(var(--ink))" : "hsl(var(--ink-soft))",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+          background: active ? "hsl(var(--ink))" : "#fff",
+          color: active ? "#fff" : "hsl(var(--ink))",
+          boxShadow: active
+            ? "0 1px 3px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.10)"
+            : "0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06)",
         }}
       >
         {label}
         {count > 0 && (
-          <span className="inline-flex items-center justify-center text-white" style={{ background: "hsl(var(--ink))", fontSize: 10, minWidth: 16, height: 16, padding: "0 4px" }}>
+          <span className="inline-flex items-center justify-center" style={{ background: active ? "#fff" : "hsl(var(--ink))", color: active ? "hsl(var(--ink))" : "#fff", borderRadius: 6, fontSize: 10, minWidth: 18, height: 18, padding: "0 5px", fontWeight: 600 }}>
             {count}
           </span>
         )}
@@ -100,50 +104,39 @@ function FilterMenu({
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={onClose} />
-          {stacked ? (
-            <div className="absolute left-0 top-full mt-2 z-50 fade-in flex flex-col gap-1.5 overflow-y-auto no-scrollbar"
-              style={{ maxHeight: "min(60vh, 480px)", minWidth: 200 }}>
-              {options.map((o) => {
-                const on = selected.includes(o);
-                return (
-                  <button
-                    key={o}
-                    onClick={() => onToggle(o)}
-                    className="font-mono uppercase px-3 py-2 border transition-colors text-left whitespace-nowrap"
-                    style={
-                      on
-                        ? { fontSize: 12, letterSpacing: "0.12em", background: "hsl(var(--ink))", color: "#fff", borderColor: "hsl(var(--ink))", boxShadow: "0 2px 10px rgba(0,0,0,0.10)" }
-                        : { fontSize: 12, letterSpacing: "0.12em", background: "hsl(var(--paper))", borderColor: "rgba(0,0,0,0.12)", color: "hsl(var(--ink))", boxShadow: "0 2px 10px rgba(0,0,0,0.08)" }
-                    }
-                  >
-                    {o}
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="absolute left-0 top-full mt-2 z-50 bg-paper p-4 fade-in" style={{ minWidth: 280, maxWidth: 380, border: "1px solid hsl(var(--paper-mid))", boxShadow: "0 10px 34px rgba(0,0,0,0.10)" }}>
-              <div className="flex flex-wrap gap-1.5 overflow-y-auto no-scrollbar" style={{ maxHeight: "min(60vh, 480px)" }}>
-                {options.map((o) => {
-                  const on = selected.includes(o);
-                  return (
-                    <button
-                      key={o}
-                      onClick={() => onToggle(o)}
-                      className="font-mono uppercase px-3 py-1.5 border transition-colors"
-                      style={
-                        on
-                          ? { fontSize: 12, letterSpacing: "0.12em", background: "hsl(var(--ink))", color: "#fff", borderColor: "hsl(var(--ink))" }
-                          : { fontSize: 12, letterSpacing: "0.12em", borderColor: "rgba(0,0,0,0.12)", color: "hsl(var(--ink-muted))" }
-                      }
-                    >
-                      {o}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          <div
+            className="absolute left-0 top-full mt-2 z-50 fade-in bg-white overflow-y-auto no-scrollbar"
+            style={{
+              minWidth: 220,
+              maxWidth: 320,
+              maxHeight: "min(60vh, 480px)",
+              borderRadius: 12,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.10)",
+              padding: 6,
+            }}
+          >
+            {options.map((o) => {
+              const on = selected.includes(o);
+              return (
+                <button
+                  key={o}
+                  onClick={() => onToggle(o)}
+                  className="w-full text-left font-mono uppercase transition-colors whitespace-nowrap"
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 8,
+                    fontSize: 11,
+                    letterSpacing: "0.16em",
+                    fontWeight: 500,
+                    background: on ? "hsl(var(--ink))" : "transparent",
+                    color: on ? "#fff" : "hsl(var(--ink))",
+                  }}
+                >
+                  {o}
+                </button>
+              );
+            })}
+          </div>
         </>
       )}
     </div>
@@ -218,8 +211,15 @@ function SearchBox({
   return (
     <div className="relative w-full">
       <div
-        className="flex items-center gap-2 px-3 py-2"
-        style={{ background: "hsl(var(--paper-warm) / 0.95)", border: "1px solid rgba(0,0,0,0.14)", boxShadow: "0 2px 10px rgba(0,0,0,0.06)" }}
+        className="flex items-center gap-2"
+        style={{
+          background: "#fff",
+          borderRadius: 10,
+          boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06)",
+          paddingLeft: 14,
+          paddingRight: 8,
+          height: 42,
+        }}
       >
         <Search className="w-3.5 h-3.5 text-ink-soft shrink-0" />
         <input
@@ -232,7 +232,12 @@ function SearchBox({
           style={{ fontSize: 13 }}
         />
         {q && (
-          <button onClick={() => { setQ(""); setOpen(false); }} aria-label="Clear search" className="text-ink-soft hover:text-ink shrink-0">
+          <button
+            onClick={() => { setQ(""); setOpen(false); }}
+            aria-label="Clear search"
+            className="inline-flex items-center justify-center text-ink-soft hover:text-ink shrink-0"
+            style={{ width: 26, height: 26, borderRadius: 8 }}
+          >
             <X className="w-3.5 h-3.5" />
           </button>
         )}
@@ -241,8 +246,8 @@ function SearchBox({
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div
-            className="absolute left-0 right-0 top-full mt-1 z-50 bg-paper overflow-y-auto no-scrollbar fade-in"
-            style={{ maxHeight: "60vh", border: "1px solid hsl(var(--paper-mid))", boxShadow: "0 10px 30px rgba(0,0,0,0.14)" }}
+            className="absolute left-0 right-0 top-full mt-2 z-50 bg-white overflow-y-auto no-scrollbar fade-in"
+            style={{ maxHeight: "60vh", borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.10)" }}
           >
             {!hasResults && (
               <p className="px-3 py-3 font-mono uppercase text-ink-soft" style={{ fontSize: 11, letterSpacing: "0.14em" }}>No matches</p>
@@ -355,6 +360,9 @@ export default function Atlas() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // Mobile filters: when null, the panel shows the list of categories. When
+  // set, the panel shows the options for that category. Two-level nav.
+  const [mobileFilterCategory, setMobileFilterCategory] = useState<FilterType | null>(null);
   const [selected, setSelected] = useState<Project | null>(null);
   const [isZoomedIn, setIsZoomedIn] = useState(false);
   // Mobile search — single query lifted up so the pill never has to change
@@ -389,16 +397,21 @@ export default function Atlas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityParam, cities.length]);
 
-  // When the URL carries ?project=<slug>, activate its city and select it.
+  // When the URL carries ?project=<slug>, select just that project and fly
+  // straight to it. We deliberately do NOT activate the city filter — the
+  // user clicked "See on the map" expecting to see THIS project marked, not
+  // the whole list of buildings in the city.
   useEffect(() => {
     if (!projectParam || projects.length === 0 || !mapReady) return;
     const p = projects.find((x) => x.slug === projectParam);
     if (!p) return;
-    if (p.city?.name) setActive({ type: "city", value: p.city.name });
+    skipCameraRef.current = true;
+    setActive(null);
     setSelected(p);
     if (p.latitude != null && p.longitude != null) {
       mapRef.current?.flyTo({ center: [p.longitude, p.latitude], zoom: 15, essential: true });
     }
+    window.setTimeout(() => { skipCameraRef.current = false; }, 800);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectParam, projects.length, mapReady]);
 
@@ -583,11 +596,12 @@ export default function Atlas() {
       s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
     const dot = "#bf3a18";
 
-    // ─── World-view: no pins ─────────────────────────────────────────
+    // ─── World-view: no pins (unfiltered) ────────────────────────────
     // At low zoom, individual project pins from the same city collapse to
     // the same pixel and pile up. The map stays clean until the user zooms
-    // in enough to read individual locations.
-    if (isCityCluster) {
+    // in enough to read individual locations. Exception: when a filter is
+    // active, always show the matching pins so the filter is visible.
+    if (isCityCluster && !active) {
       return () => { hoverPopup.remove(); };
     }
 
@@ -653,7 +667,7 @@ export default function Atlas() {
       hoverPopup.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered, selected, mapReady, isCityCluster]);
+  }, [filtered, selected, mapReady, isCityCluster, active]);
 
   const selectProject = (p: Project) => {
     setSelected(p);
@@ -1001,7 +1015,7 @@ export default function Atlas() {
                       </button>
                     ) : (
                       <button
-                        onClick={() => { setFiltersOpen((o) => !o); setSearchOpen(false); }}
+                        onClick={() => { setFiltersOpen((o) => !o); setSearchOpen(false); setMobileFilterCategory(null); }}
                         aria-label="Filters"
                         aria-expanded={filtersOpen}
                         className="inline-flex items-center justify-center shrink-0"
@@ -1069,44 +1083,106 @@ export default function Atlas() {
               );
             })()}
 
-            {/* Filters panel — opens below the pill on tap. */}
-            {filtersOpen && (
-              <div
-                className="mt-2 w-full bg-paper p-4 fade-in overflow-y-auto no-scrollbar"
-                style={{ maxHeight: "min(70vh, 560px)", border: "1px solid hsl(var(--paper-mid))", boxShadow: "0 16px 44px rgba(0,0,0,0.14)", borderRadius: 12 }}
-              >
-                <FilterGroup label="Cities" type="city" options={cityOptions} active={active} onPick={(v) => activate("city", v)} />
-                <FilterGroup label="Materials" type="material" options={MATERIALS} active={active} onPick={(v) => activate("material", v)} />
-                <FilterGroup label="Experience" type="experience" options={EXPERIENCES} active={active} onPick={(v) => activate("experience", v)} />
-                <FilterGroup label="Style" type="style" options={styleOptions} active={active} onPick={(v) => activate("style", v)} />
-              </div>
-            )}
+            {/* Filters panel — opens below the pill on tap. Two-level nav:
+                first the user picks a category (Cities / Materials / …) and
+                then the options for that category appear. */}
+            {filtersOpen && (() => {
+              const categories: { type: FilterType; label: string; options: string[] }[] = [
+                { type: "material", label: "Materials", options: MATERIALS },
+                { type: "experience", label: "Experience", options: EXPERIENCES },
+                { type: "style", label: "Style", options: styleOptions },
+              ];
+              const current = categories.find((c) => c.type === mobileFilterCategory) || null;
+              return (
+                <div
+                  className="mt-2 w-full bg-white fade-in overflow-y-auto no-scrollbar"
+                  style={{ maxHeight: "min(70vh, 560px)", borderRadius: 14, boxShadow: "0 16px 44px rgba(0,0,0,0.16)", padding: 8 }}
+                >
+                  {!current ? (
+                    categories.filter((c) => c.options.length > 0).map((c) => (
+                      <button
+                        key={c.type}
+                        onClick={() => setMobileFilterCategory(c.type)}
+                        className="w-full flex items-center justify-between text-left transition-colors active:bg-paper-warm"
+                        style={{
+                          padding: "14px 14px",
+                          borderRadius: 10,
+                          fontSize: 14,
+                          fontWeight: 500,
+                          color: "hsl(var(--ink))",
+                        }}
+                      >
+                        <span>{c.label}</span>
+                        <span aria-hidden="true" className="text-ink-soft">→</span>
+                      </button>
+                    ))
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setMobileFilterCategory(null)}
+                        className="inline-flex items-center gap-2 transition-colors"
+                        style={{ padding: "8px 12px", fontSize: 12, color: "hsl(var(--ink-soft))" }}
+                      >
+                        <span aria-hidden="true">←</span> Back
+                      </button>
+                      <p className="font-mono uppercase text-ink-soft px-3 mt-1 mb-2" style={{ fontSize: 10, letterSpacing: "0.2em" }}>{current.label}</p>
+                      <div className="flex flex-col">
+                        {current.options.map((o) => {
+                          const on = active?.type === current.type && active.value === o;
+                          return (
+                            <button
+                              key={o}
+                              onClick={() => { activate(current.type, o); setMobileFilterCategory(null); }}
+                              className="w-full text-left transition-colors active:bg-paper-warm"
+                              style={{
+                                padding: "12px 14px",
+                                borderRadius: 10,
+                                fontSize: 14,
+                                fontWeight: 500,
+                                background: on ? "hsl(var(--ink))" : "transparent",
+                                color: on ? "#fff" : "hsl(var(--ink))",
+                              }}
+                            >
+                              {o}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
-          {/* DESKTOP (md+) — the classic always-visible bar: search box + filter
-              chips in a row (the compact search/Filters toolbar above is mobile-only). */}
-          <div className="hidden md:flex items-start gap-3 flex-wrap px-8 py-2.5 pointer-events-auto">
-            <div className="w-[260px] shrink-0">
+          {/* DESKTOP (md+) — editorial square search box + filter chips. */}
+          <div className="hidden md:flex items-center gap-2 flex-wrap px-8 py-3 pointer-events-auto">
+            <div className="w-[280px] shrink-0">
               <SearchBox projects={projects} cities={cities} token={token} onPickCity={searchPickCity} onPickProject={searchPickProject} onPickPlace={searchPickPlace} />
             </div>
             {active ? (
-              <div className="inline-flex items-center gap-3" style={{ minHeight: 40 }}>
-                <span className="font-mono uppercase text-ink" style={{ fontSize: 11, letterSpacing: "0.18em", background: "hsl(var(--paper-warm) / 0.92)", padding: "4px 8px" }}>
-                  {FILTER_LABELS[active.type]}
-                </span>
-                <button
-                  onClick={clearActive}
-                  className="font-mono uppercase inline-flex items-center gap-2 px-3 py-1.5 transition-colors hover:opacity-90"
-                  style={{ fontSize: 12, letterSpacing: "0.12em", background: "hsl(var(--ink))", color: "#fff", border: "1px solid hsl(var(--ink))" }}
-                  aria-label="Clear filter"
-                >
-                  {active.value}
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
+              <button
+                onClick={clearActive}
+                className="atlas-filter-btn inline-flex items-center gap-2 font-mono uppercase"
+                style={{
+                  height: 42,
+                  padding: "0 16px",
+                  borderRadius: 10,
+                  background: "hsl(var(--ink))",
+                  color: "#fff",
+                  fontSize: 11,
+                  letterSpacing: "0.18em",
+                  fontWeight: 500,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.10)",
+                }}
+                aria-label="Clear filter"
+              >
+                <span className="opacity-70">{FILTER_LABELS[active.type]} ·</span>
+                {active.value}
+                <X className="w-3 h-3" />
+              </button>
             ) : (
-              <div className="inline-flex items-center gap-2 flex-wrap" style={{ minHeight: 40 }}>
-                <FilterMenu label="Cities" options={cityOptions} selected={[]} onToggle={(v) => activate("city", v)} open={openMenu === "cities"} onToggleOpen={() => toggleMenu("cities")} onClose={closeMenu} stacked />
+              <div className="inline-flex items-center gap-2 flex-wrap">
                 <FilterMenu label="Materials" options={MATERIALS} selected={[]} onToggle={(v) => activate("material", v)} open={openMenu === "materials"} onToggleOpen={() => toggleMenu("materials")} onClose={closeMenu} stacked />
                 <FilterMenu label="Experience" options={EXPERIENCES} selected={[]} onToggle={(v) => activate("experience", v)} open={openMenu === "experience"} onToggleOpen={() => toggleMenu("experience")} onClose={closeMenu} stacked />
                 {styleOptions.length > 0 && (
@@ -1266,7 +1342,6 @@ export default function Atlas() {
                 borderTopRightRadius: 18,
                 boxShadow: "0 -8px 30px rgba(0,0,0,0.18)",
                 transform: `translateY(${sheetTranslateFor(sheetSnap)}px)`,
-                touchAction: "none",
               }}
             >
               <div
@@ -1275,7 +1350,7 @@ export default function Atlas() {
                 onTouchEnd={onSheetTouchEnd}
                 onTouchCancel={onSheetTouchEnd}
                 className="shrink-0 cursor-grab select-none"
-                style={{ paddingTop: 10, paddingBottom: 12 }}
+                style={{ paddingTop: 10, paddingBottom: 12, touchAction: "none" }}
               >
                 <div
                   className="mx-auto"
@@ -1337,7 +1412,7 @@ export default function Atlas() {
           {selected && (
             <div
               className="md:hidden absolute z-40 fade-in"
-              style={{ top: 140, right: 12, width: "58%", maxWidth: 240 }}
+              style={{ bottom: 16, right: 12, width: "58%", maxWidth: 240 }}
             >
               <div
                 className="relative bg-paper overflow-hidden"
@@ -1363,37 +1438,37 @@ export default function Atlas() {
                     src={selected.cover_image_url || selected.hero_image_url || ""}
                     alt={selected.name}
                     className="block w-full object-cover"
-                    style={{ height: 110 }}
+                    style={{ height: 170 }}
                   />
                 )}
 
-                <div className="px-3.5 pt-3 pb-3.5">
+                <div className="px-3 pt-2.5 pb-3">
                   {selected.city?.name && (
-                    <p className="font-mono uppercase text-accent-terra font-semibold truncate" style={{ fontSize: 9.5, letterSpacing: "0.2em" }}>
+                    <p className="font-mono uppercase text-accent-terra font-semibold truncate" style={{ fontSize: 9, letterSpacing: "0.2em" }}>
                       {selected.city.name}
                     </p>
                   )}
-                  <h3 className="font-display text-ink leading-tight mt-1" style={{ fontSize: 16, fontWeight: 400, letterSpacing: "-0.005em" }}>
+                  <h3 className="font-display text-ink leading-tight mt-0.5" style={{ fontSize: 14, fontWeight: 400, letterSpacing: "-0.005em" }}>
                     {selected.name}
                   </h3>
                   {(selected.architect || selected.year_completed) && (
-                    <p className="mt-1 font-mono text-ink-soft truncate" style={{ fontSize: 11 }}>
+                    <p className="mt-0.5 font-mono text-ink-soft truncate" style={{ fontSize: 10 }}>
                       {[selected.architect, selected.year_completed].filter(Boolean).join(" · ")}
                     </p>
                   )}
                   {selected.tagline && (
-                    <p className="mt-2 text-ink-soft leading-[1.45]" style={{ fontSize: 12, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    <p className="mt-1.5 text-ink-soft leading-[1.4]" style={{ fontSize: 11, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                       {selected.tagline}
                     </p>
                   )}
                   <Link
                     to={`/projects/${selected.slug}`}
-                    className="mt-3 inline-flex items-center justify-center w-full font-mono uppercase text-white"
+                    className="mt-2.5 inline-flex items-center justify-center w-full font-mono uppercase text-white"
                     style={{
                       background: "hsl(var(--ink))",
-                      height: 38,
-                      fontSize: 10,
-                      letterSpacing: "0.2em",
+                      height: 28,
+                      fontSize: 9,
+                      letterSpacing: "0.18em",
                       fontWeight: 500,
                       borderRadius: 9999,
                     }}
