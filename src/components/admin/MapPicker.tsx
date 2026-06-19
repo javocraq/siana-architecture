@@ -11,6 +11,11 @@ type Props = {
    *  map and drop a marker when no coordinates have been saved yet. The
    *  editor can still drag, click or search to refine. */
   defaultPlace?: string;
+  /** Optional initial / saved zoom level. The map will mount at this zoom
+   *  and emit zoom changes through onZoomChange so the parent form keeps
+   *  the value in sync (no separate slider needed). */
+  zoom?: number;
+  onZoomChange?: (zoom: number) => void;
 };
 
 type Suggestion = { mapboxId: string; name: string; place_formatted?: string; distance?: number };
@@ -45,14 +50,17 @@ async function geocodeCityPlace(query: string, token: string, signal?: AbortSign
   }
 }
 
-export default function MapPicker({ latitude, longitude, onChange, defaultPlace }: Props) {
+export default function MapPicker({ latitude, longitude, onChange, defaultPlace, zoom, onZoomChange }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
-  // Keep the latest onChange reachable from listeners created once (map click,
-  // marker dragend) without re-initialising the map.
+  // Keep the latest onChange / onZoomChange reachable from listeners created
+  // once (map click, marker dragend, map zoomend) without re-initialising the
+  // map on every parent re-render.
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const onZoomChangeRef = useRef(onZoomChange);
+  onZoomChangeRef.current = onZoomChange;
   // Per-mount session token for the Mapbox Search Box API. Tied billing-wise
   // to the suggest → retrieve pair, so suggestions don't count as separate
   // searches unless the editor actually picks one.
@@ -88,11 +96,12 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace 
     mapboxgl.accessToken = token;
     const lng = longitude ?? 2.349;
     const lat = latitude ?? 48.864;
+    const initialZoom = zoom ?? (latitude && longitude ? 14 : 11);
     const map = new mapboxgl.Map({
       container: ref.current,
       style: "mapbox://styles/mapbox/light-v11",
       center: [lng, lat],
-      zoom: latitude && longitude ? 14 : 11,
+      zoom: initialZoom,
       // Don't hijack page scroll on hover — require ⌘/Ctrl + scroll (and two
       // fingers on touch) to zoom. Mapbox shows a small hint overlay.
       cooperativeGestures: true,
@@ -103,6 +112,13 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace 
     if (latitude && longitude) placeMarker(lng, lat, { silent: true });
 
     map.on("click", (e) => placeMarker(e.lngLat.lng, e.lngLat.lat));
+    // Sync zoom to the parent form whenever the editor settles on a new
+    // level (mouse wheel, +/- buttons, double-click). Rounded to an integer
+    // because the DB column is `integer`.
+    map.on("zoomend", () => {
+      const z = Math.round(map.getZoom());
+      onZoomChangeRef.current?.(z);
+    });
 
     return () => {
       map.remove();

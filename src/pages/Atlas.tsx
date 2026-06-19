@@ -715,7 +715,7 @@ export default function Atlas() {
     setMobilePlaces([]);
     setSheetSnap("medium");
     if (c.center_longitude != null && c.center_latitude != null) {
-      placeSearchMarker(c.center_longitude, c.center_latitude);
+      placeSearchMarker(c.center_longitude, c.center_latitude, c.name);
     }
   };
   const searchPickProject = (p: Project) => {
@@ -727,7 +727,7 @@ export default function Atlas() {
     setMobilePlaces([]);
     setSheetSnap("medium");
     if (p.longitude != null && p.latitude != null) {
-      placeSearchMarker(p.longitude, p.latitude);
+      placeSearchMarker(p.longitude, p.latitude, p.name);
     }
     window.setTimeout(() => { skipCameraRef.current = false; }, 600);
   };
@@ -740,7 +740,7 @@ export default function Atlas() {
     setSearchOpen(false);
     setMobileQ(name ?? "");
     setMobilePlaces([]);
-    placeSearchMarker(lng, lat);
+    placeSearchMarker(lng, lat, name);
     const map = mapRef.current;
     if (map) {
       if (bbox && bbox.length === 4) {
@@ -799,27 +799,32 @@ export default function Atlas() {
   }, [mobileQ, token]);
 
   // Drops (or moves) a standalone marker at a lng/lat. Used to highlight a
-  // city or geocoded place the user just searched for.
-  const placeSearchMarker = (lng: number, lat: number) => {
+  // city or geocoded place the user just searched for. When `label` is
+  // provided (typically the city name), it's rendered below the pin in
+  // editorial serif so the location is unambiguous at any zoom.
+  const placeSearchMarker = (lng: number, lat: number, label?: string) => {
     const map = mapRef.current;
     if (!map) return;
+    // Recreate so the label can be added/changed/removed on subsequent picks.
     if (placedMarkerRef.current) {
-      placedMarkerRef.current.setLngLat([lng, lat]);
-      return;
+      placedMarkerRef.current.remove();
+      placedMarkerRef.current = null;
     }
     const el = document.createElement("div");
-    el.style.cssText = [
-      "width:18px",
-      "height:26px",
-      "position:relative",
-      "pointer-events:none",
-    ].join(";");
+    el.style.cssText = "width:18px;height:26px;position:relative;pointer-events:none;";
     // Editorial drop-pin: terracotta teardrop with a white dot inside.
     el.innerHTML = `
-      <svg viewBox="0 0 18 26" width="18" height="26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <svg viewBox="0 0 18 26" width="18" height="26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.18));">
         <path d="M9 0C4.03 0 0 4.03 0 9c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#bf3a18"/>
         <circle cx="9" cy="9" r="3" fill="#ffffff"/>
       </svg>`;
+    if (label) {
+      const labelEl = document.createElement("span");
+      labelEl.textContent = label;
+      labelEl.style.cssText =
+        "position:absolute;left:50%;top:calc(100% + 4px);transform:translateX(-50%);font-family:'Garamond Premier Pro','EB Garamond',Garamond,serif;font-size:15px;color:#1c1917;font-weight:500;white-space:nowrap;text-shadow:0 0 4px rgba(255,255,255,0.95),0 0 8px rgba(255,255,255,0.7);";
+      el.appendChild(labelEl);
+    }
     placedMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "bottom" })
       .setLngLat([lng, lat])
       .addTo(map);

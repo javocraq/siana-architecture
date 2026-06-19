@@ -232,9 +232,10 @@ export default function CityDetail() {
    ────────────────────────────────────────────────────────────────── */
 
 // Renders the city-center marker as a classic teardrop pin in terracotta
-// (matching the admin editor) with the city name as an editorial label
-// just below it. The pin tip anchors exactly on the saved coordinate.
-function buildCenterMarkerEl(cityName: string): HTMLElement {
+// (matching the admin editor). The pin tip anchors exactly on the saved
+// coordinate; the city name comes from the map's own cartographic labels
+// (no superimposed text label).
+function buildCenterMarkerEl(): HTMLElement {
   const wrap = document.createElement("div");
   // Sized to the pin only so Mapbox's "bottom" anchor places the tip on
   // the coord; the label is absolutely positioned out of flow below.
@@ -248,13 +249,7 @@ function buildCenterMarkerEl(cityName: string): HTMLElement {
     "</svg>";
   pin.style.cssText = "filter:drop-shadow(0 2px 4px rgba(0,0,0,0.18));";
 
-  const label = document.createElement("span");
-  label.textContent = cityName;
-  label.style.cssText =
-    "position:absolute;left:50%;top:calc(100% + 4px);transform:translateX(-50%);font-family:'Garamond Premier Pro','EB Garamond',Garamond,serif;font-size:15px;color:#1c1917;font-weight:500;white-space:nowrap;text-shadow:0 0 4px rgba(255,255,255,0.95),0 0 8px rgba(255,255,255,0.7);";
-
   wrap.appendChild(pin);
-  wrap.appendChild(label);
   return wrap;
 }
 
@@ -297,7 +292,7 @@ function CityMapPreview({ city, projects }: { city: City; projects: Project[] })
       // Visible city-center marker (hollow ring + name label) so the admin's
       // pin choice is confirmed visually, distinct from the red project dots.
       if (hasCenter) {
-        centerMarkerRef.current = new mapboxgl.Marker({ element: buildCenterMarkerEl(city.name), anchor: "bottom" })
+        centerMarkerRef.current = new mapboxgl.Marker({ element: buildCenterMarkerEl(), anchor: "bottom" })
           .setLngLat(center)
           .addTo(map);
       }
@@ -348,7 +343,7 @@ function CityMapPreview({ city, projects }: { city: City; projects: Project[] })
     if (centerMarkerRef.current) {
       centerMarkerRef.current.setLngLat(target);
     } else {
-      centerMarkerRef.current = new mapboxgl.Marker({ element: buildCenterMarkerEl(city.name), anchor: "bottom" })
+      centerMarkerRef.current = new mapboxgl.Marker({ element: buildCenterMarkerEl(), anchor: "bottom" })
         .setLngLat(target)
         .addTo(map);
     }

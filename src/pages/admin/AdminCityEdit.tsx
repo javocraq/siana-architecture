@@ -270,20 +270,18 @@ export default function AdminCityEdit() {
               <ImageUpload label="Hero image" value={form.hero_image_url} onChange={(url) => set("hero_image_url", url)} aspect="wide" folder="cities" />
             </div>
 
-            {/* Map — full width, below the details. */}
-            <Field label="Map center" hint={form.center_latitude && form.center_longitude ? `${form.center_latitude}, ${form.center_longitude}` : "We'll locate the city automatically — drag the pin or click to fine-tune"}>
+            {/* Map — full width, below the details. The zoom level you leave
+                the map at (using +/- or ⌘+scroll) is what the public page
+                will use. No separate slider. */}
+            <Field label="Map center" hint={form.center_latitude && form.center_longitude ? `${form.center_latitude}, ${form.center_longitude} · zoom ${form.default_zoom}` : "We'll locate the city automatically — drag the pin or click to fine-tune"}>
               <MapPicker
                 latitude={form.center_latitude}
                 longitude={form.center_longitude}
+                zoom={form.default_zoom}
                 defaultPlace={[form.name, form.country].filter(Boolean).join(", ")}
                 onChange={(lat, lng) => setForm((f) => ({ ...f, center_latitude: lat, center_longitude: lng }))}
+                onZoomChange={(z) => set("default_zoom", z)}
               />
-            </Field>
-
-            <Field label={`Default zoom — ${form.default_zoom}`} hint="0 (world) → 22 (street)">
-              <input type="range" min={1} max={20} step={1} value={form.default_zoom}
-                onChange={(e) => set("default_zoom", parseInt(e.target.value, 10))}
-                className="w-full" />
             </Field>
 
             {/* Description — below the map. */}
