@@ -7,7 +7,8 @@ import Navbar from "@/components/site/Navbar";
 import SEO from "@/components/site/SEO";
 import { ChevronDown, X, Search, SlidersHorizontal } from "lucide-react";
 import { getMapboxToken, TOKEN_KEY } from "@/lib/mapbox";
-import { MATERIALS, EXPERIENCES, tagsFor } from "@/lib/atlasFilters";
+import { tagsFor } from "@/lib/atlasFilters";
+import { useTaxonomies } from "@/hooks/useTaxonomies";
 
 type City = {
   id: string;
@@ -509,10 +510,12 @@ export default function Atlas() {
     return m;
   }, [cities]);
   const cityOptions = useMemo(() => cities.map((c) => c.name), [cities]);
-  const styleOptions = useMemo(
-    () => Array.from(new Set(projects.map((p) => p.style).filter(Boolean) as string[])).sort(),
-    [projects]
-  );
+  const tax = useTaxonomies();
+  // Style options come from the managed Categories list, falling back to the
+  // styles actually present in the loaded projects when the list is empty.
+  const styleOptions = tax.styles.length
+    ? tax.styles
+    : Array.from(new Set(projects.map((p) => p.style).filter(Boolean) as string[])).sort();
 
   const filtered = useMemo(() => {
     if (!active) return projects;
@@ -1088,8 +1091,8 @@ export default function Atlas() {
                 then the options for that category appear. */}
             {filtersOpen && (() => {
               const categories: { type: FilterType; label: string; options: string[] }[] = [
-                { type: "material", label: "Materials", options: MATERIALS },
-                { type: "experience", label: "Experience", options: EXPERIENCES },
+                { type: "material", label: "Materials", options: tax.materials },
+                { type: "experience", label: "Experience", options: tax.experiences },
                 { type: "style", label: "Style", options: styleOptions },
               ];
               const current = categories.find((c) => c.type === mobileFilterCategory) || null;
@@ -1183,8 +1186,8 @@ export default function Atlas() {
               </button>
             ) : (
               <div className="inline-flex items-center gap-2 flex-wrap">
-                <FilterMenu label="Materials" options={MATERIALS} selected={[]} onToggle={(v) => activate("material", v)} open={openMenu === "materials"} onToggleOpen={() => toggleMenu("materials")} onClose={closeMenu} stacked />
-                <FilterMenu label="Experience" options={EXPERIENCES} selected={[]} onToggle={(v) => activate("experience", v)} open={openMenu === "experience"} onToggleOpen={() => toggleMenu("experience")} onClose={closeMenu} stacked />
+                <FilterMenu label="Materials" options={tax.materials} selected={[]} onToggle={(v) => activate("material", v)} open={openMenu === "materials"} onToggleOpen={() => toggleMenu("materials")} onClose={closeMenu} stacked />
+                <FilterMenu label="Experience" options={tax.experiences} selected={[]} onToggle={(v) => activate("experience", v)} open={openMenu === "experience"} onToggleOpen={() => toggleMenu("experience")} onClose={closeMenu} stacked />
                 {styleOptions.length > 0 && (
                   <FilterMenu label="Style" options={styleOptions} selected={[]} onToggle={(v) => activate("style", v)} open={openMenu === "style"} onToggleOpen={() => toggleMenu("style")} onClose={closeMenu} stacked />
                 )}

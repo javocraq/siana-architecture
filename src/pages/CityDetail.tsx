@@ -233,44 +233,52 @@ export default function CityDetail() {
 function CityMapPreview({ city, projects }: { city: City; projects: Project[] }) {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
+  const centerMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const [token] = useState<string>(() => getMapboxToken());
+
+  // Whether the admin set an explicit center for this city.
+  const hasCenter = city.center_longitude != null && city.center_latitude != null;
 
   useEffect(() => {
     if (!token || !mapContainer.current || mapRef.current) return;
     mapboxgl.accessToken = token;
     try {
-      const center: [number, number] =
-        city.center_longitude != null && city.center_latitude != null
-          ? [city.center_longitude, city.center_latitude]
-          : [10, 25];
-      // Preview is centered on the city — close enough that street detail
-      // reads, but not so close that the city label disappears. z=11 keeps
-      // the urban grain visible on light-v11.
-      const PREVIEW_MAX_ZOOM = 11;
-      const baseZoom = city.default_zoom ?? 11;
-      const zoom = Math.min(baseZoom, PREVIEW_MAX_ZOOM);
+      const center: [number, number] = hasCenter
+        ? [city.center_longitude!, city.center_latitude!]
+        : [10, 25];
+      // Respect whatever the admin chose in the editor. The slider in the
+      // admin Map field is the single source of truth for zoom — we don't
+      // cap it, so moving the marker to a specific spot at z=15 reads on
+      // the public page exactly as the admin saw it.
+      const zoom = city.default_zoom ?? 12;
       const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/light-v11",
         center,
         zoom,
         attributionControl: false,
-        // Interactive but kept calm: drag-pan stays on; scroll-zoom is OFF
-        // so the user can scroll past the section without the page
-        // getting "trapped" by the map. They zoom via the ± control.
         scrollZoom: false,
         dragRotate: false,
         pitchWithRotate: false,
         touchPitch: false,
       });
       map.touchZoomRotate.disableRotation();
-      // Subtle zoom control so users can dial in without external chrome.
       map.addControl(new mapboxgl.NavigationControl({ showCompass: false, showZoom: true }), "top-right");
       mapRef.current = map;
 
+      // Visible city-center marker (hollow ring) so the admin's pin choice
+      // is confirmed visually, distinct from the red project dots.
+      if (hasCenter) {
+        const el = document.createElement("span");
+        el.style.cssText =
+          "display:block;width:18px;height:18px;border-radius:9999px;background:transparent;border:2px solid #bf3a18;box-shadow:0 0 0 4px rgba(191,58,24,0.18);pointer-events:none;";
+        centerMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" })
+          .setLngLat(center)
+          .addTo(map);
+      }
+
       map.on("load", () => {
         const pts = projects.filter((p) => p.latitude != null && p.longitude != null);
-        // Drop the city's project pins so the preview feels populated.
         pts.forEach((p) => {
           const el = document.createElement("span");
           el.style.cssText =
@@ -279,12 +287,13 @@ function CityMapPreview({ city, projects }: { city: City; projects: Project[] })
             .setLngLat([p.longitude!, p.latitude!])
             .addTo(map);
         });
-        if (pts.length >= 2) {
+        // If the admin didn't set a city center but there are projects,
+        // fit to the project bounds as a fallback. Admin's explicit
+        // center+zoom always wins when provided.
+        if (!hasCenter && pts.length >= 2) {
           const b = new mapboxgl.LngLatBounds();
           pts.forEach((p) => b.extend([p.longitude!, p.latitude!]));
-          // Same reasoning as PREVIEW_MAX_ZOOM above — don't let fitBounds
-          // override the city-label scale.
-          map.fitBounds(b, { padding: 80, maxZoom: PREVIEW_MAX_ZOOM, duration: 0 });
+          map.fitBounds(b, { padding: 80, duration: 0 });
         }
       });
     } catch (e) {
@@ -293,25 +302,34 @@ function CityMapPreview({ city, projects }: { city: City; projects: Project[] })
     return () => {
       mapRef.current?.remove();
       mapRef.current = null;
+      centerMarkerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, city.id, projects.length]);
 
-  // Re-sync the map center/zoom when the city's stored coordinates change
-  // (e.g. the admin moves the marker, saves, and the public page picks up
-  // fresh data). We avoid re-initialising the whole map — just animate to
-  // the new location so existing pins and tiles stay loaded.
+  // React to admin edits — when the saved coords or zoom change, animate
+  // the map to the new view and move the center marker. No re-init, so
+  // project pins and tiles stay loaded.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     if (city.center_longitude == null || city.center_latitude == null) return;
-    const PREVIEW_MAX_ZOOM = 11;
-    const zoom = Math.min(city.default_zoom ?? 11, PREVIEW_MAX_ZOOM);
+    const target: [number, number] = [city.center_longitude, city.center_latitude];
     map.easeTo({
-      center: [city.center_longitude, city.center_latitude],
-      zoom,
+      center: target,
+      zoom: city.default_zoom ?? map.getZoom(),
       duration: 600,
     });
+    if (centerMarkerRef.current) {
+      centerMarkerRef.current.setLngLat(target);
+    } else {
+      const el = document.createElement("span");
+      el.style.cssText =
+        "display:block;width:18px;height:18px;border-radius:9999px;background:transparent;border:2px solid #bf3a18;box-shadow:0 0 0 4px rgba(191,58,24,0.18);pointer-events:none;";
+      centerMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" })
+        .setLngLat(target)
+        .addTo(map);
+    }
   }, [city.center_latitude, city.center_longitude, city.default_zoom]);
 
   return (
