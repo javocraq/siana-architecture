@@ -9,7 +9,20 @@ type Props = {
   onChange: (lat: number, lng: number) => void;
 };
 
-type Suggestion = { name: string; lng: number; lat: number };
+type Suggestion = { mapboxId: string; name: string; place_formatted?: string; distance?: number };
+
+// Compact distance label: "320 m" under 1 km, otherwise "12 km" / "1 240 km".
+const formatDistance = (meters?: number): string | null => {
+  if (typeof meters !== "number" || !Number.isFinite(meters)) return null;
+  if (meters < 1000) return `${Math.round(meters)} m`;
+  const km = meters / 1000;
+  return km < 100 ? `${km.toFixed(1)} km` : `${Math.round(km).toLocaleString("es")} km`;
+};
+
+const newSessionToken = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2);
 
 export default function MapPicker({ latitude, longitude, onChange }: Props) {
   const ref = useRef<HTMLDivElement>(null);
@@ -19,6 +32,10 @@ export default function MapPicker({ latitude, longitude, onChange }: Props) {
   // marker dragend) without re-initialising the map.
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  // Per-mount session token for the Mapbox Search Box API. Tied billing-wise
+  // to the suggest → retrieve pair, so suggestions don't count as separate
+  // searches unless the editor actually picks one.
+  const sessionTokenRef = useRef<string>(newSessionToken());
 
   const [token] = useState<string>(() => getMapboxToken());
   const [query, setQuery] = useState("");
@@ -75,23 +92,57 @@ export default function MapPicker({ latitude, longitude, onChange }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  // Debounced forward geocoding — search by city, place, building, address…
+  // Sync the marker with externally-driven prop changes (e.g. the parent form
+  // resets coords, or the city is re-loaded after a save). Skips no-op
+  // updates when the marker is already at those coords so editor-driven
+  // moves don't ping-pong with the parent state.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (latitude == null || longitude == null) return;
+    const current = markerRef.current?.getLngLat();
+    const same = current && Math.abs(current.lat - latitude) < 1e-6 && Math.abs(current.lng - longitude) < 1e-6;
+    if (same) return;
+    placeMarker(longitude, latitude, { silent: true });
+    map.easeTo({ center: [longitude, latitude], duration: 500 });
+  }, [latitude, longitude, placeMarker]);
+
+  // Debounced autocomplete — Mapbox Search Box API. Searches POIs, addresses,
+  // streets and places, biased toward the current map center so a query like
+  // "naval museum" inside Madrid surfaces nearby museums before global matches.
   useEffect(() => {
     const qq = query.trim();
     if (!qq || !token) { setResults([]); return; }
     const ctrl = new AbortController();
     const t = setTimeout(async () => {
       try {
-        const url =
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(qq)}.json` +
-          `?access_token=${token}&limit=6&language=en`;
-        const res = await fetch(url, { signal: ctrl.signal });
+        const url = new URL("https://api.mapbox.com/search/searchbox/v1/suggest");
+        url.searchParams.set("q", qq);
+        url.searchParams.set("access_token", token);
+        url.searchParams.set("session_token", sessionTokenRef.current);
+        url.searchParams.set("limit", "8");
+        url.searchParams.set("language", "es");
+        // Proximity bias: prefer the dropped pin first, otherwise the map's
+        // current center. Massively improves POI relevance.
+        const ll = markerRef.current?.getLngLat() ?? mapRef.current?.getCenter();
+        if (ll) url.searchParams.set("proximity", `${ll.lng},${ll.lat}`);
+
+        const res = await fetch(url.toString(), { signal: ctrl.signal });
         const data = await res.json();
-        const feats: Suggestion[] = (data.features || []).map((f: any) => ({
-          name: f.place_name as string,
-          lng: f.center[0] as number,
-          lat: f.center[1] as number,
+        const feats: Suggestion[] = (data.suggestions || []).map((f: any) => ({
+          mapboxId: f.mapbox_id as string,
+          name: (f.name as string) || (f.place_formatted as string) || "",
+          place_formatted: f.place_formatted as string | undefined,
+          distance: typeof f.distance === "number" ? f.distance : undefined,
         }));
+        // Mapbox ranks by relevance (name + proximity), but sometimes a
+        // distant exact name match outranks a closer near-match — e.g.
+        // searching "Fuente de la Cibeles" from Madrid surfaces the
+        // namesake fountain at La Granja (~80 km away) before Madrid's
+        // own Cibeles. Re-sort by distance so the nearest match always
+        // wins; ties keep Mapbox's order. Suggestions without distance
+        // (no proximity hit) sink to the bottom.
+        feats.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
         setResults(feats);
       } catch {
         /* aborted or network error — ignore */
@@ -100,11 +151,26 @@ export default function MapPicker({ latitude, longitude, onChange }: Props) {
     return () => { clearTimeout(t); ctrl.abort(); };
   }, [query, token]);
 
-  const pick = (r: Suggestion) => {
-    placeMarker(r.lng, r.lat, { fly: true });
-    setQuery(r.name);
-    setResults([]);
-    setOpen(false);
+  const pick = async (r: Suggestion) => {
+    if (!token) return;
+    try {
+      const url = new URL(`https://api.mapbox.com/search/searchbox/v1/retrieve/${encodeURIComponent(r.mapboxId)}`);
+      url.searchParams.set("access_token", token);
+      url.searchParams.set("session_token", sessionTokenRef.current);
+      const res = await fetch(url.toString());
+      const data = await res.json();
+      const coords = data?.features?.[0]?.geometry?.coordinates as [number, number] | undefined;
+      if (!coords) return;
+      const [lng, lat] = coords;
+      placeMarker(lng, lat, { fly: true });
+      setQuery(r.name);
+      setResults([]);
+      setOpen(false);
+      // Rotate the session token — billing closes when a retrieve fires.
+      sessionTokenRef.current = newSessionToken();
+    } catch {
+      /* network error — ignore */
+    }
   };
 
   if (!token) {
@@ -146,9 +212,19 @@ export default function MapPicker({ latitude, longitude, onChange }: Props) {
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => pick(r)}
-                    className="w-full text-left px-3 py-2 text-[12.5px] leading-snug text-ink hover:bg-off-white border-b hairline last:border-b-0"
+                    className="w-full text-left px-3 py-2 text-[12.5px] leading-snug hover:bg-off-white border-b hairline last:border-b-0"
                   >
-                    {r.name}
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-ink truncate">{r.name}</span>
+                      {formatDistance(r.distance) && (
+                        <span className="text-[10px] tracking-tag uppercase text-ink-faint shrink-0">
+                          {formatDistance(r.distance)}
+                        </span>
+                      )}
+                    </div>
+                    {r.place_formatted && r.place_formatted !== r.name && (
+                      <span className="block text-[11px] text-ink-faint mt-0.5">{r.place_formatted}</span>
+                    )}
                   </button>
                 </li>
               ))}

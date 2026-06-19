@@ -7,7 +7,7 @@ import ImageUpload from "@/components/admin/ImageUpload";
 import MapPicker from "@/components/admin/MapPicker";
 import SelectOrCreate from "@/components/admin/SelectOrCreate";
 import SectionBuilder from "@/components/admin/SectionBuilder";
-import { REGIONS } from "@/lib/adminTaxonomies";
+import { useTaxonomies } from "@/hooks/useTaxonomies";
 import type { CitySection } from "@/lib/citySections";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -65,6 +65,7 @@ export default function AdminCityEdit() {
   const isNew = !id || id === "new";
   const navigate = useNavigate();
   const { toast } = useToast();
+  const tax = useTaxonomies();
 
   const [tab, setTab] = useState<Tab>("content");
   const [form, setForm] = useState<FormState>(empty);
@@ -253,7 +254,7 @@ export default function AdminCityEdit() {
                 <SelectOrCreate
                   value={form.region}
                   onChange={(v) => set("region", v)}
-                  options={REGIONS}
+                  options={tax.regions}
                 />
               </Field>
             </div>

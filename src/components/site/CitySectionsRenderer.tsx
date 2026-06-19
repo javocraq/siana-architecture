@@ -233,17 +233,24 @@ function JournalBlock({ s, cityId }: { s: JournalSection; cityId: string }) {
 function GalleryBlock({ s }: { s: GallerySection }) {
   if (!s.settings.images?.length) return null;
   const cols = s.settings.columns || 3;
-  const gridCls = cols === 2 ? "md:grid-cols-2" : cols === 4 ? "md:grid-cols-4" : "md:grid-cols-3";
+  // Masonry via CSS multi-column: each image keeps its natural aspect, photos
+  // flow down columns without forcing crops or leaving uneven gaps. Vertical
+  // spacing comes from per-item margin since `gap` only sets column-gap.
+  const colsCls = cols === 2 ? "md:columns-2" : cols === 4 ? "md:columns-4" : "md:columns-3";
   return (
     <section className="py-20 md:py-28 bg-background">
       <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
         <Eyebrow text={s.settings.eyebrow} />
         <Heading text={s.settings.heading} />
-        <div className={`grid grid-cols-1 ${gridCls} gap-4`}>
+        <div className={`columns-1 ${colsCls} gap-4 [column-fill:_balance]`}>
           {s.settings.images.map((src, i) => (
-            <div key={i} className="aspect-[4/3] overflow-hidden bg-stone">
-              <img src={src} alt="" className="w-full h-full object-cover" loading="lazy" />
-            </div>
+            <img
+              key={i}
+              src={src}
+              alt=""
+              loading="lazy"
+              className="w-full h-auto mb-4 block break-inside-avoid bg-stone"
+            />
           ))}
         </div>
       </div>

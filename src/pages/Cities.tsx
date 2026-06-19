@@ -201,12 +201,15 @@ export default function Cities() {
                   to={`/cities/${c.slug}${style ? `?style=${encodeURIComponent(style)}` : ""}`}
                   className="group block"
                 >
-                  {/* Fragment card — fixed rectangle, image shown whole (no destructive crop) */}
+                  {/* Editorial portrait card — image fills the frame and is
+                      centered. Landscape and portrait heroes both look tight
+                      here; for panoramas the sides crop slightly, which is
+                      preferable to large empty bands. */}
                   <div className="relative aspect-[4/5] overflow-hidden bg-[#E5E1DA]">
                     <img
                       src={c.hero_image_url || ""}
                       alt={c.name}
-                      className="photo-thumb w-full h-full object-contain transition-transform duration-700 group-hover:scale-[1.02]"
+                      className="photo-thumb w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.02]"
                       loading="lazy"
                     />
                   </div>

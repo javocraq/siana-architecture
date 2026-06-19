@@ -28,6 +28,7 @@ import AdminSettings from "./pages/admin/AdminSettings.tsx";
 import AdminIntegrations from "./pages/admin/AdminIntegrations.tsx";
 import AdminAbout from "./pages/admin/AdminAbout.tsx";
 import AdminHome from "./pages/admin/AdminHome.tsx";
+import AdminTaxonomies from "./pages/admin/AdminTaxonomies.tsx";
 
 const queryClient = new QueryClient();
 
@@ -99,6 +100,7 @@ const App = () => (
             <Route path="/admin/settings/integrations" element={<AdminIntegrations />} />
             <Route path="/admin/about" element={<AdminAbout />} />
             <Route path="/admin/home" element={<AdminHome />} />
+            <Route path="/admin/taxonomies" element={<AdminTaxonomies />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

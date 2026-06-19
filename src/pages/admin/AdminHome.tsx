@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import ImageUpload from "@/components/admin/ImageUpload";
 import { useToast } from "@/hooks/use-toast";
 import { HOME_DEFAULTS, mergeHomeContent, type HomeContent } from "@/lib/homeContent";
 
@@ -167,6 +168,37 @@ export default function AdminHome() {
                   />
                 </Field>
               </div>
+
+              <Field label="Hero images" hint="Background photos that cross-fade behind the hero. Leave empty to use the built-in curated set; the editor order is preserved.">
+                <div className="space-y-3">
+                  {content.hero.images.length > 0 && (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {content.hero.images.map((src, i) => (
+                        <div key={src + i} className="relative">
+                          <img src={src} alt="" className="w-full aspect-[16/10] object-cover border hairline" />
+                          <button
+                            type="button"
+                            onClick={() => updateHero({ images: content.hero.images.filter((_, j) => j !== i) })}
+                            aria-label="Remove image"
+                            className="absolute top-1 right-1 p-1 bg-background/90 border hairline text-ink-muted hover:text-ink press"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="max-w-[220px]">
+                    <ImageUpload
+                      key={content.hero.images.length}
+                      label="Add image"
+                      value={null}
+                      onChange={(url) => { if (url) updateHero({ images: [...content.hero.images, url] }); }}
+                      folder="home"
+                    />
+                  </div>
+                </div>
+              </Field>
             </section>
 
             {/* Map preview block */}

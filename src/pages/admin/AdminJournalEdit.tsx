@@ -7,6 +7,7 @@ import ImageUpload from "@/components/admin/ImageUpload";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, X } from "lucide-react";
 import { kindConfig } from "@/lib/postKind";
+import { useTaxonomies } from "@/hooks/useTaxonomies";
 
 type City = { id: string; name: string };
 type Project = { id: string; name: string; slug: string };
@@ -65,6 +66,7 @@ export default function AdminJournalEdit() {
   const kind = "resource" as const;
   const cfg = kindConfig();
   const { toast } = useToast();
+  const tax = useTaxonomies();
 
 
   const [tab, setTab] = useState<Tab>("content");
@@ -347,7 +349,10 @@ export default function AdminJournalEdit() {
                   onChange={(e) => set("category", e.target.value)}
                 >
                   <option value="">— Select —</option>
-                  {cfg.categories.map((c) => (
+                  {(form.category && !tax.categories.includes(form.category)
+                    ? [form.category, ...tax.categories]
+                    : tax.categories
+                  ).map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>

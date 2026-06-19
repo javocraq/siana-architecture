@@ -6,8 +6,7 @@ import RichTextEditor from "@/components/admin/RichTextEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import MapPicker from "@/components/admin/MapPicker";
 import SelectOrCreate from "@/components/admin/SelectOrCreate";
-import { STYLES } from "@/lib/adminTaxonomies";
-import { MATERIALS, EXPERIENCES } from "@/lib/atlasFilters";
+import { useTaxonomies } from "@/hooks/useTaxonomies";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
 
@@ -84,6 +83,7 @@ export default function AdminProjectEdit() {
   const isNew = !id || id === "new";
   const navigate = useNavigate();
   const { toast } = useToast();
+  const tax = useTaxonomies();
 
   const [tab, setTab] = useState<Tab>("content");
   const [form, setForm] = useState<FormState>(empty);
@@ -420,12 +420,14 @@ export default function AdminProjectEdit() {
                   </select>
                 )}
               </Field>
-              <Field label="Category"><input className={inputCls} value={form.category} onChange={(e) => set("category", e.target.value)} /></Field>
+              <Field label="Category">
+                <SelectOrCreate value={form.category} onChange={(v) => set("category", v)} options={tax.categories} />
+              </Field>
               <Field label="Style">
                 <SelectOrCreate
                   value={form.style}
                   onChange={(v) => set("style", v)}
-                  options={STYLES}
+                  options={tax.styles}
                 />
               </Field>
             </div>
@@ -456,14 +458,14 @@ export default function AdminProjectEdit() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Field label="Materials" hint="Filterable on the Map">
                 <ChipMulti
-                  options={MATERIALS}
+                  options={tax.materials}
                   selected={form.materials}
                   onToggle={(v) => set("materials", form.materials.includes(v) ? form.materials.filter((x) => x !== v) : [...form.materials, v])}
                 />
               </Field>
               <Field label="Experience" hint="Filterable on the Map">
                 <ChipMulti
-                  options={EXPERIENCES}
+                  options={tax.experiences}
                   selected={form.experience}
                   onToggle={(v) => set("experience", form.experience.includes(v) ? form.experience.filter((x) => x !== v) : [...form.experience, v])}
                 />

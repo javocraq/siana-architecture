@@ -17,6 +17,9 @@ export type HomeContent = {
     description: string;
     cta_primary: string;
     cta_secondary: string;
+    /** Background photos for the hero slideshow. Empty → the page uses its
+     *  built-in curated set. */
+    images: string[];
   };
   map: {
     eyebrow: string;
@@ -57,6 +60,7 @@ export const HOME_DEFAULTS: HomeContent = {
       "Explore curated projects, city guides, and architectural stories from around the world.",
     cta_primary: "Explore the Map",
     cta_secondary: "Browse all cities",
+    images: [],
   },
   map: {
     eyebrow: "The Map",

@@ -46,6 +46,12 @@ const Index = () => {
   // are nominally architecture, demo/seed entries can carry stock
   // imagery that doesn't fit the cover. This list is hand-verified.
   useEffect(() => {
+    // Editor-chosen hero images (from /admin/home) take priority, in order.
+    const custom = (content.hero.images || []).filter(Boolean);
+    if (custom.length) {
+      setHeroImages(custom);
+      return;
+    }
     const ARCH_IMAGES = [
       // Sunlit curved staircase — Valencia City of Sciences
       "https://images.unsplash.com/photo-1779995734326-3d3790120164?auto=format&fit=crop&w=1800&q=80",
@@ -69,7 +75,7 @@ const Index = () => {
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
     setHeroImages(pool);
-  }, []);
+  }, [content.hero.images]);
 
   // Rotate the active hero image on a calm interval
   useEffect(() => {

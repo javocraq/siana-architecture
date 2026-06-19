@@ -8,6 +8,7 @@ import {
   Info,
   Home as HomeIcon,
   Settings as SettingsIcon,
+  Tags,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -26,6 +27,7 @@ const navItems = [
   { to: "/admin/cities", label: "Cities", icon: MapPin },
   { to: "/admin/practice", label: "Practice", icon: BookOpen },
   { to: "/admin/about", label: "About", icon: Info },
+  { to: "/admin/taxonomies", label: "Categories", icon: Tags },
 ];
 
 const SIDEBAR_W = 240;

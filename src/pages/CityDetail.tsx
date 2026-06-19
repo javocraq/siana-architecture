@@ -297,6 +297,23 @@ function CityMapPreview({ city, projects }: { city: City; projects: Project[] })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, city.id, projects.length]);
 
+  // Re-sync the map center/zoom when the city's stored coordinates change
+  // (e.g. the admin moves the marker, saves, and the public page picks up
+  // fresh data). We avoid re-initialising the whole map — just animate to
+  // the new location so existing pins and tiles stay loaded.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (city.center_longitude == null || city.center_latitude == null) return;
+    const PREVIEW_MAX_ZOOM = 11;
+    const zoom = Math.min(city.default_zoom ?? 11, PREVIEW_MAX_ZOOM);
+    map.easeTo({
+      center: [city.center_longitude, city.center_latitude],
+      zoom,
+      duration: 600,
+    });
+  }, [city.center_latitude, city.center_longitude, city.default_zoom]);
+
   return (
     <section
       className="bg-paper-warm"
