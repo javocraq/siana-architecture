@@ -236,49 +236,60 @@ export default function AdminCityEdit() {
 
         {tab === "content" && (
           <div className="space-y-8">
-            <div className="grid grid-cols-2 gap-6">
-              <Field label="Name *">
-                <input className={inputCls} value={form.name} onChange={(e) => onNameChange(e.target.value)} />
-              </Field>
-              <Field label="Slug *" hint="URL: /cities/{slug}">
-                <input className={inputCls} value={form.slug}
-                  onChange={(e) => { setSlugTouched(true); set("slug", slugify(e.target.value)); }} />
-              </Field>
+            {/* Details on the left, hero image on the right. */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-8 items-start">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <Field label="Name *">
+                    <input className={inputCls} value={form.name} onChange={(e) => onNameChange(e.target.value)} />
+                  </Field>
+                  <Field label="Slug *" hint="URL: /cities/{slug}">
+                    <input className={inputCls} value={form.slug}
+                      onChange={(e) => { setSlugTouched(true); set("slug", slugify(e.target.value)); }} />
+                  </Field>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <Field label="Country">
+                    <input className={inputCls} value={form.country} onChange={(e) => set("country", e.target.value)} />
+                  </Field>
+                  <Field label="Region" hint="Pick from the list or add a new one">
+                    <SelectOrCreate
+                      value={form.region}
+                      onChange={(v) => set("region", v)}
+                      options={tax.regions}
+                    />
+                  </Field>
+                </div>
+
+                <Field label="Tagline" hint="One short sentence shown under the title">
+                  <input className={inputCls} value={form.tagline} onChange={(e) => set("tagline", e.target.value)} />
+                </Field>
+              </div>
+
+              <ImageUpload label="Hero image" value={form.hero_image_url} onChange={(url) => set("hero_image_url", url)} aspect="wide" folder="cities" />
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
-              <Field label="Country">
-                <input className={inputCls} value={form.country} onChange={(e) => set("country", e.target.value)} />
-              </Field>
-              <Field label="Region" hint="Pick from the list or add a new one">
-                <SelectOrCreate
-                  value={form.region}
-                  onChange={(v) => set("region", v)}
-                  options={tax.regions}
-                />
-              </Field>
-            </div>
-
-            <Field label="Tagline" hint="One short sentence shown under the title">
-              <input className={inputCls} value={form.tagline} onChange={(e) => set("tagline", e.target.value)} />
-            </Field>
-
-            <ImageUpload label="Hero image" value={form.hero_image_url} onChange={(url) => set("hero_image_url", url)} aspect="wide" folder="cities" />
-
-            <Field label="Description">
-              <RichTextEditor value={form.description} onChange={(html) => set("description", html)}
-                placeholder="Tell the story of this city…" />
-            </Field>
-
-            <Field label="Map center" hint={form.center_latitude && form.center_longitude ? `${form.center_latitude}, ${form.center_longitude}` : "Click on the map to set the default center"}>
-              <MapPicker latitude={form.center_latitude} longitude={form.center_longitude}
-                onChange={(lat, lng) => setForm((f) => ({ ...f, center_latitude: lat, center_longitude: lng }))} />
+            {/* Map — full width, below the details. */}
+            <Field label="Map center" hint={form.center_latitude && form.center_longitude ? `${form.center_latitude}, ${form.center_longitude}` : "We'll locate the city automatically — drag the pin or click to fine-tune"}>
+              <MapPicker
+                latitude={form.center_latitude}
+                longitude={form.center_longitude}
+                defaultPlace={[form.name, form.country].filter(Boolean).join(", ")}
+                onChange={(lat, lng) => setForm((f) => ({ ...f, center_latitude: lat, center_longitude: lng }))}
+              />
             </Field>
 
             <Field label={`Default zoom — ${form.default_zoom}`} hint="0 (world) → 22 (street)">
               <input type="range" min={1} max={20} step={1} value={form.default_zoom}
                 onChange={(e) => set("default_zoom", parseInt(e.target.value, 10))}
                 className="w-full" />
+            </Field>
+
+            {/* Description — below the map. */}
+            <Field label="Description">
+              <RichTextEditor value={form.description} onChange={(html) => set("description", html)}
+                placeholder="Tell the story of this city…" />
             </Field>
           </div>
         )}

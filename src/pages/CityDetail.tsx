@@ -230,6 +230,34 @@ export default function CityDetail() {
 /* ──────────────────────────────────────────────────────────────────
    City Map Preview
    ────────────────────────────────────────────────────────────────── */
+
+// Renders the city-center marker as a classic teardrop pin in terracotta
+// (matching the admin editor) with the city name as an editorial label
+// just below it. The pin tip anchors exactly on the saved coordinate.
+function buildCenterMarkerEl(cityName: string): HTMLElement {
+  const wrap = document.createElement("div");
+  // Sized to the pin only so Mapbox's "bottom" anchor places the tip on
+  // the coord; the label is absolutely positioned out of flow below.
+  wrap.style.cssText = "position:relative;width:28px;height:38px;pointer-events:none;";
+
+  const pin = document.createElement("div");
+  pin.innerHTML =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 28 38" aria-hidden="true">' +
+    '<path d="M14 0C6.27 0 0 6.27 0 14c0 9.95 12.5 22.5 13.04 23.04a1.36 1.36 0 0 0 1.93 0C15.5 36.5 28 23.95 28 14 28 6.27 21.73 0 14 0Z" fill="#bf3a18"/>' +
+    '<circle cx="14" cy="14" r="5" fill="#fff"/>' +
+    "</svg>";
+  pin.style.cssText = "filter:drop-shadow(0 2px 4px rgba(0,0,0,0.18));";
+
+  const label = document.createElement("span");
+  label.textContent = cityName;
+  label.style.cssText =
+    "position:absolute;left:50%;top:calc(100% + 4px);transform:translateX(-50%);font-family:'Garamond Premier Pro','EB Garamond',Garamond,serif;font-size:15px;color:#1c1917;font-weight:500;white-space:nowrap;text-shadow:0 0 4px rgba(255,255,255,0.95),0 0 8px rgba(255,255,255,0.7);";
+
+  wrap.appendChild(pin);
+  wrap.appendChild(label);
+  return wrap;
+}
+
 function CityMapPreview({ city, projects }: { city: City; projects: Project[] }) {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -266,13 +294,10 @@ function CityMapPreview({ city, projects }: { city: City; projects: Project[] })
       map.addControl(new mapboxgl.NavigationControl({ showCompass: false, showZoom: true }), "top-right");
       mapRef.current = map;
 
-      // Visible city-center marker (hollow ring) so the admin's pin choice
-      // is confirmed visually, distinct from the red project dots.
+      // Visible city-center marker (hollow ring + name label) so the admin's
+      // pin choice is confirmed visually, distinct from the red project dots.
       if (hasCenter) {
-        const el = document.createElement("span");
-        el.style.cssText =
-          "display:block;width:18px;height:18px;border-radius:9999px;background:transparent;border:2px solid #bf3a18;box-shadow:0 0 0 4px rgba(191,58,24,0.18);pointer-events:none;";
-        centerMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" })
+        centerMarkerRef.current = new mapboxgl.Marker({ element: buildCenterMarkerEl(city.name), anchor: "bottom" })
           .setLngLat(center)
           .addTo(map);
       }
@@ -323,10 +348,7 @@ function CityMapPreview({ city, projects }: { city: City; projects: Project[] })
     if (centerMarkerRef.current) {
       centerMarkerRef.current.setLngLat(target);
     } else {
-      const el = document.createElement("span");
-      el.style.cssText =
-        "display:block;width:18px;height:18px;border-radius:9999px;background:transparent;border:2px solid #bf3a18;box-shadow:0 0 0 4px rgba(191,58,24,0.18);pointer-events:none;";
-      centerMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" })
+      centerMarkerRef.current = new mapboxgl.Marker({ element: buildCenterMarkerEl(city.name), anchor: "bottom" })
         .setLngLat(target)
         .addTo(map);
     }

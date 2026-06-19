@@ -7,6 +7,10 @@ type Props = {
   latitude: number | null;
   longitude: number | null;
   onChange: (lat: number, lng: number) => void;
+  /** Optional place query (e.g. "Madrid, Spain") used to auto-locate the
+   *  map and drop a marker when no coordinates have been saved yet. The
+   *  editor can still drag, click or search to refine. */
+  defaultPlace?: string;
 };
 
 type Suggestion = { mapboxId: string; name: string; place_formatted?: string; distance?: number };
@@ -24,7 +28,24 @@ const newSessionToken = () =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
 
-export default function MapPicker({ latitude, longitude, onChange }: Props) {
+// One-shot geocode for the auto-locate effect. Uses the lightweight Geocoding
+// v5 endpoint (no session token), and restricts results to `place` so a query
+// like "Madrid, Spain" returns the city itself, not a museum or street.
+async function geocodeCityPlace(query: string, token: string, signal?: AbortSignal): Promise<[number, number] | null> {
+  try {
+    const url =
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json` +
+      `?access_token=${token}&types=place&limit=1&language=es`;
+    const res = await fetch(url, { signal });
+    const data = await res.json();
+    const c = data?.features?.[0]?.center;
+    return Array.isArray(c) && c.length === 2 ? [c[0] as number, c[1] as number] : null;
+  } catch {
+    return null;
+  }
+}
+
+export default function MapPicker({ latitude, longitude, onChange, defaultPlace }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
@@ -76,7 +97,6 @@ export default function MapPicker({ latitude, longitude, onChange }: Props) {
       // fingers on touch) to zoom. Mapbox shows a small hint overlay.
       cooperativeGestures: true,
     });
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
     mapRef.current = map;
 
     // Existing coordinates → drop the pin without firing onChange.
@@ -106,6 +126,30 @@ export default function MapPicker({ latitude, longitude, onChange }: Props) {
     placeMarker(longitude, latitude, { silent: true });
     map.easeTo({ center: [longitude, latitude], duration: 500 });
   }, [latitude, longitude, placeMarker]);
+
+  // Auto-locate: when there are no saved coordinates yet but the form has a
+  // name (and ideally a country) to work with, geocode it and drop the
+  // initial marker at the city's centroid. Saves the editor from having to
+  // hunt the place by hand for every new city. Skipped if the editor has
+  // already dropped/dragged a marker, so manual edits are never overridden.
+  useEffect(() => {
+    if (!token || !mapRef.current) return;
+    if (latitude != null && longitude != null) return;
+    if (markerRef.current) return;
+    const place = defaultPlace?.trim();
+    if (!place) return;
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      const coords = await geocodeCityPlace(place, token, ctrl.signal);
+      // Re-check guards after the async hop — editor may have clicked or
+      // saved coords in the meantime.
+      if (!coords) return;
+      if (markerRef.current) return;
+      if (latitude != null && longitude != null) return;
+      placeMarker(coords[0], coords[1], { fly: true });
+    }, 500);
+    return () => { clearTimeout(t); ctrl.abort(); };
+  }, [defaultPlace, latitude, longitude, token, placeMarker]);
 
   // Debounced autocomplete — Mapbox Search Box API. Searches POIs, addresses,
   // streets and places, biased toward the current map center so a query like
