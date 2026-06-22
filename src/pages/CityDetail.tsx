@@ -834,7 +834,7 @@ function CityIntro({ city }: { city: City; projects: Project[]; projectStyles: s
   // crossing the trigger). Long-form text must be visible immediately.
   return (
     <section className="bg-paper py-24 md:py-32" style={{ borderTop: "1px solid hsl(var(--paper-mid))" }}>
-      <div className="mx-auto max-w-[760px] px-6 lg:px-10">
+      <div className="mx-auto max-w-[960px] px-6 lg:px-10">
         <RichHtml
           html={html}
           className="[&_p]:font-serif [&_p]:text-ink [&_p+p]:mt-6 [&_p]:leading-[1.65] [&_p]:text-[clamp(19px,1.7vw,24px)] [&_h2]:font-display [&_h2]:text-ink [&_h2]:text-[clamp(24px,2.4vw,34px)] [&_h2]:mt-12 [&_h2]:mb-4 [&_h3]:font-display [&_h3]:text-ink [&_h3]:text-[clamp(20px,2vw,28px)] [&_h3]:mt-10 [&_h3]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:text-ink [&_li]:font-serif [&_li]:text-[clamp(18px,1.5vw,22px)] [&_li]:leading-[1.65] [&_blockquote]:border-l-2 [&_blockquote]:border-ink/30 [&_blockquote]:pl-5 [&_blockquote]:italic [&_blockquote]:text-ink-soft [&_a]:text-ink [&_a]:underline [&_a]:underline-offset-2"

@@ -291,26 +291,29 @@ export default function AdminCityEdit() {
         )}
 
         {tab === "seo" && (
-          <div className="space-y-8 max-w-[760px]">
-            <Field label="Meta title" hint={`${form.meta_title.length}/60 characters`}>
-              <input className={inputCls} value={form.meta_title} onChange={(e) => set("meta_title", e.target.value)} maxLength={80} />
-            </Field>
-            <Field label="Meta description" hint={`${form.meta_description.length}/160 characters`}>
-              <textarea rows={3} className={inputCls} value={form.meta_description} onChange={(e) => set("meta_description", e.target.value)} maxLength={200} />
-            </Field>
-            <Field label="Canonical URL">
-              <input className={inputCls} value={form.canonical_url} onChange={(e) => set("canonical_url", e.target.value)} placeholder="https://…" />
-            </Field>
-            <ImageUpload label="OG image (social share)" value={form.og_image_url} onChange={(url) => set("og_image_url", url)} aspect="wide" folder="cities" />
+          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-8 items-start">
+            <div className="space-y-8">
+              <Field label="Meta title" hint={`${form.meta_title.length}/60 characters`}>
+                <input className={inputCls} value={form.meta_title} onChange={(e) => set("meta_title", e.target.value)} maxLength={80} />
+              </Field>
+              <Field label="Meta description" hint={`${form.meta_description.length}/160 characters`}>
+                <textarea rows={3} className={inputCls} value={form.meta_description} onChange={(e) => set("meta_description", e.target.value)} maxLength={200} />
+              </Field>
+              <Field label="Canonical URL">
+                <input className={inputCls} value={form.canonical_url} onChange={(e) => set("canonical_url", e.target.value)} placeholder="https://…" />
+              </Field>
 
-            <div>
-              <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">Search preview</p>
-              <div className="border hairline bg-background p-5">
-                <p className="text-[11px] text-ink-muted truncate">{serpUrl}</p>
-                <p className="text-[18px] mt-1 truncate" style={{ color: "hsl(var(--ink))" }}>{serpTitle}</p>
-                <p className="text-[13px] text-ink-muted mt-1 line-clamp-2">{serpDesc}</p>
+              <div>
+                <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">Search preview</p>
+                <div className="border hairline bg-background p-5">
+                  <p className="text-[11px] text-ink-muted truncate">{serpUrl}</p>
+                  <p className="text-[18px] mt-1 truncate" style={{ color: "hsl(var(--ink))" }}>{serpTitle}</p>
+                  <p className="text-[13px] text-ink-muted mt-1 line-clamp-2">{serpDesc}</p>
+                </div>
               </div>
             </div>
+
+            <ImageUpload label="OG image (social share)" value={form.og_image_url} onChange={(url) => set("og_image_url", url)} aspect="wide" folder="cities" />
           </div>
         )}
       </div>
