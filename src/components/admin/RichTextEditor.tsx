@@ -51,6 +51,64 @@ function Btn({
   );
 }
 
+// Pretty-print TipTap's compact single-line HTML so the source view is
+// readable: each block element on its own line, nested blocks indented.
+// Inline-only blocks (e.g. `<p>text <strong>x</strong></p>`) stay on one
+// line so prose is easy to scan. Round-tripping through TipTap normalizes
+// whitespace, so the formatting is purely cosmetic for the editor.
+const BLOCK_TAGS = new Set([
+  "p", "h1", "h2", "h3", "h4", "h5", "h6",
+  "ul", "ol", "li", "blockquote",
+  "table", "thead", "tbody", "tfoot", "tr", "td", "th",
+  "figure", "figcaption", "section", "article", "header", "footer",
+  "pre", "hr", "div",
+]);
+const VOID_TAGS = new Set(["br", "hr", "img", "input", "meta", "link"]);
+
+function escapeAttr(s: string) {
+  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+}
+
+function serializeChildren(node: Node, depth: number): string {
+  const pad = "  ".repeat(depth);
+  let out = "";
+  for (const child of Array.from(node.childNodes)) {
+    if (child.nodeType === Node.TEXT_NODE) {
+      const t = (child.textContent || "").replace(/\s+/g, " ").trim();
+      if (t) out += pad + t + "\n";
+      continue;
+    }
+    if (child.nodeType !== Node.ELEMENT_NODE) continue;
+    const el = child as Element;
+    const tag = el.tagName.toLowerCase();
+    const attrs = Array.from(el.attributes)
+      .map((a) => ` ${a.name}="${escapeAttr(a.value)}"`)
+      .join("");
+    if (VOID_TAGS.has(tag)) {
+      out += `${pad}<${tag}${attrs}>\n`;
+      continue;
+    }
+    const hasBlockChildren = Array.from(el.children).some((c) =>
+      BLOCK_TAGS.has(c.tagName.toLowerCase()),
+    );
+    if (BLOCK_TAGS.has(tag) && hasBlockChildren) {
+      out += `${pad}<${tag}${attrs}>\n`;
+      out += serializeChildren(el, depth + 1);
+      out += `${pad}</${tag}>\n`;
+    } else {
+      out += `${pad}<${tag}${attrs}>${el.innerHTML.trim()}</${tag}>\n`;
+    }
+  }
+  return out;
+}
+
+function prettyHtml(html: string): string {
+  if (!html) return "";
+  const container = document.createElement("div");
+  container.innerHTML = html;
+  return serializeChildren(container, 0).trimEnd();
+}
+
 export default function RichTextEditor({ value, onChange, placeholder }: Props) {
   const [mode, setMode] = useState<"visual" | "html">("visual");
   const [htmlBuffer, setHtmlBuffer] = useState(value || "");
@@ -111,7 +169,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
   const inTable = editor.isActive("table");
 
   const switchToHtml = () => {
-    setHtmlBuffer(editor.getHTML());
+    setHtmlBuffer(prettyHtml(editor.getHTML()));
     setMode("html");
   };
   const switchToVisual = () => {
@@ -260,7 +318,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
         <EditorContent editor={editor} />
       ) : (
         <textarea
-          className="w-full min-h-[280px] px-4 py-4 font-mono text-[12px] text-ink bg-background focus:outline-none resize-y"
+          className="w-full min-h-[420px] px-4 py-4 font-mono text-[12px] leading-[1.6] text-ink bg-background focus:outline-none resize-y"
           value={htmlBuffer}
           onChange={(e) => { setHtmlBuffer(e.target.value); onChange(e.target.value); }}
           placeholder="<p>Paste or edit HTML here…</p>"

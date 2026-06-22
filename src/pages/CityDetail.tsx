@@ -70,37 +70,42 @@ export default function CityDetail() {
 
   useEffect(() => {
     if (!slug) return;
+    let cancelled = false;
     (async () => {
       const { data: c } = await supabase
         .from("cities")
         .select("id, name, slug, country, tagline, description, hero_image_url, center_latitude, center_longitude, default_zoom, meta_title, meta_description, og_image_url, sections")
         .eq("slug", slug).eq("status", "published").maybeSingle();
+      if (cancelled) return;
       if (!c) { setNotFound(true); setLoading(false); return; }
+      // Render the hero + intro immediately on city data; projects/posts
+      // load in parallel below and stream in without blocking the page.
       setCity(c as any);
+      setLoading(false);
 
       const sections = (c as any).sections as CitySection[] | null;
       const usingDefaults = !sections || sections.length === 0;
+      if (!usingDefaults) return;
 
-      if (usingDefaults) {
-        const { data: ps } = await supabase
+      const [psRes, jsRes] = await Promise.all([
+        supabase
           .from("projects")
           .select("id, name, slug, architect, year_completed, category, style, cover_image_url, hero_image_url, latitude, longitude")
           .eq("city_id", c.id).eq("status", "published")
-          .order("year_completed", { ascending: false });
-        if (ps) setProjects(ps as any);
-
-        const { data: js } = await supabase
+          .order("year_completed", { ascending: false }),
+        supabase
           .from("posts")
           .select("id, slug, title, excerpt, category, hero_image_url, published_at, city_tags")
           .eq("status", "published")
           .contains("city_tags", [c.id])
           .order("published_at", { ascending: false, nullsFirst: false })
-          .limit(3);
-        if (js) setPosts(js as any);
-      }
-
-      setLoading(false);
+          .limit(3),
+      ]);
+      if (cancelled) return;
+      if (psRes.data) setProjects(psRes.data as any);
+      if (jsRes.data) setPosts(jsRes.data as any);
     })();
+    return () => { cancelled = true; };
   }, [slug]);
 
   const projectStyles = useMemo(
@@ -124,7 +129,17 @@ export default function CityDetail() {
   }
 
   if (loading || !city) {
-    return <SiteLayout><div className="pt-40 mx-auto max-w-[1280px] px-6 text-ink-soft text-[13px] font-medium tracking-[0.16em] uppercase">Loading…</div></SiteLayout>;
+    // min-h-screen pushes the newsletter/footer below the fold during the
+    // brief loading window, so the user doesn't see the footer flash above
+    // the not-yet-rendered hero. A skeleton hero gives the page a stable
+    // silhouette while the city query resolves (~100–300ms).
+    return (
+      <SiteLayout>
+        <div className="min-h-screen">
+          <div className="relative h-[80vh] min-h-[560px] overflow-hidden bg-paper-mid animate-pulse" />
+        </div>
+      </SiteLayout>
+    );
   }
 
   const hasCustomLayout = city.sections && city.sections.length > 0;
@@ -144,7 +159,7 @@ export default function CityDetail() {
           ============================================================ */}
       <section className="relative h-[80vh] min-h-[560px] overflow-hidden">
         {city.hero_image_url && (
-          <img src={city.hero_image_url} alt={city.name} className="absolute inset-0 w-full h-full object-cover" />
+          <img src={city.hero_image_url} alt={city.name} className="absolute inset-0 w-full h-full object-cover" loading="eager" fetchPriority="high" />
         )}
         <div
           className="absolute inset-0"
@@ -813,14 +828,18 @@ function exampleArticlesFor(city: City): Post[] {
    short essay so even newly added cities feel finished. */
 function CityIntro({ city }: { city: City; projects: Project[]; projectStyles: string[] }) {
   const html = city.description!;
+  // No Reveal wrapper here: the description can be an arbitrarily long
+  // editorial essay, and the IntersectionObserver's 12% threshold misfires
+  // on very tall sections (the user lands inside the section without ever
+  // crossing the trigger). Long-form text must be visible immediately.
   return (
     <section className="bg-paper py-24 md:py-32" style={{ borderTop: "1px solid hsl(var(--paper-mid))" }}>
-      <Reveal className="mx-auto max-w-[760px] px-6 lg:px-10">
+      <div className="mx-auto max-w-[760px] px-6 lg:px-10">
         <RichHtml
           html={html}
           className="[&_p]:font-serif [&_p]:text-ink [&_p+p]:mt-6 [&_p]:leading-[1.65] [&_p]:text-[clamp(19px,1.7vw,24px)] [&_h2]:font-display [&_h2]:text-ink [&_h2]:text-[clamp(24px,2.4vw,34px)] [&_h2]:mt-12 [&_h2]:mb-4 [&_h3]:font-display [&_h3]:text-ink [&_h3]:text-[clamp(20px,2vw,28px)] [&_h3]:mt-10 [&_h3]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:text-ink [&_li]:font-serif [&_li]:text-[clamp(18px,1.5vw,22px)] [&_li]:leading-[1.65] [&_blockquote]:border-l-2 [&_blockquote]:border-ink/30 [&_blockquote]:pl-5 [&_blockquote]:italic [&_blockquote]:text-ink-soft [&_a]:text-ink [&_a]:underline [&_a]:underline-offset-2"
         />
-      </Reveal>
+      </div>
     </section>
   );
 }

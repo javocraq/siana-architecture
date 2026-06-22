@@ -4,7 +4,6 @@ export default function AdminPlaceholder({ title }: { title: string }) {
   return (
     <AdminLayout>
       <div className="px-10 py-10">
-        <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">Manage</p>
         <h1 className="font-display text-[44px] text-ink leading-none">{title}</h1>
         <p className="mt-6 text-[13px] text-ink-muted max-w-md leading-relaxed">
           This admin section ships in the next build pass — together with the full Project editor

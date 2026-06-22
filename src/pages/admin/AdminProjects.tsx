@@ -94,12 +94,6 @@ export default function AdminProjects() {
         {/* Header — same editorial hierarchy as the public site */}
         <div className="flex items-end justify-between mb-10 gap-6 flex-wrap">
           <div>
-            <p
-              className="font-mono uppercase text-ink-soft mb-3 font-semibold"
-              style={{ fontSize: 11, letterSpacing: "0.22em" }}
-            >
-              Manage
-            </p>
             <h1
               className="font-display text-ink"
               style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.005em" }}

@@ -43,7 +43,15 @@ const BODY_PROSE =
   "[&_h2]:font-display [&_h2]:text-ink [&_h2]:text-[clamp(22px,2.4vw,30px)] [&_h2]:mt-10 [&_h2]:mb-4 " +
   "[&_h3]:font-display [&_h3]:text-ink [&_h3]:text-[clamp(19px,2vw,24px)] [&_h3]:mt-8 [&_h3]:mb-3 " +
   "[&_img]:mx-auto [&_img]:my-8 [&_blockquote]:italic [&_blockquote]:text-ink-soft [&_blockquote]:text-[18px] md:[&_blockquote]:text-[20px] [&_blockquote]:my-8 " +
-  "[&_ul]:inline-block [&_ul]:text-left [&_ol]:inline-block [&_ol]:text-left [&_li]:font-serif [&_li]:text-ink [&_li]:text-[17px] md:[&_li]:text-[19px] [&_a]:underline [&_a]:underline-offset-2";
+  "[&_ul]:inline-block [&_ul]:text-left [&_ol]:inline-block [&_ol]:text-left [&_li]:font-serif [&_li]:text-ink [&_li]:text-[17px] md:[&_li]:text-[19px] [&_a]:underline [&_a]:underline-offset-2 " +
+  // Tables: stay inside the article column, render as a block with horizontal
+  // scroll if there are genuinely too many columns to fit. Editorial palette
+  // — hairline borders, serif body, mono-caps headers, generous padding.
+  "[&_table]:block [&_table]:overflow-x-auto [&_table]:max-w-full [&_table]:w-full [&_table]:mx-auto [&_table]:my-10 [&_table]:text-left [&_table]:text-[13px] md:[&_table]:text-[14px] [&_table]:border-collapse " +
+  "[&_thead]:border-b [&_thead]:border-ink/30 " +
+  "[&_th]:font-mono [&_th]:text-[10px] md:[&_th]:text-[11px] [&_th]:uppercase [&_th]:tracking-[0.14em] [&_th]:text-ink [&_th]:font-semibold [&_th]:px-3 [&_th]:py-3 [&_th]:text-left [&_th]:align-top [&_th]:whitespace-normal " +
+  "[&_td]:font-serif [&_td]:text-ink [&_td]:px-3 [&_td]:py-3 [&_td]:border-b [&_td]:border-ink/10 [&_td]:align-top [&_td]:leading-[1.55] [&_td]:whitespace-normal " +
+  "[&_table_p]:mb-0 [&_table_p]:text-[13px] md:[&_table_p]:text-[14px] [&_table_p]:leading-[1.55]";
 
 /** Split top-level HTML blocks in half so a section can be inserted mid-article.
  *  Returns the whole thing as `first` (empty `second`) when it's too short to
@@ -131,7 +139,13 @@ export default function JournalArticle() {
   }
 
   if (loading || !post) {
-    return <SiteLayout><div className="pt-40 mx-auto max-w-[1280px] px-6 text-ink-soft text-[13px] font-medium tracking-[0.16em] uppercase">Loading…</div></SiteLayout>;
+    return (
+      <SiteLayout>
+        <div className="min-h-screen">
+          <div className="relative h-[60vh] min-h-[440px] overflow-hidden bg-paper-mid animate-pulse" />
+        </div>
+      </SiteLayout>
+    );
   }
 
   return (

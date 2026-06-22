@@ -68,9 +68,6 @@ export default function AdminAbout() {
       <div className="px-10 py-10 max-w-[820px]">
         <div className="mb-10 flex items-end justify-between gap-6 flex-wrap">
           <div>
-            <p className="font-mono uppercase text-ink-soft mb-3 font-semibold" style={{ fontSize: 11, letterSpacing: "0.22em" }}>
-              Manage
-            </p>
             <h1
               className="font-display text-ink"
               style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.005em" }}

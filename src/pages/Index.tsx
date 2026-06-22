@@ -13,7 +13,6 @@ import LatestJournal from "@/components/site/LatestJournal";
 import NewsletterCta from "@/components/site/NewsletterCta";
 import Footer from "@/components/site/Footer";
 import Reveal from "@/components/site/Reveal";
-import EditorialButton from "@/components/site/EditorialButton";
 import { useHomeContent } from "@/hooks/useHomeContent";
 
 type Pin = { latitude: number | null; longitude: number | null };
@@ -233,18 +232,13 @@ const Index = () => {
             {content.hero.headline_line2 ? (<><br />{content.hero.headline_line2}</>) : null}
           </h1>
 
-          <div className="fadeup-3 mt-10 md:mt-12 flex flex-col md:flex-row items-center md:items-end justify-center md:justify-between gap-8">
+          <div className="fadeup-3 mt-10 md:mt-12">
             <p
               className="font-mono text-white/85 mx-auto md:mx-0"
               style={{ fontSize: "16.5px", lineHeight: 1.7, maxWidth: 380, letterSpacing: "0.01em", textShadow: "0 1px 8px rgba(0,0,0,0.25)" }}
             >
               {content.hero.description}
             </p>
-
-            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
-              <EditorialButton to="/atlas" arrow variant="invert">{content.hero.cta_primary}</EditorialButton>
-              <EditorialButton to="/cities" variant="invert">{content.hero.cta_secondary}</EditorialButton>
-            </div>
           </div>
         </div>
       </section>

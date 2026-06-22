@@ -68,19 +68,12 @@ export default function AdminHome() {
     <AdminLayout>
       <div className="px-10 py-10">
         <div className="mb-10">
-          <p className="font-mono uppercase text-ink-soft mb-3 font-semibold" style={{ fontSize: 11, letterSpacing: "0.22em" }}>
-            Manage
-          </p>
           <h1
             className="font-display text-ink"
             style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.005em" }}
           >
             Home
           </h1>
-          <p className="mt-4 text-[13px] text-ink-soft" style={{ lineHeight: 1.6 }}>
-            Text on the homepage — the hero cover and the map preview section. Featured cities,
-            buildings and journal strips below them are driven by their own content.
-          </p>
         </div>
 
         {loading ? (

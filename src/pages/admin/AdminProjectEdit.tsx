@@ -12,7 +12,7 @@ import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
 
 type City = { id: string; name: string };
 
-type Tab = "content" | "media" | "seo";
+type Tab = "content" | "seo";
 
 const slugify = (s: string) =>
   s
@@ -28,7 +28,6 @@ type FormState = {
   tagline: string;
   description: string;
   architect: string;
-  practice: string;
   city_id: string | null;
   category: string;
   style: string;
@@ -56,7 +55,6 @@ const empty: FormState = {
   tagline: "",
   description: "",
   architect: "",
-  practice: "",
   city_id: null,
   category: "",
   style: "",
@@ -118,7 +116,6 @@ export default function AdminProjectEdit() {
         tagline: data.tagline || "",
         description: data.description || "",
         architect: data.architect || "",
-        practice: data.practice || "",
         city_id: data.city_id,
         category: data.category || "",
         style: data.style || "",
@@ -191,7 +188,6 @@ export default function AdminProjectEdit() {
       tagline: form.tagline || null,
       description: form.description || null,
       architect: form.architect || null,
-      practice: form.practice || null,
       city_id: form.city_id,
       category: form.category || null,
       style: form.style || null,
@@ -269,7 +265,6 @@ export default function AdminProjectEdit() {
   const tabs: { key: Tab; label: string }[] = useMemo(
     () => [
       { key: "content", label: "Content" },
-      { key: "media", label: "Media" },
       { key: "seo", label: "SEO" },
     ],
     []
@@ -370,10 +365,7 @@ export default function AdminProjectEdit() {
               <input className={inputCls} value={form.tagline} onChange={(e) => set("tagline", e.target.value)} />
             </Field>
 
-            <div className="grid grid-cols-2 gap-6">
-              <Field label="Architect"><input className={inputCls} value={form.architect} onChange={(e) => set("architect", e.target.value)} /></Field>
-              <Field label="Practice"><input className={inputCls} value={form.practice} onChange={(e) => set("practice", e.target.value)} /></Field>
-            </div>
+            <Field label="Architect"><input className={inputCls} value={form.architect} onChange={(e) => set("architect", e.target.value)} /></Field>
 
             <div className="grid grid-cols-3 gap-6">
               <Field label="City" hint="Pick a city or add a new one">
@@ -478,7 +470,13 @@ export default function AdminProjectEdit() {
             <Field label="Address"><input className={inputCls} value={form.address} onChange={(e) => set("address", e.target.value)} /></Field>
               </div>
 
-              <ImageUpload label="Hero image" value={form.hero_image_url} onChange={(url) => set("hero_image_url", url)} aspect="wide" />
+              <div className="space-y-6">
+                <ImageUpload label="Hero image" value={form.hero_image_url} onChange={(url) => set("hero_image_url", url)} aspect="wide" />
+                <div>
+                  <ImageUpload label="Cover (thumbnail)" value={form.cover_image_url} onChange={(url) => set("cover_image_url", url)} aspect="square" />
+                  <p className="mt-2 text-[11px] text-ink-faint">Used in card grids. Falls back to the hero image if empty.</p>
+                </div>
+              </div>
             </div>
 
             {/* Map — full width, below the details. */}
@@ -498,16 +496,8 @@ export default function AdminProjectEdit() {
                 placeholder="Tell the story of this project…"
               />
             </Field>
-          </div>
-        )}
 
-        {tab === "media" && (
-          <div className="space-y-10">
-            <div className="max-w-[280px]">
-              <ImageUpload label="Cover (thumbnail)" value={form.cover_image_url} onChange={(url) => set("cover_image_url", url)} aspect="square" />
-              <p className="mt-2 text-[11px] text-ink-faint">The main hero image is set in the Content tab.</p>
-            </div>
-
+            {/* Gallery — additional images shown on the public project page. */}
             <div>
               <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">Gallery</p>
               <div className="grid grid-cols-3 gap-4">

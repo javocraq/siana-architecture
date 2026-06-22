@@ -69,7 +69,13 @@ export default function ProjectDetail() {
   }
 
   if (loading || !project) {
-    return <SiteLayout><div className="pt-40 mx-auto max-w-[1280px] px-6 text-ink-muted text-[12px] tracking-tag uppercase">Loading…</div></SiteLayout>;
+    return (
+      <SiteLayout>
+        <div className="min-h-screen">
+          <div className="relative h-[80vh] min-h-[560px] overflow-hidden bg-paper-mid animate-pulse" />
+        </div>
+      </SiteLayout>
+    );
   }
 
   const gallery: { url: string; caption?: string }[] = Array.isArray(project.gallery) ? project.gallery : [];
