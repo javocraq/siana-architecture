@@ -8,6 +8,7 @@ import MapPicker from "@/components/admin/MapPicker";
 import SelectOrCreate from "@/components/admin/SelectOrCreate";
 import { useTaxonomies } from "@/hooks/useTaxonomies";
 import { useToast } from "@/hooks/use-toast";
+import { adminInputCls, adminLabelCls } from "@/lib/adminUi";
 import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
 
 type City = { id: string; name: string };
@@ -564,8 +565,7 @@ export default function AdminProjectEdit() {
   );
 }
 
-const inputCls =
-  "w-full bg-background border hairline px-3 py-2 text-[13px] text-ink focus:outline-none focus:border-ink";
+const inputCls = adminInputCls;
 
 function ChipMulti({
   options,
@@ -603,7 +603,7 @@ function ChipMulti({
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      {label && <label className="block text-[10px] tracking-tag uppercase text-ink-muted mb-2">{label}</label>}
+      {label && <label className={adminLabelCls}>{label}</label>}
       {children}
       {hint && <p className="mt-1.5 text-[11px] text-ink-faint">{hint}</p>}
     </div>

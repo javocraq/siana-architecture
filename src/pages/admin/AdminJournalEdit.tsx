@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, X } from "lucide-react";
 import { kindConfig } from "@/lib/postKind";
 import { useTaxonomies } from "@/hooks/useTaxonomies";
+import { adminInputCls, adminLabelCls } from "@/lib/adminUi";
 
 type City = { id: string; name: string };
 type Project = { id: string; name: string; slug: string };
@@ -475,13 +476,12 @@ export default function AdminJournalEdit() {
   );
 }
 
-const inputCls =
-  "w-full bg-background border hairline px-3 py-2 text-[13px] text-ink focus:outline-none focus:border-ink";
+const inputCls = adminInputCls;
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      {label && <label className="block text-[10px] tracking-tag uppercase text-ink-muted mb-2">{label}</label>}
+      {label && <label className={adminLabelCls}>{label}</label>}
       {children}
       {hint && <p className="mt-1.5 text-[11px] text-ink-faint">{hint}</p>}
     </div>

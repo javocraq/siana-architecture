@@ -5,6 +5,7 @@ import SettingsTabs from "@/components/admin/SettingsTabs";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/hooks/use-toast";
+import { adminInputCls, adminLabelCls, adminCardCls } from "@/lib/adminUi";
 import { Loader2 } from "lucide-react";
 
 export default function AdminSettings() {
@@ -86,7 +87,7 @@ export default function AdminSettings() {
           </div>
         ) : (
           <div className="space-y-8">
-          <div className="border hairline bg-background p-6 space-y-6">
+          <div className={adminCardCls}>
             <div>
               <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-2">Account</p>
               <h2 className="font-display text-[22px] text-ink">Your profile</h2>
@@ -114,7 +115,7 @@ export default function AdminSettings() {
             </div>
           </div>
 
-          <div className="border hairline bg-background p-6 space-y-6">
+          <div className={adminCardCls}>
             <div>
               <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-2">Security</p>
               <h2 className="font-display text-[22px] text-ink">Change password</h2>
@@ -143,13 +144,12 @@ export default function AdminSettings() {
   );
 }
 
-const inputCls =
-  "w-full bg-background border hairline px-3 py-2 text-[13px] text-ink focus:outline-none focus:border-ink";
+const inputCls = adminInputCls;
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      {label && <label className="block text-[10px] tracking-tag uppercase text-ink-muted mb-2">{label}</label>}
+      {label && <label className={adminLabelCls}>{label}</label>}
       {children}
       {hint && <p className="mt-1.5 text-[11px] text-ink-faint">{hint}</p>}
     </div>

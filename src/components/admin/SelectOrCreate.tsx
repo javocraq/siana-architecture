@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
+import { adminInputCls } from "@/lib/adminUi";
 
-const inputCls =
-  "w-full bg-background border hairline px-3 py-2 text-[13px] text-ink focus:outline-none focus:border-ink";
+const inputCls = adminInputCls;
 
 type Props = {
   value: string;

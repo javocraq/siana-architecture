@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { ABOUT_DEFAULTS, type AboutContent } from "@/lib/aboutContent";
+import { adminInputCls, adminLabelCls } from "@/lib/adminUi";
 
 /**
  * Edits the text of the public /about page (only the manifesto block —
@@ -166,21 +167,14 @@ export default function AdminAbout() {
   );
 }
 
-const inputCls =
-  "w-full bg-background px-3 py-2 text-[13px] text-ink focus:outline-none focus:border-ink";
+const inputCls = adminInputCls;
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      {label && (
-        <label className="block font-mono uppercase text-ink-soft mb-2 font-medium" style={{ fontSize: 10, letterSpacing: "0.22em" }}>
-          {label}
-        </label>
-      )}
-      <div className="border" style={{ borderColor: "hsl(var(--paper-mid))" }}>
-        {children}
-      </div>
-      {hint && <p className="mt-1.5 text-[11px] text-ink-soft">{hint}</p>}
+      {label && <label className={adminLabelCls}>{label}</label>}
+      {children}
+      {hint && <p className="mt-2 text-[12px] text-ink-soft">{hint}</p>}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import SettingsTabs from "@/components/admin/SettingsTabs";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { useToast } from "@/hooks/use-toast";
+import { adminInputCls, adminLabelCls } from "@/lib/adminUi";
 import { Loader2 } from "lucide-react";
 
 type SeoRow = {
@@ -162,19 +163,14 @@ export default function AdminSEO() {
   );
 }
 
-const inputCls =
-  "w-full bg-background px-3 py-2 text-[13px] text-ink focus:outline-none focus:border-ink";
+const inputCls = adminInputCls;
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      {label && (
-        <label className="block font-mono uppercase text-ink-soft mb-2 font-medium" style={{ fontSize: 10, letterSpacing: "0.22em" }}>
-          {label}
-        </label>
-      )}
-      <div className="border" style={{ borderColor: "hsl(var(--paper-mid))" }}>{children}</div>
-      {hint && <p className="mt-1.5 text-[11px] text-ink-soft">{hint}</p>}
+      {label && <label className={adminLabelCls}>{label}</label>}
+      {children}
+      {hint && <p className="mt-2 text-[12px] text-ink-soft">{hint}</p>}
     </div>
   );
 }

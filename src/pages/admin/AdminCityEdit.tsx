@@ -9,6 +9,7 @@ import SelectOrCreate from "@/components/admin/SelectOrCreate";
 import { useTaxonomies } from "@/hooks/useTaxonomies";
 import type { CitySection } from "@/lib/citySections";
 import { useToast } from "@/hooks/use-toast";
+import { adminInputCls, adminLabelCls } from "@/lib/adminUi";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 type Tab = "content" | "seo";
@@ -321,13 +322,12 @@ export default function AdminCityEdit() {
   );
 }
 
-const inputCls =
-  "w-full bg-background border hairline px-3 py-2 text-[13px] text-ink focus:outline-none focus:border-ink";
+const inputCls = adminInputCls;
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      {label && <label className="block text-[10px] tracking-tag uppercase text-ink-muted mb-2">{label}</label>}
+      {label && <label className={adminLabelCls}>{label}</label>}
       {children}
       {hint && <p className="mt-1.5 text-[11px] text-ink-faint">{hint}</p>}
     </div>

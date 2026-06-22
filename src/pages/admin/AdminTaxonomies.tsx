@@ -4,6 +4,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, X, Plus } from "lucide-react";
 import { TAXONOMY_DEFAULTS, TAXONOMY_FIELDS, mergeTaxonomies, type Taxonomies } from "@/lib/taxonomies";
+import { adminInputCls } from "@/lib/adminUi";
 
 /**
  * Categories — manage the option lists used across the CMS (categories,
@@ -133,7 +134,7 @@ function TaxonomyList({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }}
           placeholder={`Add ${label.toLowerCase().replace(/s$/, "")}…`}
-          className="flex-1 bg-background border hairline px-3 py-2 text-[13px] text-ink focus:outline-none focus:border-ink"
+          className={adminInputCls + " flex-1"}
         />
         <button
           type="button"

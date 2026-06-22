@@ -566,7 +566,11 @@ export default function Atlas() {
     if (active?.type === "city") {
       const c = cities.find((x) => x.name === active.value);
       if (c && c.center_latitude != null && c.center_longitude != null) {
-        mapRef.current?.flyTo({ center: [c.center_longitude, c.center_latitude], zoom: c.default_zoom || 12, speed: 1.2, curve: 1.4, essential: true });
+        // City overview — frame the whole city (not street level) at a zoom
+        // where the map still shows its own city label (e.g. "Berlin").
+        // Ignore the saved default_zoom, which is tuned for the city-page
+        // preview and can be much closer.
+        mapRef.current?.flyTo({ center: [c.center_longitude, c.center_latitude], zoom: 10, speed: 1.2, curve: 1.4, essential: true });
         return;
       }
     }
