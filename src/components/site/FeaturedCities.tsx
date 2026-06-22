@@ -166,70 +166,67 @@ export default function FeaturedCities() {
       >
         <ArrowRight className="w-4 h-4" strokeWidth={1.25} />
       </button>
-      <div
-        ref={scrollRef}
-        className="flex no-scrollbar overflow-x-auto scroll-smooth mx-auto max-w-[1400px] px-6 lg:px-10"
-        style={{
-          gap: "2rem",
-          cursor: "grab",
-          // Prevent the horizontal strip from "stealing" vertical wheel
-          // events from the page (Mac trackpads mix X/Y deltas; Chrome
-          // sometimes consumes vertical scroll here, which feels like the
-          // page is freezing).
-          overscrollBehaviorY: "none",
-          touchAction: "pan-x pan-y",
-        }}
-        onWheel={(e) => {
-          // If the user is scrolling vertically (Y delta dominates), make
-          // sure the page scrolls — never the strip. The strip only
-          // consumes wheel events when the X delta dominates.
-          if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-            window.scrollBy({ top: e.deltaY, behavior: "auto" });
-            e.preventDefault();
-          }
-        }}
-        onMouseDown={onDown}
-        onMouseLeave={onLeaveOrUp}
-        onMouseUp={onLeaveOrUp}
-        onMouseMove={onMove}
-      >
-        {cities.map((c, i) => (
-          <Reveal
-            key={c.id}
-            delay={i * 90}
-            className="flex-shrink-0"
-            style={{ width: 320 }}
-          >
-          <Link
-            to={`/cities/${c.slug}`}
-            className="group block text-center"
-            draggable={false}
-          >
-            {/* Fragment card — sharp corners, full-bleed portrait, no scrim */}
-            <div className="relative aspect-[3/4] overflow-hidden bg-[#E5E1DA]">
-              <img
-                src={c.hero_image_url || ""}
-                alt={c.name}
-                className="photo-thumb w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                loading="lazy"
+      {/* One Reveal around the whole strip so the cards fade in together
+          instead of cascading one by one — the staggered per-card reveal
+          was creating a "photos hiding/moving" feel as the section
+          scrolled into view. The onWheel handler forwards vertical wheel
+          deltas to the window so the strip (which has overflow-x: auto)
+          doesn't trap them — Chrome on Mac trackpads otherwise absorbs
+          Y-dominant wheel events here and the page appears to freeze. */}
+      <Reveal>
+        <div
+          ref={scrollRef}
+          className="flex no-scrollbar overflow-x-auto scroll-smooth mx-auto max-w-[1400px] px-6 lg:px-10"
+          style={{
+            gap: "2rem",
+            cursor: "grab",
+            overscrollBehaviorY: "none",
+            touchAction: "pan-y",
+          }}
+          onWheel={(e) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+              e.preventDefault();
+              window.scrollBy(0, e.deltaY);
+            }
+          }}
+          onMouseDown={onDown}
+          onMouseLeave={onLeaveOrUp}
+          onMouseUp={onLeaveOrUp}
+          onMouseMove={onMove}
+        >
+          {cities.map((c) => (
+            <div key={c.id} className="flex-shrink-0" style={{ width: 320 }}>
+              <Link
+                to={`/cities/${c.slug}`}
+                className="group block text-center"
                 draggable={false}
-              />
+              >
+                {/* Fragment card — sharp corners, full-bleed portrait, no scrim */}
+                <div className="relative aspect-[3/4] overflow-hidden bg-[#E5E1DA]">
+                  <img
+                    src={c.hero_image_url || ""}
+                    alt={c.name}
+                    className="photo-thumb w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                    loading="lazy"
+                    draggable={false}
+                  />
+                </div>
+                {/* Centered name + metadata below the image */}
+                <h3
+                  className="font-garamond text-black mt-6"
+                  style={{ fontWeight: 500, fontSize: "clamp(28px, 2.8vw, 38px)", lineHeight: 1.1, letterSpacing: "-0.015em" }}
+                >
+                  {c.name}
+                </h3>
+                <p className="font-grotesk text-[13px] font-semibold uppercase tracking-[0.16em] text-[#4F4534] mt-3">
+                  {c.country ? `${c.country} • ` : ""}
+                  {String(c.project_count).padStart(2, "0")} Proyectos
+                </p>
+              </Link>
             </div>
-            {/* Centered name + metadata below the image */}
-            <h3
-              className="font-garamond text-black mt-6"
-              style={{ fontWeight: 500, fontSize: "clamp(28px, 2.8vw, 38px)", lineHeight: 1.1, letterSpacing: "-0.015em" }}
-            >
-              {c.name}
-            </h3>
-            <p className="font-grotesk text-[13px] font-semibold uppercase tracking-[0.16em] text-[#4F4534] mt-3">
-              {c.country ? `${c.country} • ` : ""}
-              {String(c.project_count).padStart(2, "0")} Proyectos
-            </p>
-          </Link>
-          </Reveal>
-        ))}
-      </div>
+          ))}
+        </div>
+      </Reveal>
       </div>
       <div className="mx-auto max-w-[1400px] px-6 lg:px-10 flex justify-center" style={{ marginTop: "3rem" }}>
         <Reveal delay={120}>
