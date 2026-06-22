@@ -11,6 +11,11 @@ type Props = {
    *  map and drop a marker when no coordinates have been saved yet. The
    *  editor can still drag, click or search to refine. */
   defaultPlace?: string;
+  /** Geocoding `types` filter for the auto-locate query. Defaults to
+   *  `"place"` so a city editor resolves to the city centroid. For project
+   *  editors pass e.g. `"poi,address,place"` so a building or street name
+   *  resolves to the building itself, falling back to the city. */
+  defaultPlaceTypes?: string;
   /** Optional initial / saved zoom level. The map will mount at this zoom
    *  and emit zoom changes through onZoomChange so the parent form keeps
    *  the value in sync (no separate slider needed). */
@@ -34,13 +39,19 @@ const newSessionToken = () =>
     : Math.random().toString(36).slice(2);
 
 // One-shot geocode for the auto-locate effect. Uses the lightweight Geocoding
-// v5 endpoint (no session token), and restricts results to `place` so a query
-// like "Madrid, Spain" returns the city itself, not a museum or street.
-async function geocodeCityPlace(query: string, token: string, signal?: AbortSignal): Promise<[number, number] | null> {
+// v5 endpoint (no session token). `types` is configurable so the city editor
+// can stay restricted to `place` (city centroid) while the project editor can
+// pass `poi,address,place` to resolve a building or address.
+async function geocodePlace(
+  query: string,
+  token: string,
+  types: string,
+  signal?: AbortSignal,
+): Promise<[number, number] | null> {
   try {
     const url =
       `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json` +
-      `?access_token=${token}&types=place&limit=1&language=es`;
+      `?access_token=${token}&types=${encodeURIComponent(types)}&limit=1&language=es`;
     const res = await fetch(url, { signal });
     const data = await res.json();
     const c = data?.features?.[0]?.center;
@@ -50,7 +61,7 @@ async function geocodeCityPlace(query: string, token: string, signal?: AbortSign
   }
 }
 
-export default function MapPicker({ latitude, longitude, onChange, defaultPlace, zoom, onZoomChange }: Props) {
+export default function MapPicker({ latitude, longitude, onChange, defaultPlace, defaultPlaceTypes = "place", zoom, onZoomChange }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
@@ -65,6 +76,13 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
   // to the suggest → retrieve pair, so suggestions don't count as separate
   // searches unless the editor actually picks one.
   const sessionTokenRef = useRef<string>(newSessionToken());
+  // True once the pin has been placed by something we shouldn't override —
+  // saved coordinates loaded from the DB, a manual click on the map, a drag
+  // of the marker, or a pick from the search dropdown. Auto-locate only
+  // touches the pin while this is false, so refining the form's name re-runs
+  // the geocode and walks the pin toward the right place without ever
+  // clobbering a manual edit.
+  const manuallyPlacedRef = useRef(false);
 
   const [token] = useState<string>(() => getMapboxToken());
   const [query, setQuery] = useState("");
@@ -80,6 +98,7 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
         .setLngLat([lng, lat])
         .addTo(map);
       markerRef.current.on("dragend", () => {
+        manuallyPlacedRef.current = true;
         const ll = markerRef.current!.getLngLat();
         onChangeRef.current(+ll.lat.toFixed(6), +ll.lng.toFixed(6));
       });
@@ -108,10 +127,18 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
     });
     mapRef.current = map;
 
-    // Existing coordinates → drop the pin without firing onChange.
-    if (latitude && longitude) placeMarker(lng, lat, { silent: true });
+    // Existing coordinates → drop the pin without firing onChange. Coords
+    // loaded from the DB count as a manual placement: don't let auto-locate
+    // overwrite a project that was already pinned by hand.
+    if (latitude && longitude) {
+      manuallyPlacedRef.current = true;
+      placeMarker(lng, lat, { silent: true });
+    }
 
-    map.on("click", (e) => placeMarker(e.lngLat.lng, e.lngLat.lat));
+    map.on("click", (e) => {
+      manuallyPlacedRef.current = true;
+      placeMarker(e.lngLat.lng, e.lngLat.lat);
+    });
     // Sync zoom to the parent form whenever the editor settles on a new
     // level (mouse wheel, +/- buttons, double-click). Rounded to an integer
     // because the DB column is `integer`.
@@ -143,29 +170,29 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
     map.easeTo({ center: [longitude, latitude], duration: 500 });
   }, [latitude, longitude, placeMarker]);
 
-  // Auto-locate: when there are no saved coordinates yet but the form has a
-  // name (and ideally a country) to work with, geocode it and drop the
-  // initial marker at the city's centroid. Saves the editor from having to
-  // hunt the place by hand for every new city. Skipped if the editor has
-  // already dropped/dragged a marker, so manual edits are never overridden.
+  // Auto-locate: re-runs every time `defaultPlace` changes (e.g. the editor
+  // is typing the project name or just picked a city). Geocodes the current
+  // query and walks the pin to the result, so a half-typed name like
+  // "Sagrada F" doesn't lock the pin in the wrong place — once the editor
+  // finishes typing "Sagrada Familia, Barcelona" the pin flies to Barcelona.
+  // Stops as soon as the pin has been placed manually (click, drag, search
+  // pick, or loaded from saved DB coords), so manual edits are never lost.
   useEffect(() => {
     if (!token || !mapRef.current) return;
-    if (latitude != null && longitude != null) return;
-    if (markerRef.current) return;
+    if (manuallyPlacedRef.current) return;
     const place = defaultPlace?.trim();
     if (!place) return;
     const ctrl = new AbortController();
     const t = setTimeout(async () => {
-      const coords = await geocodeCityPlace(place, token, ctrl.signal);
-      // Re-check guards after the async hop — editor may have clicked or
-      // saved coords in the meantime.
+      const coords = await geocodePlace(place, token, defaultPlaceTypes, ctrl.signal);
+      // Re-check after the async hop — the editor may have clicked or
+      // dragged in the meantime.
       if (!coords) return;
-      if (markerRef.current) return;
-      if (latitude != null && longitude != null) return;
+      if (manuallyPlacedRef.current) return;
       placeMarker(coords[0], coords[1], { fly: true });
     }, 500);
     return () => { clearTimeout(t); ctrl.abort(); };
-  }, [defaultPlace, latitude, longitude, token, placeMarker]);
+  }, [defaultPlace, defaultPlaceTypes, token, placeMarker]);
 
   // Debounced autocomplete — Mapbox Search Box API. Searches POIs, addresses,
   // streets and places, biased toward the current map center so a query like
@@ -222,6 +249,7 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
       const coords = data?.features?.[0]?.geometry?.coordinates as [number, number] | undefined;
       if (!coords) return;
       const [lng, lat] = coords;
+      manuallyPlacedRef.current = true;
       placeMarker(lng, lat, { fly: true });
       setQuery(r.name);
       setResults([]);

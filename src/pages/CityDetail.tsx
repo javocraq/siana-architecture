@@ -284,11 +284,13 @@ function CityMapPreview({ city, projects }: { city: City; projects: Project[] })
       const center: [number, number] = hasCenter
         ? [city.center_longitude!, city.center_latitude!]
         : [10, 25];
-      // Respect whatever the admin chose in the editor. The slider in the
-      // admin Map field is the single source of truth for zoom — we don't
-      // cap it, so moving the marker to a specific spot at z=15 reads on
-      // the public page exactly as the admin saw it.
-      const zoom = city.default_zoom ?? 12;
+      // The public city preview is a "where in the world is this city" view,
+      // not a street-level placement. Cap the admin's saved zoom at a level
+      // that reliably shows the city label on the basemap — admins often pin
+      // a precise spot at z=15+ to fine-tune the marker, but that detail view
+      // hides the city name on the public page.
+      const PUBLIC_PREVIEW_MAX_ZOOM = 11;
+      const zoom = Math.min(city.default_zoom ?? 11, PUBLIC_PREVIEW_MAX_ZOOM);
       const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/light-v11",
@@ -352,7 +354,7 @@ function CityMapPreview({ city, projects }: { city: City; projects: Project[] })
     const target: [number, number] = [city.center_longitude, city.center_latitude];
     map.easeTo({
       center: target,
-      zoom: city.default_zoom ?? map.getZoom(),
+      zoom: Math.min(city.default_zoom ?? map.getZoom(), 11),
       duration: 600,
     });
     if (centerMarkerRef.current) {
@@ -837,7 +839,7 @@ function CityIntro({ city }: { city: City; projects: Project[]; projectStyles: s
       <div className="mx-auto max-w-[960px] px-6 lg:px-10">
         <RichHtml
           html={html}
-          className="[&_p]:font-serif [&_p]:text-ink [&_p+p]:mt-6 [&_p]:leading-[1.65] [&_p]:text-[clamp(19px,1.7vw,24px)] [&_h2]:font-display [&_h2]:text-ink [&_h2]:text-[clamp(24px,2.4vw,34px)] [&_h2]:mt-12 [&_h2]:mb-4 [&_h3]:font-display [&_h3]:text-ink [&_h3]:text-[clamp(20px,2vw,28px)] [&_h3]:mt-10 [&_h3]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:text-ink [&_li]:font-serif [&_li]:text-[clamp(18px,1.5vw,22px)] [&_li]:leading-[1.65] [&_blockquote]:border-l-2 [&_blockquote]:border-ink/30 [&_blockquote]:pl-5 [&_blockquote]:italic [&_blockquote]:text-ink-soft [&_a]:text-ink [&_a]:underline [&_a]:underline-offset-2"
+          className="[&_p]:font-serif [&_p]:text-ink [&_p+p]:mt-5 [&_p]:leading-[1.7] [&_p]:text-[clamp(17px,1.25vw,20px)] [&_p]:text-justify [&_p]:hyphens-auto [&_h2]:font-display [&_h2]:text-ink [&_h2]:text-[clamp(22px,2vw,29px)] [&_h2]:mt-10 [&_h2]:mb-3 [&_h3]:font-display [&_h3]:text-ink [&_h3]:text-[clamp(19px,1.6vw,24px)] [&_h3]:mt-8 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:text-ink [&_li]:font-serif [&_li]:text-[clamp(16px,1.15vw,19px)] [&_li]:leading-[1.7] [&_blockquote]:border-l-2 [&_blockquote]:border-ink/30 [&_blockquote]:pl-5 [&_blockquote]:italic [&_blockquote]:text-ink-soft [&_a]:text-ink [&_a]:underline [&_a]:underline-offset-2"
         />
       </div>
     </section>

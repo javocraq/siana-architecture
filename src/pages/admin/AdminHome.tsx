@@ -83,7 +83,7 @@ export default function AdminHome() {
         ) : (
           <div className="space-y-8">
             {/* Hero block */}
-            <section className="bg-background p-6 space-y-6" style={{ border: "1px solid hsl(var(--paper-mid))" }}>
+            <section className="bg-white rounded-xl p-7 space-y-6 border border-paper-mid">
               <div>
                 <h2 className="font-display text-ink" style={{ fontSize: 22, fontWeight: 400 }}>Hero</h2>
                 <p className="text-[12px] text-ink-soft mt-1" style={{ lineHeight: 1.5 }}>
@@ -121,18 +121,12 @@ export default function AdminHome() {
                 </div>
               </div>
 
-              <Field label="Headline — line 1">
-                <input
+              <Field label="Title" hint="Press ↵ Enter to break onto a new line">
+                <textarea
+                  rows={2}
                   className={inputCls}
-                  value={content.hero.headline_line1}
-                  onChange={(e) => updateHero({ headline_line1: e.target.value })}
-                />
-              </Field>
-              <Field label="Headline — line 2" hint="Leave empty to render a single-line headline">
-                <input
-                  className={inputCls}
-                  value={content.hero.headline_line2}
-                  onChange={(e) => updateHero({ headline_line2: e.target.value })}
+                  value={content.hero.headline}
+                  onChange={(e) => updateHero({ headline: e.target.value })}
                 />
               </Field>
 
@@ -195,7 +189,7 @@ export default function AdminHome() {
             </section>
 
             {/* Map preview block */}
-            <section className="bg-background p-6 space-y-6" style={{ border: "1px solid hsl(var(--paper-mid))" }}>
+            <section className="bg-white rounded-xl p-7 space-y-6 border border-paper-mid">
               <div>
                 <h2 className="font-display text-ink" style={{ fontSize: 22, fontWeight: 400 }}>Map preview</h2>
                 <p className="text-[12px] text-ink-soft mt-1" style={{ lineHeight: 1.5 }}>
@@ -247,7 +241,7 @@ export default function AdminHome() {
             </section>
 
             {/* Cities strip */}
-            <section className="bg-background p-6 space-y-6" style={{ border: "1px solid hsl(var(--paper-mid))" }}>
+            <section className="bg-white rounded-xl p-7 space-y-6 border border-paper-mid">
               <div>
                 <h2 className="font-display text-ink" style={{ fontSize: 22, fontWeight: 400 }}>Cities strip</h2>
                 <p className="text-[12px] text-ink-soft mt-1" style={{ lineHeight: 1.5 }}>
@@ -264,7 +258,7 @@ export default function AdminHome() {
             </section>
 
             {/* Featured buildings */}
-            <section className="bg-background p-6 space-y-6" style={{ border: "1px solid hsl(var(--paper-mid))" }}>
+            <section className="bg-white rounded-xl p-7 space-y-6 border border-paper-mid">
               <div>
                 <h2 className="font-display text-ink" style={{ fontSize: 22, fontWeight: 400 }}>Featured Buildings</h2>
                 <p className="text-[12px] text-ink-soft mt-1" style={{ lineHeight: 1.5 }}>
@@ -298,7 +292,7 @@ export default function AdminHome() {
             </section>
 
             {/* Latest journal */}
-            <section className="bg-background p-6 space-y-6" style={{ border: "1px solid hsl(var(--paper-mid))" }}>
+            <section className="bg-white rounded-xl p-7 space-y-6 border border-paper-mid">
               <div>
                 <h2 className="font-display text-ink" style={{ fontSize: 22, fontWeight: 400 }}>Latest journal</h2>
                 <p className="text-[12px] text-ink-soft mt-1" style={{ lineHeight: 1.5 }}>
@@ -339,7 +333,7 @@ export default function AdminHome() {
             </section>
 
             {/* Newsletter */}
-            <section className="bg-background p-6 space-y-6" style={{ border: "1px solid hsl(var(--paper-mid))" }}>
+            <section className="bg-white rounded-xl p-7 space-y-6 border border-paper-mid">
               <div>
                 <h2 className="font-display text-ink" style={{ fontSize: 22, fontWeight: 400 }}>Newsletter</h2>
                 <p className="text-[12px] text-ink-soft mt-1" style={{ lineHeight: 1.5 }}>
@@ -387,24 +381,25 @@ export default function AdminHome() {
   );
 }
 
+// Modern editorial input: white surface, soft rounding, gentle hover, ink
+// border on focus. The border lives on the input itself (no wrapper) so the
+// focus state is the input, not a static plate around it.
 const inputCls =
-  "w-full bg-background px-3 py-2 text-[13px] text-ink focus:outline-none focus:border-ink";
+  "w-full bg-white border border-paper-mid rounded-lg px-4 py-3 text-[14px] text-ink placeholder:text-ink-faint transition-colors duration-150 focus:outline-none focus:border-ink/50 focus:ring-2 focus:ring-ink/5 hover:border-ink/30";
 
 const labelCls =
-  "block font-mono uppercase text-ink-soft mb-2 font-medium";
+  "block text-[11px] uppercase text-ink-muted mb-2 font-semibold";
 
 function Field({ label, hint, children }: { label?: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
       {label && (
-        <label className={labelCls} style={{ fontSize: 10, letterSpacing: "0.22em" }}>
+        <label className={labelCls} style={{ letterSpacing: "0.08em" }}>
           {label}
         </label>
       )}
-      <div className="border" style={{ borderColor: "hsl(var(--paper-mid))" }}>
-        {children}
-      </div>
-      {hint && <p className="mt-1.5 text-[11px] text-ink-soft">{hint}</p>}
+      {children}
+      {hint && <p className="mt-2 text-[12px] text-ink-soft">{hint}</p>}
     </div>
   );
 }

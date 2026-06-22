@@ -78,7 +78,14 @@ export default function ProjectDetail() {
     );
   }
 
-  const gallery: { url: string; caption?: string }[] = Array.isArray(project.gallery) ? project.gallery : [];
+  // The admin saves gallery as a string[] (just URLs); older records may also
+  // be stored as {url, caption}[]. Normalize both shapes so the renderer can
+  // assume {url, caption?}.
+  const gallery: { url: string; caption?: string }[] = Array.isArray(project.gallery)
+    ? (project.gallery as any[])
+        .map((g) => (typeof g === "string" ? { url: g } : g))
+        .filter((g) => g && typeof g.url === "string" && g.url)
+    : [];
 
   // 4-column meta strip — only the editorial essentials
   const metaStrip = [
@@ -169,14 +176,19 @@ export default function ProjectDetail() {
       {/* 60px breathing room */}
       <div style={{ height: 60 }} />
 
-      {/* Body */}
+      {/* Body — same editorial typography as the city description (Garamond
+          serif, large clamp size, generous line-height) so projects and cities
+          read as one design system. */}
       {isHtml && project.description && (
-        <section className="mx-auto max-w-[760px] px-6 lg:px-10 pb-20 md:pb-28">
-          <RichHtml html={project.description} />
+        <section className="mx-auto max-w-[960px] px-6 lg:px-10 pb-20 md:pb-28">
+          <RichHtml
+            html={project.description}
+            className="[&_p]:font-serif [&_p]:text-ink [&_p+p]:mt-5 [&_p]:leading-[1.7] [&_p]:text-[clamp(17px,1.25vw,20px)] [&_p]:text-justify [&_p]:hyphens-auto [&_h2]:font-display [&_h2]:text-ink [&_h2]:text-[clamp(22px,2vw,29px)] [&_h2]:mt-10 [&_h2]:mb-3 [&_h3]:font-display [&_h3]:text-ink [&_h3]:text-[clamp(19px,1.6vw,24px)] [&_h3]:mt-8 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:text-ink [&_li]:font-serif [&_li]:text-[clamp(16px,1.15vw,19px)] [&_li]:leading-[1.7] [&_blockquote]:border-l-2 [&_blockquote]:border-ink/30 [&_blockquote]:pl-5 [&_blockquote]:italic [&_blockquote]:text-ink-soft [&_a]:text-ink [&_a]:underline [&_a]:underline-offset-2"
+          />
         </section>
       )}
       {!isHtml && paragraphs.length > 0 && (
-        <section className="mx-auto max-w-[760px] px-6 lg:px-10 pb-20 md:pb-28">
+        <section className="mx-auto max-w-[960px] px-6 lg:px-10 pb-20 md:pb-28">
           {paragraphs.map((p, i) => {
             const isPullQuote = i > 0 && i < paragraphs.length - 1 && p.length < 220;
             if (isPullQuote) {
@@ -229,19 +241,24 @@ export default function ProjectDetail() {
         </section>
       )}
 
-      {/* Gallery */}
+      {/* Gallery — image-only, centered, no background plate so portrait
+          shots don't end up framed by big grey side bars. The container is
+          narrow on purpose: editorial photo essay, not a hero. */}
       {gallery.length > 0 && (
         <section className="py-20 md:py-28">
-          <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
+          <div className="mx-auto max-w-[960px] px-6 lg:px-10">
             <p className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-10">Gallery</p>
-            <div className="space-y-16">
+            <div className="space-y-12">
               {gallery.map((img, i) => (
-                <figure key={i}>
-                  <div className="bg-stone overflow-hidden">
-                    <img src={img.url} alt={img.caption || `${project.name} — ${i + 1}`} className="w-full h-auto" loading="lazy" />
-                  </div>
+                <figure key={i} className="flex flex-col items-center">
+                  <img
+                    src={img.url}
+                    alt={img.caption || `${project.name} — ${i + 1}`}
+                    className="block w-auto max-w-full max-h-[70vh] object-contain"
+                    loading="lazy"
+                  />
                   {img.caption && (
-                    <figcaption className="text-[13px] font-semibold tracking-[0.16em] uppercase text-ink-soft mt-4">
+                    <figcaption className="text-[13px] font-semibold tracking-[0.16em] uppercase text-ink-soft mt-4 text-center">
                       {img.caption}
                     </figcaption>
                   )}

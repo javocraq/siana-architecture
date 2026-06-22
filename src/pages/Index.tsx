@@ -226,10 +226,10 @@ const Index = () => {
               fontSize: "clamp(2.5rem, 8.2vw, 7rem)",
               lineHeight: 1.02,
               textShadow: "0 2px 18px rgba(0,0,0,0.25)",
+              whiteSpace: "pre-line",
             }}
           >
-            {content.hero.headline_line1}
-            {content.hero.headline_line2 ? (<><br />{content.hero.headline_line2}</>) : null}
+            {content.hero.headline}
           </h1>
 
           <div className="fadeup-3 mt-10 md:mt-12">

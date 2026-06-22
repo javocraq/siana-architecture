@@ -799,9 +799,9 @@ export default function Atlas() {
   }, [mobileQ, token]);
 
   // Drops (or moves) a standalone marker at a lng/lat. Used to highlight a
-  // city or geocoded place the user just searched for. When `label` is
-  // provided (typically the city name), it's rendered below the pin in
-  // editorial serif so the location is unambiguous at any zoom.
+  // city or geocoded place the user just searched for. The `label` arg is
+  // kept for call-site compatibility but intentionally NOT drawn — the name
+  // shows in the card / city list and the map renders its own labels.
   const placeSearchMarker = (lng: number, lat: number, label?: string) => {
     const map = mapRef.current;
     if (!map) return;
@@ -818,13 +818,9 @@ export default function Atlas() {
         <path d="M9 0C4.03 0 0 4.03 0 9c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#bf3a18"/>
         <circle cx="9" cy="9" r="3" fill="#ffffff"/>
       </svg>`;
-    if (label) {
-      const labelEl = document.createElement("span");
-      labelEl.textContent = label;
-      labelEl.style.cssText =
-        "position:absolute;left:50%;top:calc(100% + 4px);transform:translateX(-50%);font-family:'Garamond Premier Pro','EB Garamond',Garamond,serif;font-size:15px;color:#1c1917;font-weight:500;white-space:nowrap;text-shadow:0 0 4px rgba(255,255,255,0.95),0 0 8px rgba(255,255,255,0.7);";
-      el.appendChild(labelEl);
-    }
+    // No text label is drawn on the pin: the name already shows in the
+    // project card / "Projects in …" list, and the map renders its own city
+    // labels — so a marker label would just sit superimposed over the map.
     placedMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "bottom" })
       .setLngLat([lng, lat])
       .addTo(map);
