@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { useAdmin } from "@/hooks/useAdmin";
 import { Loader2, Plus, ArrowRight, ArrowUpRight, Building2, MapPin, BookOpen } from "lucide-react";
 
 /**
@@ -26,15 +25,7 @@ const SECTIONS: Section[] = [
 type Stat = Section & { total: number; published: number };
 type RecentItem = { id: string; type: string; name: string; status: string; editPath: string; updated_at: string };
 
-// "daniela@sianamarketing.com" -> "Daniela". Used for the greeting only.
-function nameFromEmail(email?: string | null) {
-  if (!email) return "there";
-  const local = email.split("@")[0] || email;
-  return local.charAt(0).toUpperCase() + local.slice(1);
-}
-
 export default function AdminDashboard() {
-  const { user } = useAdmin();
   const [stats, setStats] = useState<Stat[]>([]);
   const [recent, setRecent] = useState<RecentItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +77,7 @@ export default function AdminDashboard() {
             className="font-display text-ink"
             style={{ fontSize: "clamp(2rem, 3.4vw, 3rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.01em" }}
           >
-            Te damos la bienvenida, {nameFromEmail(user?.email)}
+            Welcome
           </h1>
           <p className="mt-3 text-[13px] text-ink-faint max-w-[540px] leading-relaxed">
             An overview of the Siana atlas — projects, cities and practice entries. Pick up where you left off below.
