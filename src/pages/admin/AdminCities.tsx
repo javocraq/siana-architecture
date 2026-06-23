@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { useToast } from "@/hooks/use-toast";
+import { adminTableCardCls } from "@/lib/adminUi";
 import { Plus } from "lucide-react";
 
 type CityRow = {
@@ -83,7 +84,7 @@ export default function AdminCities() {
           </Link>
         </div>
 
-        <div className="bg-background border hairline overflow-hidden">
+        <div className={adminTableCardCls}>
           <div className="overflow-x-auto">
             <table className="w-full text-[12px]">
               <thead>

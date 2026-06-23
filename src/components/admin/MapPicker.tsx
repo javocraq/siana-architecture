@@ -16,6 +16,11 @@ type Props = {
    *  editors pass e.g. `"poi,address,place"` so a building or street name
    *  resolves to the building itself, falling back to the city. */
   defaultPlaceTypes?: string;
+  /** Zoom level the camera flies to after auto-locate. City editors should
+   *  pass ~11 (city overview — the basemap still shows the city label).
+   *  Project editors keep the default 15 (street level, you see the pin
+   *  sitting on the building). */
+  autoLocateZoom?: number;
   /** Optional initial / saved zoom level. The map will mount at this zoom
    *  and emit zoom changes through onZoomChange so the parent form keeps
    *  the value in sync (no separate slider needed). */
@@ -61,7 +66,7 @@ async function geocodePlace(
   }
 }
 
-export default function MapPicker({ latitude, longitude, onChange, defaultPlace, defaultPlaceTypes = "place", zoom, onZoomChange }: Props) {
+export default function MapPicker({ latitude, longitude, onChange, defaultPlace, defaultPlaceTypes = "place", autoLocateZoom = 15, zoom, onZoomChange }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
@@ -90,7 +95,10 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
   const [open, setOpen] = useState(false);
 
   // Create or move the draggable pin, report the position, optionally fly to it.
-  const placeMarker = useCallback((lng: number, lat: number, opts?: { fly?: boolean; silent?: boolean }) => {
+  // `targetZoom` overrides the default "zoom in to street level" behaviour —
+  // city editors pass a lower value so the camera lands at city-overview
+  // scale (the basemap still shows the city label).
+  const placeMarker = useCallback((lng: number, lat: number, opts?: { fly?: boolean; silent?: boolean; targetZoom?: number }) => {
     const map = mapRef.current;
     if (!map) return;
     if (!markerRef.current) {
@@ -106,7 +114,12 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
       markerRef.current.setLngLat([lng, lat]);
     }
     if (!opts?.silent) onChangeRef.current(+lat.toFixed(6), +lng.toFixed(6));
-    if (opts?.fly) map.flyTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 15), essential: true });
+    if (opts?.fly) {
+      // Default behaviour: zoom in to street level (15) but never zoom out
+      // if the user is already closer. Caller can override with targetZoom.
+      const target = opts.targetZoom ?? Math.max(map.getZoom(), 15);
+      map.flyTo({ center: [lng, lat], zoom: target, essential: true });
+    }
   }, []);
 
   // Init map once.
@@ -189,10 +202,10 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
       // dragged in the meantime.
       if (!coords) return;
       if (manuallyPlacedRef.current) return;
-      placeMarker(coords[0], coords[1], { fly: true });
+      placeMarker(coords[0], coords[1], { fly: true, targetZoom: autoLocateZoom });
     }, 500);
     return () => { clearTimeout(t); ctrl.abort(); };
-  }, [defaultPlace, defaultPlaceTypes, token, placeMarker]);
+  }, [defaultPlace, defaultPlaceTypes, token, placeMarker, autoLocateZoom]);
 
   // Debounced autocomplete — Mapbox Search Box API. Searches POIs, addresses,
   // streets and places, biased toward the current map center so a query like
@@ -210,9 +223,18 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
         url.searchParams.set("limit", "8");
         url.searchParams.set("language", "es");
         // Proximity bias: prefer the dropped pin first, otherwise the map's
-        // current center. Massively improves POI relevance.
-        const ll = markerRef.current?.getLngLat() ?? mapRef.current?.getCenter();
-        if (ll) url.searchParams.set("proximity", `${ll.lng},${ll.lat}`);
+        // current center. Helpful for generic queries like "café" or "park".
+        // BUT: when the query is specific enough (3+ words or contains a
+        // comma — typical of "Building, City"), the user is naming a precise
+        // place and the bias hurts more than it helps. Searching
+        // "Champalimaud Centre new york" while the pin is in Lisbon should
+        // not be pulled back to Lisbon results. Skip proximity in that case.
+        const wordCount = qq.split(/\s+/).filter(Boolean).length;
+        const isSpecific = wordCount >= 3 || qq.includes(",");
+        if (!isSpecific) {
+          const ll = markerRef.current?.getLngLat() ?? mapRef.current?.getCenter();
+          if (ll) url.searchParams.set("proximity", `${ll.lng},${ll.lat}`);
+        }
 
         const res = await fetch(url.toString(), { signal: ctrl.signal });
         const data = await res.json();

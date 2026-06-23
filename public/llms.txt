@@ -1,51 +1,53 @@
 # Siana — Architecture, city by city
 
-> Siana is an editorial atlas of architecture: a curated guide to significant buildings around the world, mapped city by city, paired with Practice — essays, field notes, and practical guides for architects.
+> Siana is an editorial atlas of architecture: a curated guide to significant buildings around the world, mapped city by city, paired with a journal of essays and field notes and a library of resources for architects.
 
-Siana documents notable architecture across global cities and writes about it with an editorial eye. The site is organized into three areas: **Cities** (city guides with an interactive map of pinned buildings), **Projects** (individual buildings with architect, year and context), and **Practice** (essays, criticism, profiles, interviews, field notes, and practical guides for architecture, engineering and construction practices).
+Siana documents notable architecture across global cities and writes about it with an editorial eye. The site is organized into four areas: **Cities** (city guides with an interactive map of pinned buildings), **Projects** (individual buildings with architect, year and context), the **Journal** (the blog — essays, criticism, profiles, interviews and field notes on architecture), and **Resources** (practical guides for architecture practices).
 
 - Website: https://sianaarchitecture.com
 - Language: English
 - Focus: architecture, cities, urbanism, design history, the built environment
-- Cities covered: Barcelona, Chicago, Copenhagen, Lisbon, Mexico City, Porto
+- Cities covered: Barcelona, Berlin, Chicago, Madrid, Mexico City, New York, Porto
 
 ## Cities
 - [Barcelona](https://sianaarchitecture.com/cities/barcelona): Architecture guide to Barcelona, Spain — Modernisme, mosaics, and the unfinished cathedral of a dream.
+- [Berlin](https://sianaarchitecture.com/cities/berlin): Architecture guide to Berlin, Germany — Where History Meets Contemporary Design
 - [Chicago](https://sianaarchitecture.com/cities/chicago): Architecture guide to Chicago, United States — The birthplace of the skyscraper.
-- [Copenhagen](https://sianaarchitecture.com/cities/copenhagen): Architecture guide to Copenhagen, Denmark — Quiet Nordic rigor by the water.
-- [Lisbon](https://sianaarchitecture.com/cities/lisbon): Architecture guide to Lisbon, Portugal — Azulejo light spilling across seven hills.
+- [Madrid](https://sianaarchitecture.com/cities/madrid): Architecture guide to Madrid, Spain — Madrid: donde la tradición y la modernidad se encuentran.
 - [Mexico City](https://sianaarchitecture.com/cities/mexico-city): Architecture guide to Mexico City, Mexico — Barragán's color and the weight of volcanic stone.
+- [New York](https://sianaarchitecture.com/cities/newyork): Architecture guide to New York, USA — The city that nevers sleeps
 - [Porto](https://sianaarchitecture.com/cities/porto): Architecture guide to Porto, Portugal — Granite, fog, and the precision of Siza.
 
-## Practice
-- [The Drawing That Thinks Back](https://sianaarchitecture.com/practice/the-drawing-that-thinks-back): Architecture + AI — Generative tools promise infinite variation. What they ask in return is a new kind of authorship.
-- [On the Patience of Stone](https://sianaarchitecture.com/practice/on-the-patience-of-stone): Essay — Why the slowest buildings often outlast the fashions that surround them.
-- [The Museum That Forgot Its Street](https://sianaarchitecture.com/practice/the-museum-that-forgot-its-street): Criticism — A new cultural landmark dazzles from the water and turns its back on the city behind it.
-- [Lina Bo Bardi, In Her Own Light](https://sianaarchitecture.com/practice/lina-bo-bardi-in-her-own-light): Profile — The architect who treated concrete as an invitation rather than a barrier.
-- [A Conversation With the Last Brickmaker](https://sianaarchitecture.com/practice/a-conversation-with-the-last-brickmaker): Interview — Forty years at the kiln, and a quiet argument for materials that age in public.
-- [Lisbon, From the Tile Up](https://sianaarchitecture.com/practice/lisbon-from-the-tile-up): City guide — A walking route through azulejo facades, hillside miradouros and the quiet genius of the pombaline grid.
-- [The Slow Return of the Courtyard](https://sianaarchitecture.com/practice/the-slow-return-of-the-courtyard): Reportage — Across three continents, architects are rediscovering the oldest trick for cooling a city block.
+## Journal (blog)
+- [The Drawing That Thinks Back](https://sianaarchitecture.com/journal/the-drawing-that-thinks-back): Architecture + AI — Generative tools promise infinite variation. What they ask in return is a new kind of authorship.
+- [On the Patience of Stone](https://sianaarchitecture.com/journal/on-the-patience-of-stone): Essay — Why the slowest buildings often outlast the fashions that surround them.
+- [The Museum That Forgot Its Street](https://sianaarchitecture.com/journal/the-museum-that-forgot-its-street): Criticism — A new cultural landmark dazzles from the water and turns its back on the city behind it.
+- [Lina Bo Bardi, In Her Own Light](https://sianaarchitecture.com/journal/lina-bo-bardi-in-her-own-light): Profile — The architect who treated concrete as an invitation rather than a barrier.
+- [A Conversation With the Last Brickmaker](https://sianaarchitecture.com/journal/a-conversation-with-the-last-brickmaker): Interview — Forty years at the kiln, and a quiet argument for materials that age in public.
+- [The Slow Return of the Courtyard](https://sianaarchitecture.com/journal/the-slow-return-of-the-courtyard): Reportage — Across three continents, architects are rediscovering the oldest trick for cooling a city block.
 
 ## Projects
-- [8 House](https://sianaarchitecture.com/projects/8-house): BIG, 2010 — Copenhagen.
-- [Altos de Lima](https://sianaarchitecture.com/projects/altos-de-lima): Javier F — Barcelona.
+- [8 House](https://sianaarchitecture.com/projects/8-house): BIG, 2010 — Berlin.
+- [Caixaforum Madrid](https://sianaarchitecture.com/projects/caixaforum-madrid): Herzog & de Meuron — Madrid.
 - [Casa Batlló](https://sianaarchitecture.com/projects/casa-batllo): Antoni Gaudí, 1906 — Barcelona.
 - [Casa da Música](https://sianaarchitecture.com/projects/casa-da-musica): OMA / Rem Koolhaas, 2005 — Porto.
 - [Casa Luis Barragán](https://sianaarchitecture.com/projects/casa-luis-barragan): Luis Barragán, 1948 — Mexico City.
-- [Champalimaud Centre](https://sianaarchitecture.com/projects/champalimaud-centre): Charles Correa, 2010 — Lisbon.
-- [MAAT](https://sianaarchitecture.com/projects/maat-lisbon): Amanda Levete (AL_A), 2016 — Lisbon.
+- [Champalimaud Centre](https://sianaarchitecture.com/projects/champalimaud-centre): Charles Correa, 2010 — New York.
+- [MAAT](https://sianaarchitecture.com/projects/maat-lisbon): Amanda Levete (AL_A), 2016 — New York.
 - [Mercat de Santa Caterina](https://sianaarchitecture.com/projects/mercat-santa-caterina): EMBT, 2005 — Barcelona.
 - [Museo Soumaya](https://sianaarchitecture.com/projects/museo-soumaya): FR-EE / Fernando Romero, 2011 — Mexico City.
 - [Robie House](https://sianaarchitecture.com/projects/robie-house): Frank Lloyd Wright, 1910 — Chicago.
-- [Royal Danish Opera](https://sianaarchitecture.com/projects/royal-danish-opera): Henning Larsen, 2005 — Copenhagen.
+- [Royal Danish Opera](https://sianaarchitecture.com/projects/royal-danish-opera): Henning Larsen, 2005 — Berlin.
 - [Sagrada Família](https://sianaarchitecture.com/projects/sagrada-familia): Antoni Gaudí, 1882 — Barcelona.
 - [Serralves Museum](https://sianaarchitecture.com/projects/serralves-museum): Álvaro Siza, 1999 — Porto.
+- [Unité d'Habitation Berlin](https://sianaarchitecture.com/projects/unite-d-habitation-berlin): Le Corbusier, 1957 — Berlin.
 - [Willis Tower](https://sianaarchitecture.com/projects/willis-tower): SOM / Fazlur Rahman Khan, 1973 — Chicago.
 
 ## Main sections
-- [Map](https://sianaarchitecture.com/atlas): Interactive map — explore every project by city, architect, style and year.
+- [Atlas](https://sianaarchitecture.com/atlas): Interactive map — explore every project by city, architect, style and year.
 - [Cities index](https://sianaarchitecture.com/cities): Browse all cities in the atlas.
-- [Practice](https://sianaarchitecture.com/practice): Essays, field notes, and practical guides for architecture, engineering and construction practices.
+- [Journal](https://sianaarchitecture.com/journal): All essays and field notes (the blog).
+- [Resources for architects](https://sianaarchitecture.com/resources): Practical guides for architecture, engineering and construction practices.
 - [About](https://sianaarchitecture.com/about): What Siana is and why it exists.
 
 ## Optional

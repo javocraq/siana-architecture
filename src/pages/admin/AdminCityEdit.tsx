@@ -278,6 +278,7 @@ export default function AdminCityEdit() {
                 longitude={form.center_longitude}
                 zoom={form.default_zoom}
                 defaultPlace={[form.name, form.country].filter(Boolean).join(", ")}
+                autoLocateZoom={11}
                 onChange={(lat, lng) => setForm((f) => ({ ...f, center_latitude: lat, center_longitude: lng }))}
                 onZoomChange={(z) => set("default_zoom", z)}
               />

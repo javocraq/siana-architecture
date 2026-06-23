@@ -18,3 +18,10 @@ export const adminLabelCls =
 /** Card/section panel for grouping fields. Rounded, white, gentle border. */
 export const adminCardCls =
   "bg-white rounded-xl p-7 space-y-6 border border-paper-mid";
+
+/** Variant of the card for list/table containers — same shell as adminCardCls
+ *  but without padding or vertical spacing (the table rows already manage
+ *  their own paddings), and with overflow-hidden so the rounded corners
+ *  clip the inner table cleanly. */
+export const adminTableCardCls =
+  "bg-white rounded-xl border border-paper-mid overflow-hidden";

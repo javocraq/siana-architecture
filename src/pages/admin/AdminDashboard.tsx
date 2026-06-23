@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdmin } from "@/hooks/useAdmin";
 import { Loader2, Plus, ArrowRight, ArrowUpRight, Building2, MapPin, BookOpen } from "lucide-react";
 
 /**
@@ -25,10 +26,38 @@ const SECTIONS: Section[] = [
 type Stat = Section & { total: number; published: number };
 type RecentItem = { id: string; type: string; name: string; status: string; editPath: string; updated_at: string };
 
+// Normalise a display_name OR an email into a single first name suitable
+// for "Welcome, X". Strips the domain from an email, then takes the first
+// word so "Daniela Pedroza" → "Daniela", "daniela@sianamarketing.com"
+// → "Daniela", "daniela.pedroza@…" → "Daniela".
+function firstName(raw: string | null | undefined) {
+  if (!raw) return "";
+  const local = raw.includes("@") ? raw.split("@")[0] : raw;
+  const first = local.split(/[\s.]+/).filter(Boolean)[0] || local;
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+
 export default function AdminDashboard() {
+  const { user } = useAdmin();
+  const [displayName, setDisplayName] = useState<string>("");
   const [stats, setStats] = useState<Stat[]>([]);
   const [recent, setRecent] = useState<RecentItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Pull the editor's saved display_name from profiles so the greeting honours
+  // whatever they typed in Settings. Falls back to the email-derived name if
+  // no display_name is set yet.
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      setDisplayName(firstName(data?.display_name || user.email));
+    })();
+  }, [user]);
 
   useEffect(() => {
     (async () => {
@@ -72,16 +101,12 @@ export default function AdminDashboard() {
       <div className="px-10 py-10 max-w-[1180px]">
         {/* Header */}
         <div className="mb-10">
-          <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">Content management</p>
           <h1
             className="font-display text-ink"
             style={{ fontSize: "clamp(2rem, 3.4vw, 3rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.01em" }}
           >
-            Welcome
+            Welcome{displayName ? `, ${displayName}` : ""}
           </h1>
-          <p className="mt-3 text-[13px] text-ink-faint max-w-[540px] leading-relaxed">
-            An overview of the Siana atlas — projects, cities and practice entries. Pick up where you left off below.
-          </p>
         </div>
 
         {loading ? (

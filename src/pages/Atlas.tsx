@@ -44,10 +44,11 @@ const NAV_H = 76;
 // canvas down so the bar isn't sitting on top of the map.
 const FILTER_BAR_H = 60;
 
-/** Single active filter — picking a chip from any category activates one
- *  filter, hides the filter bar, and frames the map on the matching set. */
+/** Filters are now compound — at most one value per category, but multiple
+ *  categories can be active at once (e.g. city = Madrid AND material = Brick).
+ *  An empty record means "show everything". */
 type FilterType = "city" | "material" | "experience" | "style";
-type Active = { type: FilterType; value: string };
+type Filters = Partial<Record<FilterType, string>>;
 
 const FILTER_LABELS: Record<FilterType, string> = {
   city: "City",
@@ -55,6 +56,9 @@ const FILTER_LABELS: Record<FilterType, string> = {
   experience: "Experience",
   style: "Style",
 };
+
+const hasAnyFilter = (f: Filters) =>
+  !!(f.city || f.material || f.experience || f.style);
 
 /** A minimal popover filter — a labelled chip that opens a panel of toggle chips.
  *  When `stacked` is set, options render one-per-row as standalone boxes
@@ -304,13 +308,13 @@ function FilterGroup({
   label,
   type,
   options,
-  active,
+  filters,
   onPick,
 }: {
   label: string;
   type: FilterType;
   options: string[];
-  active: Active | null;
+  filters: Filters;
   onPick: (v: string) => void;
 }) {
   if (!options.length) return null;
@@ -319,7 +323,7 @@ function FilterGroup({
       <p className="font-mono uppercase text-ink-soft mb-2.5" style={{ fontSize: 10, letterSpacing: "0.2em" }}>{label}</p>
       <div className="flex flex-wrap gap-1.5">
         {options.map((o) => {
-          const on = active?.type === type && active.value === o;
+          const on = filters[type] === o;
           return (
             <button
               key={o}
@@ -357,7 +361,7 @@ export default function Atlas() {
 
   const [cities, setCities] = useState<City[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [active, setActive] = useState<Active | null>(null);
+  const [filters, setFilters] = useState<Filters>({});
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -390,25 +394,33 @@ export default function Atlas() {
   const cityParam = searchParams.get("city");
   const projectParam = searchParams.get("project");
 
-  // When the URL carries ?city=<slug>, activate that city as the filter.
+  // When the URL carries ?city=<slug>, activate that city as the filter and
+  // drop a visible teardrop marker at the city centroid — same treatment as
+  // when the user picks a city from the search box, so deep links from the
+  // article body land the same way as in-app search.
   useEffect(() => {
-    if (!cityParam || cities.length === 0) return;
+    if (!cityParam || cities.length === 0 || !mapReady) return;
     const match = cities.find((c) => c.slug === cityParam);
-    if (match) setActive({ type: "city", value: match.name });
+    if (!match) return;
+    setFilters((f) => ({ ...f, city: match.name }));
+    if (match.center_longitude != null && match.center_latitude != null) {
+      placeSearchMarker(match.center_longitude, match.center_latitude, match.name);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cityParam, cities.length]);
+  }, [cityParam, cities.length, mapReady]);
 
-  // When the URL carries ?project=<slug>, select just that project and fly
-  // straight to it. We deliberately do NOT activate the city filter — the
-  // user clicked "See on the map" expecting to see THIS project marked, not
-  // the whole list of buildings in the city.
+  // When the URL carries ?project=<slug>, select that project and fly to it.
+  // No teardrop marker here — at zoom 15 the regular project pin in the
+  // markers layer is already visible (isCityCluster goes false past z=5), and
+  // adding a second drop pin on top would double up.
   useEffect(() => {
     if (!projectParam || projects.length === 0 || !mapReady) return;
     const p = projects.find((x) => x.slug === projectParam);
     if (!p) return;
     skipCameraRef.current = true;
-    setActive(null);
+    setFilters({});
     setSelected(p);
+    clearSearchMarker();
     if (p.latitude != null && p.longitude != null) {
       mapRef.current?.flyTo({ center: [p.longitude, p.latitude], zoom: 15, essential: true });
     }
@@ -518,22 +530,20 @@ export default function Atlas() {
     : Array.from(new Set(projects.map((p) => p.style).filter(Boolean) as string[])).sort();
 
   const filtered = useMemo(() => {
-    if (!active) return projects;
+    if (!hasAnyFilter(filters)) return projects;
     return projects.filter((p) => {
-      if (active.type === "city") {
-        return p.city_id === cityNameToId.get(active.value);
-      }
-      if (active.type === "style") return p.style === active.value;
+      if (filters.city && p.city_id !== cityNameToId.get(filters.city)) return false;
+      if (filters.style && p.style !== filters.style) return false;
       // Prefer the per-project DB tags (editable in the admin); fall back to the
       // static seed map for projects not yet tagged.
       const t = tagsFor(p.slug);
       const mats = p.materials && p.materials.length ? p.materials : t.materials;
       const exps = p.experience && p.experience.length ? p.experience : t.experience;
-      if (active.type === "material") return mats.includes(active.value);
-      if (active.type === "experience") return exps.includes(active.value);
+      if (filters.material && !mats.includes(filters.material)) return false;
+      if (filters.experience && !exps.includes(filters.experience)) return false;
       return true;
     });
-  }, [projects, active, cityNameToId]);
+  }, [projects, filters, cityNameToId]);
 
   const fitTo = (list: Project[]) => {
     const map = mapRef.current;
@@ -554,17 +564,20 @@ export default function Atlas() {
     });
   };
 
-  // Frame the atlas on load; when a single city is active, fly to it;
-  // otherwise fit bounds around the matching set.
+  // Frame the atlas on load; when a city filter is the only thing active, fly
+  // to that city; otherwise fit bounds around the matching set.
   useEffect(() => {
     if (!mapReady) return;
-    // A direct project pick handles its own fly-to; skip the auto framing once.
-    if (skipCameraRef.current) {
-      skipCameraRef.current = false;
-      return;
-    }
-    if (active?.type === "city") {
-      const c = cities.find((x) => x.name === active.value);
+    // A direct project pick (URL ?project= or in-app pick) handles its own
+    // fly-to. Skip the auto-framing while that animation is in flight — the
+    // pick handler resets `skipCameraRef` itself after ~800ms. If we reset
+    // it here, the very next render (filters/selected just changed → new
+    // refs → this effect re-runs) would consume the skip and fit-to-bounds
+    // the whole atlas, overriding the close-in flyTo we just started.
+    if (skipCameraRef.current) return;
+    const onlyCity = filters.city && !filters.material && !filters.experience && !filters.style;
+    if (onlyCity) {
+      const c = cities.find((x) => x.name === filters.city);
       if (c && c.center_latitude != null && c.center_longitude != null) {
         // City overview — frame the whole city (not street level) at a zoom
         // where the map still shows its own city label (e.g. "Berlin").
@@ -578,10 +591,10 @@ export default function Atlas() {
     // labels visible) instead of auto-fitting to the project bounds — that
     // would zoom out to include Copenhagen and lose the "first screen" framing.
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-    if (isMobile && !active) return;
+    if (isMobile && !hasAnyFilter(filters)) return;
     fitTo(filtered.length ? filtered : projects);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapReady, active, projects.length, filtered.length]);
+  }, [mapReady, filters, projects.length, filtered.length]);
 
   // Markers for the filtered set
   useEffect(() => {
@@ -606,9 +619,9 @@ export default function Atlas() {
     // ─── World-view: no pins (unfiltered) ────────────────────────────
     // At low zoom, individual project pins from the same city collapse to
     // the same pixel and pile up. The map stays clean until the user zooms
-    // in enough to read individual locations. Exception: when a filter is
+    // in enough to read individual locations. Exception: when any filter is
     // active, always show the matching pins so the filter is visible.
-    if (isCityCluster && !active) {
+    if (isCityCluster && !hasAnyFilter(filters)) {
       return () => { hoverPopup.remove(); };
     }
 
@@ -674,7 +687,7 @@ export default function Atlas() {
       hoverPopup.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered, selected, mapReady, isCityCluster, active]);
+  }, [filtered, selected, mapReady, isCityCluster, filters]);
 
   const selectProject = (p: Project) => {
     setSelected(p);
@@ -686,24 +699,36 @@ export default function Atlas() {
   const toggleMenu = (k: string) => setOpenMenu((m) => (m === k ? null : k));
   const closeMenu = () => setOpenMenu(null);
 
-  // Activating a value commits the filter and closes the dropdown — the
-  // filter bar then collapses to a single "× value" pill.
+  // Toggle a value within its category — picking the same chip twice clears
+  // that filter. Other filters are preserved so the user can layer e.g.
+  // city = Madrid + material = Brick + style = Modernism.
   const activate = (type: FilterType, value: string) => {
-    setActive({ type, value });
+    setFilters((f) => ({
+      ...f,
+      [type]: f[type] === value ? undefined : value,
+    }));
     setOpenMenu(null);
     setSelected(null);
     setFiltersOpen(false);
     setSheetSnap("medium");
   };
-  const clearActive = () => {
-    setActive(null);
+  const clearFilter = (type: FilterType) => {
+    setFilters((f) => {
+      const next = { ...f };
+      delete next[type];
+      return next;
+    });
+    // Clearing the city also clears the dropped search marker, since that
+    // marker is tied to the searched city's centroid.
+    if (type === "city") clearSearchMarker();
+  };
+  const clearAllFilters = () => {
+    setFilters({});
     setSelected(null);
     clearSearchMarker();
   };
   const resetView = () => {
-    setActive(null);
-    setSelected(null);
-    clearSearchMarker();
+    clearAllFilters();
     mapRef.current?.flyTo({ center: [10, 25], zoom: 1.5, speed: 1.2, curve: 1.4, essential: true });
   };
 
@@ -713,7 +738,9 @@ export default function Atlas() {
   // the pill resets everything back to neutral.
   const searchPickCity = (c: City) => {
     setSelected(null);
-    setActive({ type: "city", value: c.name });
+    // Replace the city filter but keep any other active filters so the user
+    // can carry a Material/Style filter across cities.
+    setFilters((f) => ({ ...f, city: c.name }));
     setSearchOpen(false);
     setMobileQ(c.name);
     setMobilePlaces([]);
@@ -724,7 +751,7 @@ export default function Atlas() {
   };
   const searchPickProject = (p: Project) => {
     skipCameraRef.current = true;
-    setActive(null);
+    setFilters({});
     selectProject(p);
     setSearchOpen(false);
     setMobileQ(p.name);
@@ -739,7 +766,7 @@ export default function Atlas() {
   // like any map search. Fit the bbox when available, else zoom to the point.
   const searchPickPlace = (lng: number, lat: number, bbox?: number[], name?: string) => {
     skipCameraRef.current = true;
-    setActive(null);
+    setFilters({});
     setSelected(null);
     setSearchOpen(false);
     setMobileQ(name ?? "");
@@ -765,7 +792,7 @@ export default function Atlas() {
     setMobileQ("");
     setMobilePlaces([]);
     setSearchOpen(false);
-    setActive(null);
+    setFilters({});
     setSelected(null);
     clearSearchMarker();
   };
@@ -890,7 +917,7 @@ export default function Atlas() {
       sheetEl.current.style.transition = "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)";
       applySheetTransform(sheetTranslateFor(sheetSnap));
     }
-  }, [sheetSnap, active?.value, selected?.id]);
+  }, [sheetSnap, filters.city, selected?.id]);
 
   return (
     <div className="bg-paper">
@@ -931,7 +958,7 @@ export default function Atlas() {
         {/* Reset-view button — only visible once the user has zoomed in.
             Sits bottom-left so it doesn't clash with Mapbox's nav controls
             (top-right) or the selected-project card. */}
-        {isZoomedIn && !selected && !(active?.type === "city" && filtered.length > 0) && (
+        {isZoomedIn && !selected && !(filters.city && filtered.length > 0) && (
           <button
             onClick={resetView}
             className="absolute z-40 font-mono uppercase inline-flex items-center gap-1.5 px-2.5 py-1 transition-opacity hover:opacity-100 fade-in"
@@ -986,7 +1013,7 @@ export default function Atlas() {
               // the input, an applied filter, a selected project or the
               // search panel open — show a × that clears everything. Else
               // show the filters icon.
-              const showClear = !!mobileQ || !!active || !!selected || searchOpen;
+              const showClear = !!mobileQ || hasAnyFilter(filters) || !!selected || searchOpen;
               return (
                 <>
                   <div
@@ -1136,7 +1163,7 @@ export default function Atlas() {
                       <p className="font-mono uppercase text-ink-soft px-3 mt-1 mb-2" style={{ fontSize: 10, letterSpacing: "0.2em" }}>{current.label}</p>
                       <div className="flex flex-col">
                         {current.options.map((o) => {
-                          const on = active?.type === current.type && active.value === o;
+                          const on = filters[current.type] === o;
                           return (
                             <button
                               key={o}
@@ -1163,39 +1190,52 @@ export default function Atlas() {
             })()}
           </div>
 
-          {/* DESKTOP (md+) — editorial square search box + filter chips. */}
+          {/* DESKTOP (md+) — editorial square search box + filter chips.
+              Filter menus stay visible at all times (no more "collapse to a
+              single pill") so the user can stack filters — e.g. pick a city
+              and then refine by Material/Style/Experience on top. Each menu
+              shows its current pick highlighted; clicking the same option
+              clears that filter. Active filters list as dismissible pills
+              to the right. */}
           <div className="hidden md:flex items-center gap-2 flex-wrap px-8 py-3 pointer-events-auto">
             <div className="w-[280px] shrink-0">
               <SearchBox projects={projects} cities={cities} token={token} onPickCity={searchPickCity} onPickProject={searchPickProject} onPickPlace={searchPickPlace} />
             </div>
-            {active ? (
-              <button
-                onClick={clearActive}
-                className="atlas-filter-btn inline-flex items-center gap-2 font-mono uppercase"
-                style={{
-                  height: 42,
-                  padding: "0 16px",
-                  borderRadius: 10,
-                  background: "hsl(var(--ink))",
-                  color: "#fff",
-                  fontSize: 11,
-                  letterSpacing: "0.18em",
-                  fontWeight: 500,
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.10)",
-                }}
-                aria-label="Clear filter"
-              >
-                <span className="opacity-70">{FILTER_LABELS[active.type]} ·</span>
-                {active.value}
-                <X className="w-3 h-3" />
-              </button>
-            ) : (
-              <div className="inline-flex items-center gap-2 flex-wrap">
-                <FilterMenu label="Materials" options={tax.materials} selected={[]} onToggle={(v) => activate("material", v)} open={openMenu === "materials"} onToggleOpen={() => toggleMenu("materials")} onClose={closeMenu} stacked />
-                <FilterMenu label="Experience" options={tax.experiences} selected={[]} onToggle={(v) => activate("experience", v)} open={openMenu === "experience"} onToggleOpen={() => toggleMenu("experience")} onClose={closeMenu} stacked />
-                {styleOptions.length > 0 && (
-                  <FilterMenu label="Style" options={styleOptions} selected={[]} onToggle={(v) => activate("style", v)} open={openMenu === "style"} onToggleOpen={() => toggleMenu("style")} onClose={closeMenu} stacked />
-                )}
+            <div className="inline-flex items-center gap-2 flex-wrap">
+              <FilterMenu label="Materials" options={tax.materials} selected={filters.material ? [filters.material] : []} onToggle={(v) => activate("material", v)} open={openMenu === "materials"} onToggleOpen={() => toggleMenu("materials")} onClose={closeMenu} stacked />
+              <FilterMenu label="Experience" options={tax.experiences} selected={filters.experience ? [filters.experience] : []} onToggle={(v) => activate("experience", v)} open={openMenu === "experience"} onToggleOpen={() => toggleMenu("experience")} onClose={closeMenu} stacked />
+              {styleOptions.length > 0 && (
+                <FilterMenu label="Style" options={styleOptions} selected={filters.style ? [filters.style] : []} onToggle={(v) => activate("style", v)} open={openMenu === "style"} onToggleOpen={() => toggleMenu("style")} onClose={closeMenu} stacked />
+              )}
+            </div>
+            {/* Active filter pills — one per set filter, click × to remove. */}
+            {hasAnyFilter(filters) && (
+              <div className="inline-flex items-center gap-2 flex-wrap ml-1">
+                {(Object.keys(filters) as FilterType[])
+                  .filter((k) => !!filters[k])
+                  .map((k) => (
+                    <button
+                      key={k}
+                      onClick={() => clearFilter(k)}
+                      className="atlas-filter-btn inline-flex items-center gap-2 font-mono uppercase"
+                      style={{
+                        height: 42,
+                        padding: "0 14px",
+                        borderRadius: 10,
+                        background: "hsl(var(--ink))",
+                        color: "#fff",
+                        fontSize: 11,
+                        letterSpacing: "0.18em",
+                        fontWeight: 500,
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.10)",
+                      }}
+                      aria-label={`Clear ${FILTER_LABELS[k]} filter`}
+                    >
+                      <span className="opacity-70">{FILTER_LABELS[k]} ·</span>
+                      {filters[k]}
+                      <X className="w-3 h-3" />
+                    </button>
+                  ))}
               </div>
             )}
           </div>
@@ -1275,7 +1315,7 @@ export default function Atlas() {
 
           {/* City project list (DESKTOP only) — left column. On mobile the
               same content lives inside the bottom sheet below. */}
-          {active?.type === "city" && filtered.length > 0 && (
+          {filters.city && filtered.length > 0 && (
             <div
               className={`absolute z-30 bg-paper overflow-hidden flex-col fade-in hidden
                 ${selected ? "md:hidden" : "md:flex"}
@@ -1285,12 +1325,12 @@ export default function Atlas() {
               <div className="flex items-start justify-between gap-3 px-4 py-3.5 shrink-0" style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}>
                 <div className="min-w-0">
                   <p className="font-mono uppercase text-accent-terra font-semibold" style={{ fontSize: 10, letterSpacing: "0.2em" }}>Projects in</p>
-                  <p className="font-display text-ink leading-tight mt-1 truncate" style={{ fontSize: 20 }}>{active.value}</p>
+                  <p className="font-display text-ink leading-tight mt-1 truncate" style={{ fontSize: 20 }}>{filters.city}</p>
                   <p className="font-mono text-ink-soft mt-1" style={{ fontSize: 11, letterSpacing: "0.04em" }}>
                     {filtered.length} {filtered.length === 1 ? "building" : "buildings"}
                   </p>
                 </div>
-                <button onClick={clearActive} aria-label="Close list" className="p-1 -mr-1 text-ink-soft hover:text-ink transition-colors shrink-0">
+                <button onClick={() => clearFilter("city")} aria-label="Close list" className="p-1 -mr-1 text-ink-soft hover:text-ink transition-colors shrink-0">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -1340,7 +1380,7 @@ export default function Atlas() {
               Draggable Google-Maps style sheet with 3 snap points. Only
               renders the list view; the selected-project detail lives in
               its own centred overlay below so it stays fully visible. */}
-          {active?.type === "city" && filtered.length > 0 && !selected && (
+          {filters.city && filtered.length > 0 && !selected && (
             <div
               ref={sheetEl}
               className="md:hidden absolute left-0 right-0 bottom-0 z-30 bg-paper flex flex-col"
@@ -1368,7 +1408,7 @@ export default function Atlas() {
                 <div className="flex items-start justify-between gap-3 px-5 pt-3">
                   <div className="min-w-0">
                     <p className="font-mono uppercase text-accent-terra font-semibold" style={{ fontSize: 10, letterSpacing: "0.2em" }}>Projects in</p>
-                    <p className="font-display text-ink leading-tight mt-1 truncate" style={{ fontSize: 20 }}>{active?.value}</p>
+                    <p className="font-display text-ink leading-tight mt-1 truncate" style={{ fontSize: 20 }}>{filters.city}</p>
                     <p className="font-mono text-ink-soft mt-1" style={{ fontSize: 11, letterSpacing: "0.04em" }}>
                       {filtered.length} {filtered.length === 1 ? "project" : "projects"}
                     </p>

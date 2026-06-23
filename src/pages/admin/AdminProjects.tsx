@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { useToast } from "@/hooks/use-toast";
+import { adminInputCls, adminLabelCls, adminTableCardCls } from "@/lib/adminUi";
 import { Plus } from "lucide-react";
 
 type ProjectRow = {
@@ -124,12 +125,13 @@ export default function AdminProjects() {
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-3 mb-4">
-          <label className="text-[10px] tracking-tag uppercase text-ink-muted">City</label>
+        <div className="flex items-center gap-3 mb-5">
+          <label className={adminLabelCls + " mb-0 shrink-0"}>City</label>
           <select
             value={cityFilter}
             onChange={(e) => setCityFilter(e.target.value)}
-            className="bg-background border hairline text-[12px] px-3 py-2 text-ink focus:outline-none"
+            className={adminInputCls}
+            style={{ width: 240 }}
           >
             <option value="all">All cities</option>
             <option value="none">— Unassigned —</option>
@@ -140,7 +142,7 @@ export default function AdminProjects() {
           {cityFilter !== "all" && (
             <button
               onClick={() => setCityFilter("all")}
-              className="text-[11px] tracking-ui text-ink-muted hover:text-ink underline"
+              className="text-[12px] text-ink-muted hover:text-ink underline"
             >
               Clear
             </button>
@@ -148,7 +150,7 @@ export default function AdminProjects() {
         </div>
 
         {/* Table */}
-        <div className="bg-background border hairline overflow-hidden">
+        <div className={adminTableCardCls}>
           <div className="overflow-x-auto">
             <table className="w-full text-[12px]">
               <thead>

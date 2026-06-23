@@ -6,6 +6,7 @@ import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 import { kindConfig } from "@/lib/postKind";
+import { adminTableCardCls } from "@/lib/adminUi";
 
 type PostRow = {
   id: string;
@@ -92,7 +93,7 @@ export default function AdminJournal() {
         </div>
 
 
-        <div className="bg-background border hairline overflow-hidden">
+        <div className={adminTableCardCls}>
           <div className="overflow-x-auto">
             <table className="w-full text-[12px]">
               <thead>

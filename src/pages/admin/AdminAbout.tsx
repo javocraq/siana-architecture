@@ -75,9 +75,6 @@ export default function AdminAbout() {
             >
               About
             </h1>
-            <p className="mt-4 text-[13px] text-ink-soft" style={{ lineHeight: 1.6 }}>
-              Manifesto copy on <code className="text-ink">/about</code>. Only edit the words — the layout and the project/city/resource strips are not configured from here.
-            </p>
           </div>
         </div>
 

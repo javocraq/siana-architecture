@@ -63,10 +63,6 @@ export default function AdminTaxonomies() {
           <h1 className="font-display text-ink" style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.005em" }}>
             Categories
           </h1>
-          <p className="mt-3 text-[13px] text-ink-faint max-w-[560px] leading-relaxed">
-            Add or remove the options used across the CMS — categories, styles, materials, experiences and regions.
-            These appear in the Projects and Cities forms.
-          </p>
         </div>
 
         {loading ? (
