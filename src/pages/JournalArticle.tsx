@@ -47,7 +47,7 @@ const BODY_PROSE =
   // Tables: stay inside the article column, render as a block with horizontal
   // scroll if there are genuinely too many columns to fit. Editorial palette
   // — hairline borders, serif body, mono-caps headers, generous padding.
-  "[&_table]:block [&_table]:overflow-x-auto [&_table]:max-w-full [&_table]:w-full [&_table]:mx-auto [&_table]:my-10 [&_table]:text-left [&_table]:text-[13px] md:[&_table]:text-[14px] [&_table]:border-collapse " +
+  "[&_table]:text-left [&_table]:text-[13px] md:[&_table]:text-[14px] [&_table]:border-collapse " +
   "[&_thead]:border-b [&_thead]:border-ink/30 " +
   "[&_th]:font-mono [&_th]:text-[10px] md:[&_th]:text-[11px] [&_th]:uppercase [&_th]:tracking-[0.14em] [&_th]:text-ink [&_th]:font-semibold [&_th]:px-3 [&_th]:py-3 [&_th]:text-left [&_th]:align-top [&_th]:whitespace-normal " +
   "[&_td]:font-serif [&_td]:text-ink [&_td]:px-3 [&_td]:py-3 [&_td]:border-b [&_td]:border-ink/10 [&_td]:align-top [&_td]:leading-[1.55] [&_td]:whitespace-normal " +

@@ -10,12 +10,14 @@ type Props = {
  * Renders sanitized HTML content from the rich text editor.
  * Wrap in a `prose` container so headings/lists/tables get sensible defaults.
  *
- * Each <table> is moved into a `.rt-table` container (see index.css). A table
- * that fits the reading column stays there (centred at its content width); a
- * table too wide to fit gets `.is-wide`, which breaks it out near full-viewport
- * width so every column shows at once — no clipping, no horizontal scroll.
- * Re-measured on resize and after fonts load, and applied to every place
- * RichHtml is used (articles, project and city copy) and future posts.
+ * Tables reproduce the layout set in the editor. Each <table> is moved into a
+ * `.rt-table` wrapper (see index.css). A table whose authored width is wider
+ * than the reading column gets `.is-wide`: its column px-widths are converted
+ * to proportions and stored as `--tw` (the authored total width) so the table
+ * shows at that width on large screens and scales down to fit on smaller ones
+ * — instead of being clipped or forcing a horizontal scrollbar. Narrow tables
+ * keep their authored width within the column. Applies everywhere RichHtml is
+ * used (articles, project and city copy) and to future posts.
  */
 export default function RichHtml({ html, className = "" }: Props) {
   const ref = useRef<HTMLDivElement>(null);
@@ -25,42 +27,47 @@ export default function RichHtml({ html, className = "" }: Props) {
     const root = ref.current;
     if (!root) return;
 
-    // Move each table into a `.rt-table` wrapper (idempotent).
-    const wraps: HTMLElement[] = [];
-    root.querySelectorAll("table").forEach((table) => {
-      let wrap = table.parentElement as HTMLElement | null;
-      if (!wrap || !wrap.classList.contains("rt-table")) {
-        wrap = document.createElement("div");
-        wrap.className = "rt-table";
-        table.parentNode?.insertBefore(wrap, table);
-        wrap.appendChild(table);
-      }
-      wraps.push(wrap);
-    });
+    const prepare = () => {
+      root.querySelectorAll("table").forEach((table) => {
+        // Move into a `.rt-table` wrapper (idempotent).
+        let wrap = table.parentElement as HTMLElement | null;
+        if (!wrap || !wrap.classList.contains("rt-table")) {
+          wrap = document.createElement("div");
+          wrap.className = "rt-table";
+          table.parentNode?.insertBefore(wrap, table);
+          wrap.appendChild(table);
+        }
+        if ((table as HTMLElement).dataset.rtPrepped) return;
+        (table as HTMLElement).dataset.rtPrepped = "1";
 
-    // Flag the tables that can't fit the reading column so they break out wide.
-    // Measure against the column baseline (without `.is-wide`) each time.
-    const evaluate = () => {
-      wraps.forEach((wrap) => {
-        const table = wrap.querySelector("table") as HTMLElement | null;
-        if (!table) return;
-        wrap.classList.remove("is-wide");
-        if (table.offsetWidth > wrap.clientWidth + 1) wrap.classList.add("is-wide");
+        // Decide "wide" from the authored data, not a live measure (which the
+        // default fit-content cap would distort). A table only breaks out when
+        // EVERY column was given a width and their total is wider than the
+        // reading column — otherwise it stays content-sized so a widthless
+        // column (e.g. "#") can't balloon.
+        const cols = Array.from(table.querySelectorAll("col")) as HTMLElement[];
+        const widths = cols.map((c) => parseFloat(c.style.width));
+        const hasColWidths = cols.length > 0 && widths.every((w) => w > 0);
+        const colSum = hasColWidths ? widths.reduce((a, b) => a + b, 0) : 0;
+        const inlineWidth = parseFloat((table as HTMLElement).style.width) || 0;
+        const authorWidth = Math.max(inlineWidth, colSum);
+        const columnWidth = wrap.clientWidth;
+
+        if (hasColWidths && authorWidth > columnWidth + 1) {
+          wrap.classList.add("is-wide");
+          wrap.style.setProperty("--tw", `${Math.round(authorWidth)}px`);
+          wrap.style.setProperty("--tw-half", `${Math.round(authorWidth / 2)}px`);
+          // px -> proportions, so the table scales to fill whatever width the
+          // breakout band ends up being on this screen.
+          cols.forEach((c, i) => {
+            c.style.width = `${((widths[i] / colSum) * 100).toFixed(3)}%`;
+          });
+        }
       });
     };
 
-    let raf = requestAnimationFrame(evaluate);
-    const onResize = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(evaluate);
-    };
-    window.addEventListener("resize", onResize);
-    (document as any).fonts?.ready?.then(evaluate).catch(() => {});
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", onResize);
-    };
+    const raf = requestAnimationFrame(prepare);
+    return () => cancelAnimationFrame(raf);
   }, [clean]);
 
   if (!clean) return null;

@@ -441,11 +441,10 @@
   overflow: hidden;
 }
 
-/* Rendered content tables (RichHtml). Each <table> is wrapped in a `.rt-table`
-   div. Tables sit within the reading column and size to their own content, so
-   the editor's stored widths can't stretch them or balloon the number column.
-   A table that is genuinely too wide scrolls horizontally instead of being
-   clipped or forced to overflow the page. */
+/* Rendered content tables (RichHtml) reproduce the layout set in the editor.
+   Each <table> is wrapped in a `.rt-table` div. Tables keep the column
+   proportions the author dragged to; a table wider than the reading column
+   breaks out and scales to fit the screen (see `.is-wide`). */
 .prose table {
   border-collapse: collapse;
 }
@@ -454,29 +453,31 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+/* Default: size to content (auto layout) so a widthless column never balloons,
+   small tables centre, and text tables fill the column without collapsing. */
 .rt-table > table {
-  display: table !important;
-  /* fit-content: fill the column for text-heavy tables, shrink to content for
-     small ones (so they centre), never collapse to min-content. */
-  width: fit-content !important;
-  max-width: 100% !important;
-  table-layout: auto !important;
   margin: 0 auto !important;
+  width: -moz-fit-content;
+  width: fit-content;
+  max-width: 100%;
+  table-layout: auto;
 }
-/* TipTap saves <table style="width:1497px"> and <col style="width:55px"> —
-   ignore those so columns size to their content instead. */
-.rt-table col { width: auto !important; }
-.rt-table th,
-.rt-table td { width: auto !important; }
 
-/* Only tables too wide for the reading column (flagged by RichHtml) break out
-   to near-viewport width so every column shows at once — no clipping, no
-   scroll. Centred via symmetric negative margins so the page never gains a
-   horizontal scrollbar. Narrow tables keep the default in-column behaviour. */
+/* A table whose authored columns total wider than the reading column (flagged
+   by RichHtml) breaks out to a centred band capped at that authored width
+   (`--tw`) and the viewport. The table fills the band and its proportional
+   columns scale down on narrower screens — full width on large screens, never
+   clipped, scroll only as a last resort. Symmetric negative margins keep the
+   page from gaining a horizontal scrollbar. */
 .rt-table.is-wide {
-  width: min(88vw, 1480px);
-  margin-left: calc(50% - min(44vw, 740px));
-  margin-right: calc(50% - min(44vw, 740px));
+  width: min(94vw, var(--tw, 1200px));
+  margin-left: calc(50% - min(47vw, var(--tw-half, 600px)));
+  margin-right: calc(50% - min(47vw, var(--tw-half, 600px)));
+}
+.rt-table.is-wide > table {
+  width: 100% !important;
+  max-width: none !important;
+  table-layout: fixed !important;
 }
 .ProseMirror table.rte-table td,
 .ProseMirror table.rte-table th,
@@ -498,4 +499,20 @@
   position: absolute; inset: 0;
   background: hsl(var(--accent) / 0.1);
   pointer-events: none;
+}
+/* Visible column-resize handle: drag this line between two columns to widen or
+   narrow them. Shown by TipTap when hovering a column border. */
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background: hsl(var(--ink));
+  pointer-events: none;
+  z-index: 20;
+}
+.ProseMirror.resize-cursor {
+  cursor: ew-resize;
+  cursor: col-resize;
 }
