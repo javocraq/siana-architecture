@@ -432,13 +432,38 @@
 }
 
 /* ============ Rich text editor — table styling ============ */
-.ProseMirror table.rte-table,
-.prose table {
+/* Editor surface — keep fixed columns + full width for stable editing. */
+.ProseMirror table.rte-table {
   border-collapse: collapse;
   margin: 1.25em 0;
   width: 100%;
   table-layout: fixed;
   overflow: hidden;
+}
+
+/* Rendered content tables (RichHtml). Each <table> is wrapped in a `.rt-table`
+   band that is a little wider than the reading column and centred on the page.
+   The table sizes to its own content — small tables centre instead of being
+   stretched, the number column no longer balloons — and the band scrolls
+   horizontally only when a table is genuinely too wide to fit. */
+.prose table {
+  border-collapse: collapse;
+}
+.rt-table {
+  width: min(92vw, 1200px);
+  /* Centred breakout via symmetric negative margins: 50% of the column minus
+     half the band. Negative margins (not a transform) so the layout box can't
+     trigger a page-wide horizontal scrollbar. */
+  margin: 2.5rem calc(50% - min(46vw, 600px));
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.rt-table > table {
+  display: table !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  table-layout: auto !important;
+  margin: 0 auto !important;
 }
 .ProseMirror table.rte-table td,
 .ProseMirror table.rte-table th,
