@@ -86,7 +86,7 @@ export default function AdminDashboard() {
             className="font-display text-ink"
             style={{ fontSize: "clamp(2rem, 3.4vw, 3rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.01em" }}
           >
-            Bienvenida, {nameFromEmail(user?.email)}
+            Te damos la bienvenida, {nameFromEmail(user?.email)}
           </h1>
           <p className="mt-3 text-[13px] text-ink-faint max-w-[540px] leading-relaxed">
             An overview of the Siana atlas — projects, cities and practice entries. Pick up where you left off below.
