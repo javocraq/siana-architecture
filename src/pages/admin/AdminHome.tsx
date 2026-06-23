@@ -85,38 +85,8 @@ export default function AdminHome() {
             {/* Hero block */}
             <CollapsibleSection
               title="Hero"
-              description="The first screen visitors see — eyebrow links, headline, intro line and CTAs."
+              description="The first screen visitors see — headline, intro line and the background images."
             >
-              <div>
-                <label className={labelCls}>Eyebrow links</label>
-                <p className="text-[11px] text-ink-soft mb-3">
-                  Three labels rendered as <code className="text-ink">Architecture · Cities · Practice</code>.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <Field>
-                    <input
-                      className={inputCls}
-                      value={content.hero.eyebrow_architecture}
-                      onChange={(e) => updateHero({ eyebrow_architecture: e.target.value })}
-                    />
-                  </Field>
-                  <Field>
-                    <input
-                      className={inputCls}
-                      value={content.hero.eyebrow_cities}
-                      onChange={(e) => updateHero({ eyebrow_cities: e.target.value })}
-                    />
-                  </Field>
-                  <Field>
-                    <input
-                      className={inputCls}
-                      value={content.hero.eyebrow_practice}
-                      onChange={(e) => updateHero({ eyebrow_practice: e.target.value })}
-                    />
-                  </Field>
-                </div>
-              </div>
-
               <Field label="Title" hint="Press ↵ Enter to break onto a new line">
                 <textarea
                   rows={2}
@@ -134,23 +104,6 @@ export default function AdminHome() {
                   onChange={(e) => updateHero({ description: e.target.value })}
                 />
               </Field>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="Primary CTA label" hint="Links to /atlas">
-                  <input
-                    className={inputCls}
-                    value={content.hero.cta_primary}
-                    onChange={(e) => updateHero({ cta_primary: e.target.value })}
-                  />
-                </Field>
-                <Field label="Secondary CTA label" hint="Links to /cities">
-                  <input
-                    className={inputCls}
-                    value={content.hero.cta_secondary}
-                    onChange={(e) => updateHero({ cta_secondary: e.target.value })}
-                  />
-                </Field>
-              </div>
 
               <Field label="Hero images" hint="Background photos that cross-fade behind the hero. Leave empty to use the built-in curated set; the editor order is preserved.">
                 <div className="space-y-3">
@@ -222,14 +175,6 @@ export default function AdminHome() {
                   onChange={(e) => updateMap({ description: e.target.value })}
                 />
               </Field>
-
-              <Field label="CTA label">
-                <input
-                  className={inputCls}
-                  value={content.map.cta}
-                  onChange={(e) => updateMap({ cta: e.target.value })}
-                />
-              </Field>
             </CollapsibleSection>
 
             {/* Featured buildings */}
@@ -292,13 +237,6 @@ export default function AdminHome() {
                   onChange={(e) => updateJournal({ description: e.target.value })}
                 />
               </Field>
-              <Field label="CTA label" hint="Links to /practice">
-                <input
-                  className={inputCls}
-                  value={content.journal.cta}
-                  onChange={(e) => updateJournal({ cta: e.target.value })}
-                />
-              </Field>
             </CollapsibleSection>
 
             {/* Newsletter */}
@@ -359,7 +297,7 @@ function CollapsibleSection({
   title,
   description,
   children,
-  defaultOpen = true,
+  defaultOpen = false,
 }: {
   title: string;
   description: string;
