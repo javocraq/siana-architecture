@@ -468,6 +468,16 @@
 .rt-table col { width: auto !important; }
 .rt-table th,
 .rt-table td { width: auto !important; }
+
+/* Only tables too wide for the reading column (flagged by RichHtml) break out
+   to near-viewport width so every column shows at once — no clipping, no
+   scroll. Centred via symmetric negative margins so the page never gains a
+   horizontal scrollbar. Narrow tables keep the default in-column behaviour. */
+.rt-table.is-wide {
+  width: min(94vw, 1600px);
+  margin-left: calc(50% - min(47vw, 800px));
+  margin-right: calc(50% - min(47vw, 800px));
+}
 .ProseMirror table.rte-table td,
 .ProseMirror table.rte-table th,
 .prose table td,
