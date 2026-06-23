@@ -7,6 +7,7 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
+import { TableRowResize } from "./tableRowResize";
 import TextAlign from "@tiptap/extension-text-align";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -20,6 +21,21 @@ type Props = {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
+};
+
+// Row height, stored as inline `style: height` on table cells. In tables a
+// height acts as a minimum, so dragging only ever makes a row taller than its
+// content — it never clips text. Drag handled by the TableRowResize plugin.
+const ROW_HEIGHT_ATTR = {
+  height: {
+    default: null,
+    parseHTML: (el: HTMLElement) => {
+      const h = parseInt(el.style.height, 10);
+      return Number.isFinite(h) ? h : null;
+    },
+    renderHTML: (attrs: { height?: number | null }) =>
+      attrs.height ? { style: `height: ${attrs.height}px` } : {},
+  },
 };
 
 /** Toolbar button. Defined at module level (NOT inside RichTextEditor) so its
@@ -138,8 +154,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
         },
       }),
       TableRow,
-      TableHeader,
-      TableCell,
+      TableHeader.extend({ addAttributes() { return { ...this.parent?.(), ...ROW_HEIGHT_ATTR }; } }),
+      TableCell.extend({ addAttributes() { return { ...this.parent?.(), ...ROW_HEIGHT_ATTR }; } }),
+      TableRowResize,
       TextAlign.configure({
         types: ["heading", "paragraph"],
         alignments: ["left", "center", "right", "justify"],

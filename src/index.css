@@ -305,6 +305,30 @@
     white-space: nowrap;
   }
 
+  /* Public /about manifesto body — typography for the rich-text HTML
+     authored in the admin. Paragraphs space evenly; italics keep the
+     editorial pull-quote treatment so authors can mark any sentence or
+     block as italic and have it look the same on the site. */
+  .about-body p { margin-top: 1rem; }
+  .about-body p:first-child { margin-top: 0; }
+  .about-body em {
+    font-family: 'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    color: #796C5C;
+  }
+  /* When the editor italicises a whole paragraph, bump it to the larger
+     pull-quote scale used historically for the closing line. */
+  .about-body p > em:only-child { font-size: 22px; }
+  .about-body blockquote {
+    margin: 1.25rem 0;
+    padding-left: 1rem;
+    border-left: 2px solid hsl(var(--accent));
+    font-family: 'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif;
+    font-style: italic;
+    color: #796C5C;
+  }
+
   /* Scroll reveal — slow, elegant fade + lift inspired by Apple / luxury
      editorial sites. Pair with the <Reveal> component (or .reveal +
      .is-revealed manually). Stagger children by setting --reveal-delay. */
@@ -532,4 +556,9 @@
 .ProseMirror.resize-cursor {
   cursor: ew-resize;
   cursor: col-resize;
+}
+/* Row-height resize: ns-resize cursor when the pointer is near a row's bottom
+   border (set by the TableRowResize plugin). Drag to make the row taller. */
+.ProseMirror.row-resize-cursor {
+  cursor: ns-resize;
 }

@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Navigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
@@ -74,6 +74,20 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // Hover-expansion on desktop: while the cursor sits over a collapsed
   // sidebar, peek the full menu without committing to expanded width.
   const [hovered, setHovered] = useState(false);
+  // Hover-INTENT: only peek the menu open after the cursor dwells on the
+  // collapsed sidebar for a beat, so brushing past it while editing doesn't
+  // pop it open. Closes immediately on leave.
+  const hoverTimer = useRef<number | null>(null);
+  const openOnIntent = () => {
+    if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
+    hoverTimer.current = window.setTimeout(() => setHovered(true), 400);
+  };
+  const cancelHover = () => {
+    if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
+    hoverTimer.current = null;
+    setHovered(false);
+  };
+  useEffect(() => () => { if (hoverTimer.current) window.clearTimeout(hoverTimer.current); }, []);
 
   // User-menu open state. We pin the sidebar's "expanded" treatment to this
   // because Radix portals the dropdown outside the <aside>; the moment the
@@ -161,8 +175,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             borderRight: "1px solid hsl(var(--paper-mid))",
             boxShadow: expandedByHover ? "0 12px 36px rgba(0,0,0,0.08)" : "none",
           }}
-          onMouseEnter={() => !isMobile && setHovered(true)}
-          onMouseLeave={() => !isMobile && setHovered(false)}
+          onMouseEnter={() => !isMobile && openOnIntent()}
+          onMouseLeave={() => !isMobile && cancelHover()}
         >
           {/* Header — the wordmark slot now shows the signed-in user's name
               as a dropdown trigger. Clicking opens a 2-item menu (Settings,
