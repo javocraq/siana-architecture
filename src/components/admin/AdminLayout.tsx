@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { Link, NavLink, Navigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
+  LayoutDashboard,
   Building2,
   MapPin,
   BookOpen,
@@ -38,6 +39,7 @@ function displayNameFromEmail(email: string | null | undefined) {
 // not as its own top-level item. Practice unifies the former Practice + Resources
 // — all posts share /admin/practice regardless of their legacy `kind` value.
 const navItems = [
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/home", label: "Home", icon: HomeIcon },
   { to: "/admin/projects", label: "Projects", icon: Building2 },
   { to: "/admin/cities", label: "Cities", icon: MapPin },
@@ -271,7 +273,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  end={item.to === "/admin/settings"}
+                  end={item.to === "/admin/settings" || item.to === "/admin"}
                   onClick={() => {
                     // Auto-collapse the sidebar after picking a section so
                     // the main content gets the full width. We persist the

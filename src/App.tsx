@@ -29,6 +29,7 @@ import AdminIntegrations from "./pages/admin/AdminIntegrations.tsx";
 import AdminAbout from "./pages/admin/AdminAbout.tsx";
 import AdminHome from "./pages/admin/AdminHome.tsx";
 import AdminTaxonomies from "./pages/admin/AdminTaxonomies.tsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
 
 const queryClient = new QueryClient();
 
@@ -77,7 +78,7 @@ const App = () => (
             <Route path="/journal/:slug" element={<PracticeRedirect />} />
             <Route path="/resources" element={<PracticeRedirect />} />
             <Route path="/resources/:slug" element={<PracticeRedirect />} />
-            <Route path="/admin" element={<AdminProjects />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/projects" element={<AdminProjects />} />
             <Route path="/admin/projects/new" element={<AdminProjectEdit />} />
