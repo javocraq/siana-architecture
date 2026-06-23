@@ -14,7 +14,7 @@ export default function AdminLogin() {
 
   useEffect(() => {
     if (!loading && user && isAdmin) {
-      navigate("/admin/projects", { replace: true });
+      navigate("/admin", { replace: true });
     }
   }, [loading, user, isAdmin, navigate]);
 
@@ -37,7 +37,7 @@ export default function AdminLogin() {
         _role: "admin",
       });
       if (hasAdmin) {
-        navigate("/admin/projects", { replace: true });
+        navigate("/admin", { replace: true });
       } else {
         await supabase.auth.signOut();
         setError("This account does not have admin access.");
