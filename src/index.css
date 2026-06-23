@@ -279,7 +279,7 @@
   }
   @keyframes siana-pulse {
     0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.35; }
-    50% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+    50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0; }
   }
 
   /* Atlas pin hover label — minimal editorial tooltip (no tip, sharp corners) */
@@ -493,6 +493,23 @@
   background: hsl(var(--paper-warm));
   font-weight: 600;
   text-align: left;
+}
+/* Row spacing — per-table density set in the editor (data-density). Default
+   (comfortable) keeps the 8px above; compact/spacious only adjust the vertical
+   padding, so column widths and text stay intact. */
+.ProseMirror table.rte-table[data-density="compact"] td,
+.ProseMirror table.rte-table[data-density="compact"] th,
+.prose table[data-density="compact"] td,
+.prose table[data-density="compact"] th {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+.ProseMirror table.rte-table[data-density="spacious"] td,
+.ProseMirror table.rte-table[data-density="spacious"] th,
+.prose table[data-density="spacious"] td,
+.prose table[data-density="spacious"] th {
+  padding-top: 18px;
+  padding-bottom: 18px;
 }
 .ProseMirror .selectedCell:after {
   content: "";

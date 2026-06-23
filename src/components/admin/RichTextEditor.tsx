@@ -122,7 +122,21 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
       Link.configure({ openOnClick: false, HTMLAttributes: { class: "underline" } }),
       Image,
       Placeholder.configure({ placeholder: placeholder || "Start writing…" }),
-      Table.configure({ resizable: true, HTMLAttributes: { class: "rte-table" } }),
+      Table.configure({ resizable: true, HTMLAttributes: { class: "rte-table" } }).extend({
+        // Per-table row spacing, stored as data-density on the <table> so it
+        // persists in the saved HTML and renders the same on the public site.
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            density: {
+              default: null,
+              parseHTML: (el) => el.getAttribute("data-density"),
+              renderHTML: (attrs) =>
+                attrs.density ? { "data-density": attrs.density } : {},
+            },
+          };
+        },
+      }),
       TableRow,
       TableHeader,
       TableCell,
@@ -302,6 +316,19 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
             </Btn>
             <Btn title="Delete table" onClick={() => editor.chain().focus().deleteTable().run()}>
               <Trash2 className="w-3.5 h-3.5" />
+            </Btn>
+            <span className="w-px h-4 bg-border mx-1" />
+            <Btn title="Row spacing: compact" active={editor.getAttributes("table").density === "compact"}
+              onClick={() => editor.chain().focus().updateAttributes("table", { density: "compact" }).run()}>
+              <span className="text-[10px] font-mono">↕-</span>
+            </Btn>
+            <Btn title="Row spacing: comfortable" active={!editor.getAttributes("table").density || editor.getAttributes("table").density === "comfortable"}
+              onClick={() => editor.chain().focus().updateAttributes("table", { density: "comfortable" }).run()}>
+              <span className="text-[10px] font-mono">↕</span>
+            </Btn>
+            <Btn title="Row spacing: spacious" active={editor.getAttributes("table").density === "spacious"}
+              onClick={() => editor.chain().focus().updateAttributes("table", { density: "spacious" }).run()}>
+              <span className="text-[10px] font-mono">↕+</span>
             </Btn>
           </>
         )}
