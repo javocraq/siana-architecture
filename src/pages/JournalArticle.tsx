@@ -39,7 +39,7 @@ interface RelatedPost {
 // quotes styled to match. Left-aligned in a 960px column so Practice and
 // Journal pieces share the same measure as the City and Project pages.
 const BODY_PROSE =
-  "[&_p]:font-serif [&_p]:text-[17px] md:[&_p]:text-[19px] [&_p]:leading-[1.75] [&_p]:text-ink [&_p]:mb-6 " +
+  "[&_p]:font-serif [&_p]:text-[17px] md:[&_p]:text-[19px] [&_p]:leading-[1.75] [&_p]:text-ink [&_p]:text-justify [&_p]:hyphens-auto [&_p]:mb-6 " +
   "[&_h2]:font-display [&_h2]:text-ink [&_h2]:text-[clamp(22px,2.4vw,30px)] [&_h2]:mt-10 [&_h2]:mb-4 " +
   "[&_h3]:font-display [&_h3]:text-ink [&_h3]:text-[clamp(19px,2vw,24px)] [&_h3]:mt-8 [&_h3]:mb-3 " +
   "[&_img]:mx-auto [&_img]:my-8 [&_blockquote]:border-l-2 [&_blockquote]:border-ink/30 [&_blockquote]:pl-5 [&_blockquote]:italic [&_blockquote]:text-ink-soft [&_blockquote]:text-[18px] md:[&_blockquote]:text-[20px] [&_blockquote]:my-8 " +
