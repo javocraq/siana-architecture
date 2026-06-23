@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { useToast } from "@/hooks/use-toast";
 import { HOME_DEFAULTS, mergeHomeContent, type HomeContent } from "@/lib/homeContent";
-import { adminInputCls, adminLabelCls, adminCardCls } from "@/lib/adminUi";
+import { adminInputCls, adminLabelCls } from "@/lib/adminUi";
 
 /**
  * Edits the text blocks of the public homepage (hero + map preview).
- * Other strips on /home (Featured cities, Featured buildings, Latest
- * journal, Newsletter) are driven by their own data sources.
+ * Other strips on /home (Featured buildings, Latest journal, Newsletter)
+ * are driven by their own data sources. Each block is collapsible so the
+ * editor can fold away the ones it isn't working on.
  */
 export default function AdminHome() {
   const { toast } = useToast();
@@ -34,8 +35,6 @@ export default function AdminHome() {
     setContent((c) => ({ ...c, hero: { ...c.hero, ...patch } }));
   const updateMap = (patch: Partial<HomeContent["map"]>) =>
     setContent((c) => ({ ...c, map: { ...c.map, ...patch } }));
-  const updateCities = (patch: Partial<HomeContent["cities"]>) =>
-    setContent((c) => ({ ...c, cities: { ...c.cities, ...patch } }));
   const updateBuildings = (patch: Partial<HomeContent["buildings"]>) =>
     setContent((c) => ({ ...c, buildings: { ...c.buildings, ...patch } }));
   const updateJournal = (patch: Partial<HomeContent["journal"]>) =>
@@ -82,16 +81,12 @@ export default function AdminHome() {
             <Loader2 className="w-4 h-4 animate-spin" /> Loading…
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-4">
             {/* Hero block */}
-            <section className={adminCardCls}>
-              <div>
-                <h2 className="font-display text-ink" style={{ fontSize: 22, fontWeight: 400 }}>Hero</h2>
-                <p className="text-[12px] text-ink-soft mt-1" style={{ lineHeight: 1.5 }}>
-                  The first screen visitors see — eyebrow links, headline, intro line and CTAs.
-                </p>
-              </div>
-
+            <CollapsibleSection
+              title="Hero"
+              description="The first screen visitors see — eyebrow links, headline, intro line and CTAs."
+            >
               <div>
                 <label className={labelCls}>Eyebrow links</label>
                 <p className="text-[11px] text-ink-soft mb-3">
@@ -187,17 +182,13 @@ export default function AdminHome() {
                   </div>
                 </div>
               </Field>
-            </section>
+            </CollapsibleSection>
 
             {/* Map preview block */}
-            <section className={adminCardCls}>
-              <div>
-                <h2 className="font-display text-ink" style={{ fontSize: 22, fontWeight: 400 }}>Map preview</h2>
-                <p className="text-[12px] text-ink-soft mt-1" style={{ lineHeight: 1.5 }}>
-                  Editorial copy overlaid on the spinning globe section.
-                </p>
-              </div>
-
+            <CollapsibleSection
+              title="Map preview"
+              description="Editorial copy overlaid on the spinning globe section."
+            >
               <Field label="Eyebrow">
                 <input
                   className={inputCls}
@@ -239,33 +230,13 @@ export default function AdminHome() {
                   onChange={(e) => updateMap({ cta: e.target.value })}
                 />
               </Field>
-            </section>
-
-            {/* Cities strip */}
-            <section className={adminCardCls}>
-              <div>
-                <h2 className="font-display text-ink" style={{ fontSize: 22, fontWeight: 400 }}>Cities strip</h2>
-                <p className="text-[12px] text-ink-soft mt-1" style={{ lineHeight: 1.5 }}>
-                  Horizontal row of published cities. Only the heading is editable here — the cards are pulled from the Cities table.
-                </p>
-              </div>
-              <Field label="Heading">
-                <input
-                  className={inputCls}
-                  value={content.cities.title}
-                  onChange={(e) => updateCities({ title: e.target.value })}
-                />
-              </Field>
-            </section>
+            </CollapsibleSection>
 
             {/* Featured buildings */}
-            <section className={adminCardCls}>
-              <div>
-                <h2 className="font-display text-ink" style={{ fontSize: 22, fontWeight: 400 }}>Featured Buildings</h2>
-                <p className="text-[12px] text-ink-soft mt-1" style={{ lineHeight: 1.5 }}>
-                  Editorial intro above the asymmetric project grid. The cards themselves come from projects flagged as "Featured".
-                </p>
-              </div>
+            <CollapsibleSection
+              title="Featured Buildings"
+              description='Editorial intro above the asymmetric project grid. The cards themselves come from projects flagged as "Featured".'
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="Headline — lead" hint="Rendered in solid ink">
                   <input
@@ -290,16 +261,13 @@ export default function AdminHome() {
                   onChange={(e) => updateBuildings({ description: e.target.value })}
                 />
               </Field>
-            </section>
+            </CollapsibleSection>
 
             {/* Latest journal */}
-            <section className={adminCardCls}>
-              <div>
-                <h2 className="font-display text-ink" style={{ fontSize: 22, fontWeight: 400 }}>Latest journal</h2>
-                <p className="text-[12px] text-ink-soft mt-1" style={{ lineHeight: 1.5 }}>
-                  Photo grid of recent posts. Cards are pulled from published posts ordered by date.
-                </p>
-              </div>
+            <CollapsibleSection
+              title="Latest journal"
+              description="Photo grid of recent posts. Cards are pulled from published posts ordered by date."
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="Headline — lead" hint="Rendered in solid ink">
                   <input
@@ -331,16 +299,13 @@ export default function AdminHome() {
                   onChange={(e) => updateJournal({ cta: e.target.value })}
                 />
               </Field>
-            </section>
+            </CollapsibleSection>
 
             {/* Newsletter */}
-            <section className={adminCardCls}>
-              <div>
-                <h2 className="font-display text-ink" style={{ fontSize: 22, fontWeight: 400 }}>Newsletter</h2>
-                <p className="text-[12px] text-ink-soft mt-1" style={{ lineHeight: 1.5 }}>
-                  Subscription block at the bottom of every page. Form labels (Name, E-Mail, interest options) are not editable here.
-                </p>
-              </div>
+            <CollapsibleSection
+              title="Newsletter"
+              description="Subscription block at the bottom of every page. Form labels (Name, E-Mail, interest options) are not editable here."
+            >
               <Field label="Eyebrow">
                 <input
                   className={inputCls}
@@ -363,7 +328,7 @@ export default function AdminHome() {
                   onChange={(e) => updateNewsletter({ description: e.target.value })}
                 />
               </Field>
-            </section>
+            </CollapsibleSection>
 
             <div className="pt-2">
               <button
@@ -384,6 +349,45 @@ export default function AdminHome() {
 
 const inputCls = adminInputCls;
 const labelCls = adminLabelCls;
+
+/**
+ * Collapsible card. The header (title + description + chevron) is always
+ * visible and toggles the body; defaults to open so nothing is hidden on
+ * first load.
+ */
+function CollapsibleSection({
+  title,
+  description,
+  children,
+  defaultOpen = true,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <section className="bg-white rounded-xl border border-paper-mid overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="w-full flex items-start justify-between gap-4 text-left px-7 py-6 transition-colors hover:bg-paper-warm"
+      >
+        <div>
+          <h2 className="font-display text-ink" style={{ fontSize: 22, fontWeight: 400 }}>{title}</h2>
+          <p className="text-[12px] text-ink-soft mt-1" style={{ lineHeight: 1.5 }}>{description}</p>
+        </div>
+        <ChevronDown
+          className={`w-5 h-5 text-ink-muted shrink-0 mt-1 transition-transform duration-200 ${open ? "" : "-rotate-90"}`}
+          strokeWidth={1.5}
+        />
+      </button>
+      {open && <div className="px-7 pb-7 space-y-6">{children}</div>}
+    </section>
+  );
+}
 
 function Field({ label, hint, children }: { label?: string; hint?: string; children: React.ReactNode }) {
   return (
