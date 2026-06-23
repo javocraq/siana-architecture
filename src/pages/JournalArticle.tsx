@@ -35,15 +35,15 @@ interface RelatedPost {
   published_at: string | null;
 }
 
-// Centered editorial body — serif paragraphs at a comfortable size, headings
-// and quotes styled to match. `text-center` is applied on the wrapper; lists
-// stay left-aligned inside a centered block so they stay readable.
+// Editorial body — serif paragraphs at a comfortable size, headings and
+// quotes styled to match. Left-aligned in a 960px column so Practice and
+// Journal pieces share the same measure as the City and Project pages.
 const BODY_PROSE =
   "[&_p]:font-serif [&_p]:text-[17px] md:[&_p]:text-[19px] [&_p]:leading-[1.75] [&_p]:text-ink [&_p]:mb-6 " +
   "[&_h2]:font-display [&_h2]:text-ink [&_h2]:text-[clamp(22px,2.4vw,30px)] [&_h2]:mt-10 [&_h2]:mb-4 " +
   "[&_h3]:font-display [&_h3]:text-ink [&_h3]:text-[clamp(19px,2vw,24px)] [&_h3]:mt-8 [&_h3]:mb-3 " +
-  "[&_img]:mx-auto [&_img]:my-8 [&_blockquote]:italic [&_blockquote]:text-ink-soft [&_blockquote]:text-[18px] md:[&_blockquote]:text-[20px] [&_blockquote]:my-8 " +
-  "[&_ul]:inline-block [&_ul]:text-left [&_ol]:inline-block [&_ol]:text-left [&_li]:font-serif [&_li]:text-ink [&_li]:text-[17px] md:[&_li]:text-[19px] [&_a]:underline [&_a]:underline-offset-2 " +
+  "[&_img]:mx-auto [&_img]:my-8 [&_blockquote]:border-l-2 [&_blockquote]:border-ink/30 [&_blockquote]:pl-5 [&_blockquote]:italic [&_blockquote]:text-ink-soft [&_blockquote]:text-[18px] md:[&_blockquote]:text-[20px] [&_blockquote]:my-8 " +
+  "[&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:font-serif [&_li]:text-ink [&_li]:text-[17px] md:[&_li]:text-[19px] [&_li]:leading-[1.7] [&_li]:mb-1.5 [&_a]:underline [&_a]:underline-offset-2 " +
   // Tables: stay inside the article column, render as a block with horizontal
   // scroll if there are genuinely too many columns to fit. Editorial palette
   // — hairline borders, serif body, mono-caps headers, generous padding.
@@ -181,7 +181,7 @@ export default function JournalArticle() {
 
         {/* Hero image — kept modest so the writing leads. */}
         {post.hero_image_url && (
-          <div className="mx-auto max-w-[920px] px-6 lg:px-10 mb-14">
+          <div className="mx-auto max-w-[960px] px-6 lg:px-10 mb-14">
             <div className="aspect-[16/9] bg-stone overflow-hidden">
               <img src={post.hero_image_url} alt={post.title} className="w-full h-full object-cover" />
             </div>
@@ -193,17 +193,17 @@ export default function JournalArticle() {
             block in the middle; otherwise render it whole. */}
         {post.body && (related.length > 0 && split.second ? (
           <>
-            <div className="mx-auto max-w-[680px] px-6 lg:px-10 pb-12 md:pb-16 text-center">
+            <div className="mx-auto max-w-[960px] px-6 lg:px-10 pb-12 md:pb-16">
               <RichHtml html={split.first} className={BODY_PROSE} />
             </div>
             <RelatedArticles posts={related} cfg={cfg} />
-            <div className="mx-auto max-w-[680px] px-6 lg:px-10 pt-12 md:pt-16 pb-24 md:pb-32 text-center">
+            <div className="mx-auto max-w-[960px] px-6 lg:px-10 pt-12 md:pt-16 pb-24 md:pb-32">
               <RichHtml html={split.second} className={BODY_PROSE} />
             </div>
           </>
         ) : (
           <>
-            <div className="mx-auto max-w-[680px] px-6 lg:px-10 pb-16 md:pb-20 text-center">
+            <div className="mx-auto max-w-[960px] px-6 lg:px-10 pb-16 md:pb-20">
               <RichHtml html={post.body} className={BODY_PROSE} />
             </div>
             {related.length > 0 && <RelatedArticles posts={related} cfg={cfg} />}
@@ -211,7 +211,7 @@ export default function JournalArticle() {
         ))}
 
         {(linkedProjects.length > 0 || linkedCities.length > 0) && (
-          <div className="mx-auto max-w-[680px] px-6 lg:px-10 pb-12">
+          <div className="mx-auto max-w-[960px] px-6 lg:px-10 pb-12">
             <div className="border-t hairline pt-10">
               <p className="font-mono uppercase text-accent-terra font-semibold mb-5" style={{ fontSize: 12, letterSpacing: "0.2em" }}>
                 On the map
@@ -246,7 +246,7 @@ export default function JournalArticle() {
           </div>
         )}
 
-        <div className="mx-auto max-w-[680px] px-6 lg:px-10 pb-24">
+        <div className="mx-auto max-w-[960px] px-6 lg:px-10 pb-24">
           <Link to={cfg.publicBase} className="text-[13px] font-semibold tracking-[0.16em] uppercase text-ink hover:opacity-70 border-t hairline pt-8 inline-block w-full">
             ← Back to {cfg.sectionTitle}
 
