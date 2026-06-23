@@ -78,17 +78,17 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <div className="px-6 sm:px-10 py-12 max-w-[1080px] mx-auto">
+      <div className="px-10 py-10 max-w-[1180px]">
         {/* Header */}
-        <div className="mb-12 text-center">
+        <div className="mb-10">
           <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-3">Content management</p>
           <h1
             className="font-display text-ink"
             style={{ fontSize: "clamp(2rem, 3.4vw, 3rem)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.01em" }}
           >
-            Welcome back, {nameFromEmail(user?.email)}
+            Bienvenida, {nameFromEmail(user?.email)}
           </h1>
-          <p className="mt-3 text-[13px] text-ink-faint max-w-[540px] leading-relaxed mx-auto">
+          <p className="mt-3 text-[13px] text-ink-faint max-w-[540px] leading-relaxed">
             An overview of the Siana atlas — projects, cities and practice entries. Pick up where you left off below.
           </p>
         </div>
@@ -108,32 +108,36 @@ export default function AdminDashboard() {
                   <Link
                     key={s.key}
                     to={s.base}
-                    className="group bg-white rounded-xl border border-paper-mid p-8 flex flex-col items-center text-center transition-all duration-200 hover:border-ink/25 hover:shadow-[0_6px_28px_rgba(0,0,0,0.05)]"
+                    className="group bg-white rounded-xl border border-paper-mid p-7 transition-all duration-200 hover:border-ink/25 hover:shadow-[0_6px_28px_rgba(0,0,0,0.05)]"
                   >
-                    <Icon className="w-9 h-9 text-ink-soft mb-5 transition-colors group-hover:text-ink" strokeWidth={1.1} />
-                    <p className="text-[10px] tracking-tag uppercase text-ink-muted">{s.label}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] tracking-tag uppercase text-ink-muted">{s.label}</p>
+                      <Icon className="w-6 h-6 text-ink-soft transition-colors group-hover:text-ink" strokeWidth={1.25} />
+                    </div>
                     <p
-                      className="font-display text-ink mt-3"
-                      style={{ fontSize: 50, fontWeight: 400, lineHeight: 1, letterSpacing: "-0.02em" }}
+                      className="font-display text-ink mt-7"
+                      style={{ fontSize: 46, fontWeight: 400, lineHeight: 1, letterSpacing: "-0.02em" }}
                     >
                       {s.total}
                     </p>
-                    <p className="mt-3 text-[11.5px] text-ink-faint">
-                      <span className="text-ink-muted">{s.published}</span> published · {draft} draft{draft === 1 ? "" : "s"}
-                    </p>
-                    <span className="mt-5 inline-flex items-center gap-1 text-[10px] tracking-tag uppercase text-ink-faint transition-colors group-hover:text-ink">
-                      View
-                      <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" strokeWidth={1.5} />
-                    </span>
+                    <div className="mt-6 pt-4 border-t border-paper-mid flex items-center justify-between">
+                      <p className="text-[11.5px] text-ink-faint">
+                        <span className="text-ink-muted">{s.published}</span> published · {draft} draft{draft === 1 ? "" : "s"}
+                      </p>
+                      <span className="inline-flex items-center gap-1 text-[10px] tracking-tag uppercase text-ink-faint transition-colors group-hover:text-ink">
+                        View
+                        <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" strokeWidth={1.5} />
+                      </span>
+                    </div>
                   </Link>
                 );
               })}
             </div>
 
             {/* Quick actions */}
-            <div className="text-center">
+            <div>
               <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-4">Quick actions</p>
-              <div className="flex flex-wrap gap-3 justify-center">
+              <div className="flex flex-wrap gap-3">
                 <ActionLink to="/admin/projects/new" icon={Plus}>New project</ActionLink>
                 <ActionLink to="/admin/cities/new" icon={Plus}>New city</ActionLink>
                 <ActionLink to="/admin/practice/new" icon={Plus}>New entry</ActionLink>
@@ -144,7 +148,7 @@ export default function AdminDashboard() {
 
             {/* Recently updated */}
             <div>
-              <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-4 text-center">Recently updated</p>
+              <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-4">Recently updated</p>
               <div className="bg-white rounded-xl border border-paper-mid overflow-hidden">
                 {recent.length === 0 ? (
                   <p className="px-7 py-6 text-[13px] text-ink-faint">
