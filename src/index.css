@@ -442,29 +442,32 @@
 }
 
 /* Rendered content tables (RichHtml). Each <table> is wrapped in a `.rt-table`
-   band that is a little wider than the reading column and centred on the page.
-   The table sizes to its own content — small tables centre instead of being
-   stretched, the number column no longer balloons — and the band scrolls
-   horizontally only when a table is genuinely too wide to fit. */
+   div. Tables sit within the reading column and size to their own content, so
+   the editor's stored widths can't stretch them or balloon the number column.
+   A table that is genuinely too wide scrolls horizontally instead of being
+   clipped or forced to overflow the page. */
 .prose table {
   border-collapse: collapse;
 }
 .rt-table {
-  width: min(92vw, 1200px);
-  /* Centred breakout via symmetric negative margins: 50% of the column minus
-     half the band. Negative margins (not a transform) so the layout box can't
-     trigger a page-wide horizontal scrollbar. */
-  margin: 2.5rem calc(50% - min(46vw, 600px));
+  margin: 2.5rem 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 .rt-table > table {
   display: table !important;
-  width: max-content !important;
+  /* fit-content: fill the column for text-heavy tables, shrink to content for
+     small ones (so they centre), never collapse to min-content. */
+  width: fit-content !important;
   max-width: 100% !important;
   table-layout: auto !important;
   margin: 0 auto !important;
 }
+/* TipTap saves <table style="width:1497px"> and <col style="width:55px"> —
+   ignore those so columns size to their content instead. */
+.rt-table col { width: auto !important; }
+.rt-table th,
+.rt-table td { width: auto !important; }
 .ProseMirror table.rte-table td,
 .ProseMirror table.rte-table th,
 .prose table td,
