@@ -474,9 +474,9 @@
    scroll. Centred via symmetric negative margins so the page never gains a
    horizontal scrollbar. Narrow tables keep the default in-column behaviour. */
 .rt-table.is-wide {
-  width: min(94vw, 1600px);
-  margin-left: calc(50% - min(47vw, 800px));
-  margin-right: calc(50% - min(47vw, 800px));
+  width: min(88vw, 1480px);
+  margin-left: calc(50% - min(44vw, 740px));
+  margin-right: calc(50% - min(44vw, 740px));
 }
 .ProseMirror table.rte-table td,
 .ProseMirror table.rte-table th,
