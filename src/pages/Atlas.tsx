@@ -608,7 +608,9 @@ export default function Atlas() {
       closeButton: false,
       closeOnClick: false,
       anchor: "bottom",
-      offset: 16,
+      // Sit the label snug above the pin — just enough to clear the
+      // dot's outer ring (~9 px from centre) without floating away.
+      offset: 10,
       className: "siana-pin-popup",
     });
     hoverPopupRef.current = hoverPopup;
@@ -650,16 +652,20 @@ export default function Atlas() {
         "transition:transform .18s ease",
         "position:relative",
       ].join(";");
+      // Pulse ring: tighter than before so the pin's geometric centre
+      // reads precisely at any zoom. Starts at 16 px and the keyframe
+      // peaks at scale(1.3), so the halo never exceeds ~21 px — close
+      // to the dot without "haloing" the wrong block at low zoom.
       const pulse = document.createElement("span");
       pulse.style.cssText = [
         "position:absolute",
         "top:50%",
         "left:50%",
-        "width:24px",
-        "height:24px",
+        "width:16px",
+        "height:16px",
         "border-radius:9999px",
         `border:1px solid ${dot}`,
-        "opacity:.35",
+        "opacity:.3",
         "transform:translate(-50%,-50%)",
         "animation:siana-pulse 2.2s infinite",
         "pointer-events:none",
@@ -1247,9 +1253,9 @@ export default function Atlas() {
             <div
               key={selected.id}
               className="absolute z-30 slide-in-right hidden
-                md:flex md:flex-col md:left-auto md:right-6 md:bottom-auto md:top-[148px] md:w-[380px] md:max-h-[calc(100vh-180px)] md:overflow-y-auto no-scrollbar"
+                md:flex md:flex-col md:left-auto md:right-6 md:top-[148px] md:bottom-6 md:w-[380px]"
             >
-              <div className="relative bg-paper" style={{ boxShadow: "0 10px 36px rgba(0,0,0,0.18)" }}>
+              <div className="relative bg-paper md:flex md:flex-col md:flex-1 md:min-h-0" style={{ boxShadow: "0 10px 36px rgba(0,0,0,0.18)" }}>
                 <button
                   onClick={() => setSelected(null)}
                   aria-label="Close"
@@ -1261,19 +1267,19 @@ export default function Atlas() {
 
                 <Link
                   to={`/projects/${selected.slug}`}
-                  className="block group"
+                  className="block group md:flex md:flex-col md:flex-1 md:min-h-0"
                   aria-label={`Open ${selected.name}`}
                 >
                   {(selected.cover_image_url || selected.hero_image_url) && (
-                    <div className="overflow-hidden">
+                    <div className="overflow-hidden md:flex-1 md:min-h-0">
                       <img
                         src={selected.cover_image_url || selected.hero_image_url || ""}
                         alt={selected.name}
-                        className="block w-full h-auto max-h-[34vh] object-cover md:max-h-none transition-transform duration-700 group-hover:scale-[1.03]"
+                        className="block w-full h-auto max-h-[34vh] md:max-h-none md:w-full md:h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                       />
                     </div>
                   )}
-                  <div className="px-5 pt-4 pb-5">
+                  <div className="px-5 pt-4 pb-5 md:shrink-0">
                     {selected.city?.name && (
                       <p
                         className="font-mono uppercase text-accent-terra font-semibold mb-1.5"

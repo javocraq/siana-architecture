@@ -6,8 +6,9 @@ import CitiesStrip from "@/components/site/CitiesStrip";
 import LatestJournal from "@/components/site/LatestJournal";
 import ArchitectureAISection from "@/components/site/ArchitectureAISection";
 import EditorialButton from "@/components/site/EditorialButton";
+import DOMPurify from "dompurify";
 import { supabase } from "@/integrations/supabase/client";
-import { ABOUT_DEFAULTS, type AboutContent } from "@/lib/aboutContent";
+import { ABOUT_DEFAULTS, normalizeAboutBody, type AboutContent } from "@/lib/aboutContent";
 
 const About = () => {
   const [content, setContent] = useState<AboutContent>(ABOUT_DEFAULTS);
@@ -22,11 +23,11 @@ const About = () => {
         .eq("key", "about")
         .maybeSingle();
       if (error || !data?.content) return;
-      const c = data.content as Partial<AboutContent>;
+      const c = data.content as Partial<AboutContent> & { body?: unknown };
       setContent({
         eyebrow: c.eyebrow ?? ABOUT_DEFAULTS.eyebrow,
         headline: c.headline ?? ABOUT_DEFAULTS.headline,
-        body: Array.isArray(c.body) && c.body.length > 0 ? c.body : ABOUT_DEFAULTS.body,
+        body: normalizeAboutBody(c.body),
         cta_label: c.cta_label ?? ABOUT_DEFAULTS.cta_label,
       });
     })();
@@ -55,24 +56,13 @@ const About = () => {
           >
             {content.headline}
           </h1>
-          <div className="mt-7 space-y-4 text-[16px] md:text-[17px] leading-[1.7] max-w-[600px] mx-auto" style={{ color: "#4F4534" }}>
-            {content.body.map((para, i) => {
-              // The last paragraph styles as a serif italic pull-quote.
-              const isLast = i === content.body.length - 1;
-              if (isLast && content.body.length > 1) {
-                return (
-                  <p
-                    key={i}
-                    className="italic"
-                    style={{ fontFamily: "'Adobe Garamond Pro', 'EB Garamond', Garamond, Georgia, serif", fontWeight: 400, fontSize: 22, color: "#796C5C" }}
-                  >
-                    {para}
-                  </p>
-                );
-              }
-              return <p key={i}>{para}</p>;
-            })}
-          </div>
+          <div
+            className="about-body mt-7 text-[16px] md:text-[17px] leading-[1.7] max-w-[600px] mx-auto"
+            style={{ color: "#4F4534" }}
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(content.body, { ADD_ATTR: ["target", "rel"] }),
+            }}
+          />
           <div className="mt-8 flex justify-center">
             <EditorialButton to="/atlas" arrow>
               {content.cta_label.replace(/\s*→\s*$/, "")}

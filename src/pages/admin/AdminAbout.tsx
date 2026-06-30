@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 import { useToast } from "@/hooks/use-toast";
-import { ABOUT_DEFAULTS, type AboutContent } from "@/lib/aboutContent";
+import { ABOUT_DEFAULTS, normalizeAboutBody, type AboutContent } from "@/lib/aboutContent";
 import { adminInputCls, adminLabelCls } from "@/lib/adminUi";
 
 /**
@@ -24,23 +25,17 @@ export default function AdminAbout() {
         .eq("key", "about")
         .maybeSingle();
       if (data?.content) {
-        const c = data.content as Partial<AboutContent>;
+        const c = data.content as Partial<AboutContent> & { body?: unknown };
         setContent({
           eyebrow: c.eyebrow ?? ABOUT_DEFAULTS.eyebrow,
           headline: c.headline ?? ABOUT_DEFAULTS.headline,
-          body: Array.isArray(c.body) && c.body.length > 0 ? c.body : ABOUT_DEFAULTS.body,
+          body: normalizeAboutBody(c.body),
           cta_label: c.cta_label ?? ABOUT_DEFAULTS.cta_label,
         });
       }
       setLoading(false);
     })();
   }, []);
-
-  const updateBodyAt = (idx: number, value: string) =>
-    setContent((c) => ({ ...c, body: c.body.map((p, i) => (i === idx ? value : p)) }));
-  const addParagraph = () => setContent((c) => ({ ...c, body: [...c.body, ""] }));
-  const removeParagraph = (idx: number) =>
-    setContent((c) => ({ ...c, body: c.body.filter((_, i) => i !== idx) }));
 
   const save = async () => {
     setSaving(true);
@@ -100,50 +95,11 @@ export default function AdminAbout() {
               />
             </Field>
 
-            <div>
-              <label className="block font-mono uppercase text-ink-soft mb-3 font-medium" style={{ fontSize: 10, letterSpacing: "0.22em" }}>
-                Paragraphs
-              </label>
-              <p className="text-[12px] text-ink-soft mb-3" style={{ lineHeight: 1.5 }}>
-                The last paragraph is rendered as a pull quote (serif italic). Hover one to delete it.
-              </p>
-              <div className="space-y-3">
-                {content.body.map((p, i) => (
-                  <div key={i} className="flex gap-2 items-start">
-                    <textarea
-                      rows={3}
-                      className={inputCls}
-                      value={p}
-                      onChange={(e) => updateBodyAt(i, e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeParagraph(i)}
-                      disabled={content.body.length <= 1}
-                      className="shrink-0 p-2 text-ink-soft hover:text-ink disabled:opacity-30"
-                      aria-label="Delete paragraph"
-                      title="Delete paragraph"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={addParagraph}
-                className="mt-4 inline-flex items-center gap-2 font-mono uppercase text-ink-soft hover:text-ink transition-colors"
-                style={{ fontSize: 11, letterSpacing: "0.22em" }}
-              >
-                <Plus className="w-3.5 h-3.5" /> Add paragraph
-              </button>
-            </div>
-
-            <Field label="CTA button label" hint='Text for the "Open the map" link'>
-              <input
-                className={inputCls}
-                value={content.cta_label}
-                onChange={(e) => setContent((c) => ({ ...c, cta_label: e.target.value }))}
+            <Field label="Body" hint="Use the toolbar for italics, bold or block quotes — italics render as the editorial pull quote on /about.">
+              <RichTextEditor
+                value={content.body}
+                onChange={(html) => setContent((c) => ({ ...c, body: html }))}
+                placeholder="Write the manifesto…"
               />
             </Field>
 

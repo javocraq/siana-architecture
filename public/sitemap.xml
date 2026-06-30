@@ -56,6 +56,18 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://sianaarchitecture.com/cities/copenaghue</loc>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://sianaarchitecture.com/cities/lisbon</loc>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://sianaarchitecture.com/cities/madrid</loc>
     <lastmod>2026-06-22</lastmod>
     <changefreq>monthly</changefreq>
@@ -81,7 +93,7 @@
   </url>
   <url>
     <loc>https://sianaarchitecture.com/projects/8-house</loc>
-    <lastmod>2026-06-02</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -111,13 +123,13 @@
   </url>
   <url>
     <loc>https://sianaarchitecture.com/projects/champalimaud-centre</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://sianaarchitecture.com/projects/maat-lisbon</loc>
-    <lastmod>2026-06-10</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -141,7 +153,7 @@
   </url>
   <url>
     <loc>https://sianaarchitecture.com/projects/royal-danish-opera</loc>
-    <lastmod>2026-06-10</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -188,12 +200,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://sianaarchitecture.com/journal/lina-bo-bardi-in-her-own-light</loc>
-    <lastmod>2026-06-02</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://sianaarchitecture.com/journal/a-conversation-with-the-last-brickmaker</loc>
     <lastmod>2026-06-02</lastmod>
     <changefreq>monthly</changefreq>
@@ -206,8 +212,20 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://sianaarchitecture.com/resources/barcelona-la-linea-curva-como-manifiesto</loc>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://sianaarchitecture.com/resources/lina-bo-bardi-in-her-own-light</loc>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://sianaarchitecture.com/resources/lisbon-from-the-tile-up</loc>
-    <lastmod>2026-06-18</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

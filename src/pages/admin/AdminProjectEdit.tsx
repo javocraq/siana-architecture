@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { adminInputCls, adminLabelCls } from "@/lib/adminUi";
 import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
 
-type City = { id: string; name: string };
+type City = { id: string; name: string; center_latitude: number | null; center_longitude: number | null };
 
 type Tab = "content" | "seo";
 
@@ -96,9 +96,13 @@ export default function AdminProjectEdit() {
   const [creatingCity, setCreatingCity] = useState(false);
 
   useEffect(() => {
-    supabase.from("cities").select("id,name").order("name").then(({ data }) => {
-      setCities((data as City[]) || []);
-    });
+    supabase
+      .from("cities")
+      .select("id,name,center_latitude,center_longitude")
+      .order("name")
+      .then(({ data }) => {
+        setCities((data as City[]) || []);
+      });
   }, []);
 
   useEffect(() => {
@@ -159,7 +163,7 @@ export default function AdminProjectEdit() {
       toast({ title: "Could not create city", description: error?.message, variant: "destructive" });
       return;
     }
-    setCities((cs) => [...cs, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
+    setCities((cs) => [...cs, { id: data.id, name: data.name, center_latitude: null, center_longitude: null }].sort((a, b) => a.name.localeCompare(b.name)));
     set("city_id", data.id);
     setAddingCity(false);
     setCityDraft("");
@@ -485,15 +489,25 @@ export default function AdminProjectEdit() {
                 to that building/address. Clicking, dragging or searching after
                 that takes precedence — auto-locate never overrides a manual pin. */}
             <Field label="Location" hint={form.latitude && form.longitude ? `${form.latitude}, ${form.longitude}` : "We'll locate the project automatically as you type the name — click or drag to fine-tune"}>
-              <MapPicker
-                latitude={form.latitude}
-                longitude={form.longitude}
-                defaultPlace={[form.name, cities.find((c) => c.id === form.city_id)?.name]
-                  .filter(Boolean)
-                  .join(", ")}
-                defaultPlaceTypes="poi,address,place"
-                onChange={(lat, lng) => setForm((f) => ({ ...f, latitude: lat, longitude: lng }))}
-              />
+              {(() => {
+                const selectedCity = cities.find((c) => c.id === form.city_id);
+                const proximity: [number, number] | undefined =
+                  selectedCity && selectedCity.center_longitude != null && selectedCity.center_latitude != null
+                    ? [selectedCity.center_longitude, selectedCity.center_latitude]
+                    : undefined;
+                return (
+                  <MapPicker
+                    latitude={form.latitude}
+                    longitude={form.longitude}
+                    defaultPlace={[form.name, selectedCity?.name].filter(Boolean).join(", ")}
+                    defaultPlaceTypes="poi,address,place"
+                    proximity={proximity}
+                    cityName={selectedCity?.name}
+                    maxDistanceKm={selectedCity ? 80 : undefined}
+                    onChange={(lat, lng) => setForm((f) => ({ ...f, latitude: lat, longitude: lng }))}
+                  />
+                );
+              })()}
             </Field>
 
             {/* Description — below the map. */}

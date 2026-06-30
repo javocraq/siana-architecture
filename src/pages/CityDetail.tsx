@@ -672,7 +672,7 @@ function CityProjects({
 
       <Reveal className="mx-auto max-w-[1400px] flex justify-center" style={{ padding: "4rem 2.5rem 0" }}>
         <EditorialButton to={`/atlas?city=${city.slug}`} arrow variant="muted">
-          See all projects
+          See all projects on the map
         </EditorialButton>
       </Reveal>
     </section>

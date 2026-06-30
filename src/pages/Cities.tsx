@@ -174,10 +174,11 @@ export default function Cities() {
               <button
                 type="button"
                 onClick={() => { setRegion(""); setStyle(""); }}
-                className="pb-2 font-grotesk uppercase font-semibold text-[#4F4534] hover:text-black transition-colors"
-                style={{ fontSize: 11, letterSpacing: "0.22em" }}
+                aria-label="Clear filters"
+                title="Clear filters"
+                className="pb-2 text-[#4F4534] hover:text-black transition-colors"
               >
-                Clear
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             )}
           </div>

@@ -21,6 +21,21 @@ type Props = {
    *  Project editors keep the default 15 (street level, you see the pin
    *  sitting on the building). */
   autoLocateZoom?: number;
+  /** Optional `[lng, lat]` used to bias the auto-locate geocode toward a
+   *  known area (typically the selected city's centroid). Without this
+   *  bias, generic project names can match famous POIs in other countries
+   *  and drop the pin on the wrong continent. */
+  proximity?: [number, number];
+  /** Fallback used when `proximity` isn't supplied: MapPicker will geocode
+   *  this city name once (types=place) to resolve a centroid, so the
+   *  distance guardrail works even for cities that haven't had
+   *  `center_latitude`/`center_longitude` saved yet. */
+  cityName?: string;
+  /** Max distance, in km, allowed between the auto-locate geocode result
+   *  and `proximity`. Results farther than this are rejected so a pin
+   *  never lands in another country — the editor still sees the map
+   *  centred on the city and can fine-tune from there. */
+  maxDistanceKm?: number;
   /** Optional initial / saved zoom level. The map will mount at this zoom
    *  and emit zoom changes through onZoomChange so the parent form keeps
    *  the value in sync (no separate slider needed). */
@@ -43,20 +58,39 @@ const newSessionToken = () =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
 
+// Great-circle distance between two `[lng, lat]` points, in kilometres.
+// Used to reject auto-locate results that land far outside the selected
+// city — the editor sees the map stay put rather than the pin teleporting
+// to a homonymous POI on another continent.
+function distanceKm(a: [number, number], b: [number, number]): number {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b[1] - a[1]);
+  const dLng = toRad(b[0] - a[0]);
+  const lat1 = toRad(a[1]);
+  const lat2 = toRad(b[1]);
+  const h = Math.sin(dLat / 2) ** 2 + Math.sin(dLng / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
 // One-shot geocode for the auto-locate effect. Uses the lightweight Geocoding
 // v5 endpoint (no session token). `types` is configurable so the city editor
 // can stay restricted to `place` (city centroid) while the project editor can
-// pass `poi,address,place` to resolve a building or address.
+// pass `poi,address,place` to resolve a building or address. `proximity`
+// biases ranking toward a known area so generic names don't latch onto a
+// homonymous POI in another country.
 async function geocodePlace(
   query: string,
   token: string,
   types: string,
+  proximity?: [number, number],
   signal?: AbortSignal,
 ): Promise<[number, number] | null> {
   try {
-    const url =
+    let url =
       `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json` +
       `?access_token=${token}&types=${encodeURIComponent(types)}&limit=1&language=es`;
+    if (proximity) url += `&proximity=${proximity[0]},${proximity[1]}`;
     const res = await fetch(url, { signal });
     const data = await res.json();
     const c = data?.features?.[0]?.center;
@@ -66,7 +100,7 @@ async function geocodePlace(
   }
 }
 
-export default function MapPicker({ latitude, longitude, onChange, defaultPlace, defaultPlaceTypes = "place", autoLocateZoom = 15, zoom, onZoomChange }: Props) {
+export default function MapPicker({ latitude, longitude, onChange, defaultPlace, defaultPlaceTypes = "place", autoLocateZoom = 15, zoom, onZoomChange, proximity, cityName, maxDistanceKm }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
@@ -93,6 +127,29 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
+  // Shown under the search input when the editor picks a suggestion that
+  // falls outside the city's allowed radius. The pin doesn't move; the
+  // message points them back inside the selected city.
+  const [pickError, setPickError] = useState<string | null>(null);
+  // Effective proximity centre: the `proximity` prop wins, otherwise we
+  // geocode `cityName` once so the distance guardrail also works for
+  // cities whose centroid isn't stored in the DB yet (e.g. cities created
+  // through the inline "+ Add new city…" flow with status=draft).
+  const [resolvedProx, setResolvedProx] = useState<[number, number] | null>(null);
+  useEffect(() => {
+    if (proximity) { setResolvedProx(proximity); return; }
+    if (!cityName || !token) { setResolvedProx(null); return; }
+    const ctrl = new AbortController();
+    (async () => {
+      const c = await geocodePlace(cityName, token, "place", undefined, ctrl.signal);
+      if (c) setResolvedProx(c);
+    })();
+    return () => ctrl.abort();
+    // proximity is an array; only re-run when its values change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proximity?.[0], proximity?.[1], cityName, token]);
+  const proxLng = resolvedProx?.[0];
+  const proxLat = resolvedProx?.[1];
 
   // Create or move the draggable pin, report the position, optionally fly to it.
   // `targetZoom` overrides the default "zoom in to street level" behaviour —
@@ -190,22 +247,36 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
   // finishes typing "Sagrada Familia, Barcelona" the pin flies to Barcelona.
   // Stops as soon as the pin has been placed manually (click, drag, search
   // pick, or loaded from saved DB coords), so manual edits are never lost.
+  // proxLng/proxLat come from the resolvedProx state defined above.
   useEffect(() => {
     if (!token || !mapRef.current) return;
     if (manuallyPlacedRef.current) return;
     const place = defaultPlace?.trim();
     if (!place) return;
+    const prox: [number, number] | undefined =
+      proxLng != null && proxLat != null ? [proxLng, proxLat] : undefined;
     const ctrl = new AbortController();
     const t = setTimeout(async () => {
-      const coords = await geocodePlace(place, token, defaultPlaceTypes, ctrl.signal);
+      const coords = await geocodePlace(place, token, defaultPlaceTypes, prox, ctrl.signal);
       // Re-check after the async hop — the editor may have clicked or
       // dragged in the meantime.
       if (!coords) return;
       if (manuallyPlacedRef.current) return;
+      // Guardrail: if the geocoder returned a match far outside the
+      // selected city (a homonymous POI in another country), don't move
+      // the pin. Fall back to the proximity centroid so the editor sees
+      // the city and can place the pin manually from there.
+      if (prox && typeof maxDistanceKm === "number") {
+        const d = distanceKm(prox, coords);
+        if (d > maxDistanceKm) {
+          placeMarker(prox[0], prox[1], { fly: true, targetZoom: autoLocateZoom });
+          return;
+        }
+      }
       placeMarker(coords[0], coords[1], { fly: true, targetZoom: autoLocateZoom });
     }, 500);
     return () => { clearTimeout(t); ctrl.abort(); };
-  }, [defaultPlace, defaultPlaceTypes, token, placeMarker, autoLocateZoom]);
+  }, [defaultPlace, defaultPlaceTypes, token, placeMarker, autoLocateZoom, proxLng, proxLat, maxDistanceKm]);
 
   // Debounced autocomplete — Mapbox Search Box API. Searches POIs, addresses,
   // streets and places, biased toward the current map center so a query like
@@ -222,18 +293,21 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
         url.searchParams.set("session_token", sessionTokenRef.current);
         url.searchParams.set("limit", "8");
         url.searchParams.set("language", "es");
-        // Proximity bias: prefer the dropped pin first, otherwise the map's
-        // current center. Helpful for generic queries like "café" or "park".
-        // BUT: when the query is specific enough (3+ words or contains a
-        // comma — typical of "Building, City"), the user is naming a precise
-        // place and the bias hurts more than it helps. Searching
-        // "Champalimaud Centre new york" while the pin is in Lisbon should
-        // not be pulled back to Lisbon results. Skip proximity in that case.
-        const wordCount = qq.split(/\s+/).filter(Boolean).length;
-        const isSpecific = wordCount >= 3 || qq.includes(",");
-        if (!isSpecific) {
-          const ll = markerRef.current?.getLngLat() ?? mapRef.current?.getCenter();
-          if (ll) url.searchParams.set("proximity", `${ll.lng},${ll.lat}`);
+        // Proximity bias: when a city is bound to the editor, always bias
+        // toward the city's centroid so a search like "Polonia" from a
+        // Copenhagen project surfaces Copenhagen results, not the country.
+        // Otherwise fall back to the dropped pin / map centre, and only
+        // for generic queries (≤2 words, no comma) — specific queries like
+        // "Building, City" don't need (and are hurt by) bias.
+        if (proxLng != null && proxLat != null) {
+          url.searchParams.set("proximity", `${proxLng},${proxLat}`);
+        } else {
+          const wordCount = qq.split(/\s+/).filter(Boolean).length;
+          const isSpecific = wordCount >= 3 || qq.includes(",");
+          if (!isSpecific) {
+            const ll = markerRef.current?.getLngLat() ?? mapRef.current?.getCenter();
+            if (ll) url.searchParams.set("proximity", `${ll.lng},${ll.lat}`);
+          }
         }
 
         const res = await fetch(url.toString(), { signal: ctrl.signal });
@@ -258,7 +332,7 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
       }
     }, 300);
     return () => { clearTimeout(t); ctrl.abort(); };
-  }, [query, token]);
+  }, [query, token, proxLng, proxLat]);
 
   const pick = async (r: Suggestion) => {
     if (!token) return;
@@ -271,11 +345,26 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
       const coords = data?.features?.[0]?.geometry?.coordinates as [number, number] | undefined;
       if (!coords) return;
       const [lng, lat] = coords;
+      // Hard guardrail: if a city is bound and the chosen result lies
+      // outside its radius, refuse the move. Editors shouldn't be able
+      // to relocate a Copenhagen project to Poland just by searching.
+      if (proxLng != null && proxLat != null && typeof maxDistanceKm === "number") {
+        const d = distanceKm([proxLng, proxLat], [lng, lat]);
+        if (d > maxDistanceKm) {
+          setPickError(
+            `Esa ubicación queda a ~${Math.round(d)} km de la ciudad seleccionada. Cambia la ciudad del proyecto o elige un resultado dentro de ella.`,
+          );
+          setResults([]);
+          setOpen(false);
+          return;
+        }
+      }
       manuallyPlacedRef.current = true;
       placeMarker(lng, lat, { fly: true });
       setQuery(r.name);
       setResults([]);
       setOpen(false);
+      setPickError(null);
       // Rotate the session token — billing closes when a retrieve fires.
       sessionTokenRef.current = newSessionToken();
     } catch {
@@ -302,7 +391,7 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
         <div className="absolute top-3 left-3 z-10" style={{ width: "min(330px, calc(100% - 24px))" }}>
           <input
             value={query}
-            onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+            onChange={(e) => { setQuery(e.target.value); setOpen(true); setPickError(null); }}
             onFocus={() => setOpen(true)}
             onBlur={() => setTimeout(() => setOpen(false), 150)}
             onKeyDown={(e) => {
@@ -314,6 +403,14 @@ export default function MapPicker({ latitude, longitude, onChange, defaultPlace,
             placeholder="Search city, place, building…"
             className="w-full px-3 py-2 text-[13px] bg-white border hairline shadow-sm focus:outline-none focus:border-ink/40 placeholder:text-ink-faint"
           />
+          {pickError && (
+            <div
+              className="mt-1 px-3 py-2 text-[11.5px] leading-snug bg-white border hairline shadow-sm text-destructive"
+              role="alert"
+            >
+              {pickError}
+            </div>
+          )}
           {open && query.trim() && results.length > 0 && (
             <ul className="mt-1 bg-white border hairline shadow-md max-h-[220px] overflow-y-auto">
               {results.map((r, i) => (

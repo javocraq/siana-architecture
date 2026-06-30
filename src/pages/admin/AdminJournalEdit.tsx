@@ -13,7 +13,7 @@ import { adminInputCls, adminLabelCls } from "@/lib/adminUi";
 type City = { id: string; name: string };
 type Project = { id: string; name: string; slug: string };
 
-type Tab = "content" | "media" | "seo";
+type Tab = "content" | "seo";
 
 
 const slugify = (s: string) =>
@@ -229,7 +229,6 @@ export default function AdminJournalEdit() {
   const tabs: { key: Tab; label: string }[] = useMemo(
     () => [
       { key: "content", label: "Content" },
-      { key: "media", label: "Media" },
       { key: "seo", label: "SEO" },
     ],
     []
@@ -311,25 +310,39 @@ export default function AdminJournalEdit() {
 
         {tab === "content" && (
           <div className="space-y-8">
-            <div className="grid grid-cols-2 gap-6">
-              <Field label="Title *">
-                <input className={inputCls} value={form.title} onChange={(e) => onTitleChange(e.target.value)} />
-              </Field>
-              <Field label="Slug *" hint="URL: /journal/{slug}">
-                <input
-                  className={inputCls}
-                  value={form.slug}
-                  onChange={(e) => {
-                    setSlugTouched(true);
-                    set("slug", slugify(e.target.value));
-                  }}
-                />
-              </Field>
-            </div>
+            {/* Title / slug / excerpt on the left, hero image on the right
+                (mirrors the project editor: keeps the visual at a glance
+                without crowding the body editor below). */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-8 items-start">
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <Field label="Title *">
+                    <input className={inputCls} value={form.title} onChange={(e) => onTitleChange(e.target.value)} />
+                  </Field>
+                  <Field label="Slug *" hint="URL: /journal/{slug}">
+                    <input
+                      className={inputCls}
+                      value={form.slug}
+                      onChange={(e) => {
+                        setSlugTouched(true);
+                        set("slug", slugify(e.target.value));
+                      }}
+                    />
+                  </Field>
+                </div>
 
-            <Field label="Excerpt" hint="Short summary shown on the journal index">
-              <textarea rows={2} className={inputCls} value={form.excerpt} onChange={(e) => set("excerpt", e.target.value)} />
-            </Field>
+                <Field label="Excerpt" hint="Short summary shown on the journal index">
+                  <textarea rows={2} className={inputCls} value={form.excerpt} onChange={(e) => set("excerpt", e.target.value)} />
+                </Field>
+              </div>
+
+              <ImageUpload
+                label="Hero image"
+                value={form.hero_image_url}
+                onChange={(url) => set("hero_image_url", url)}
+                aspect="wide"
+              />
+            </div>
 
             <Field label="Body">
               <RichTextEditor
@@ -434,17 +447,6 @@ export default function AdminJournalEdit() {
                 )}
               </div>
             </Field>
-          </div>
-        )}
-
-        {tab === "media" && (
-          <div className="space-y-10">
-            <ImageUpload
-              label="Hero image"
-              value={form.hero_image_url}
-              onChange={(url) => set("hero_image_url", url)}
-              aspect="wide"
-            />
           </div>
         )}
 

@@ -7,12 +7,14 @@ Siana documents notable architecture across global cities and writes about it wi
 - Website: https://sianaarchitecture.com
 - Language: English
 - Focus: architecture, cities, urbanism, design history, the built environment
-- Cities covered: Barcelona, Berlin, Chicago, Madrid, Mexico City, New York, Porto
+- Cities covered: Barcelona, Berlin, Chicago, Copenhagen, Lisbon, Madrid, Mexico City, New York, Porto
 
 ## Cities
 - [Barcelona](https://sianaarchitecture.com/cities/barcelona): Architecture guide to Barcelona, Spain — Modernisme, mosaics, and the unfinished cathedral of a dream.
 - [Berlin](https://sianaarchitecture.com/cities/berlin): Architecture guide to Berlin, Germany — Where History Meets Contemporary Design
 - [Chicago](https://sianaarchitecture.com/cities/chicago): Architecture guide to Chicago, United States — The birthplace of the skyscraper.
+- [Copenhagen](https://sianaarchitecture.com/cities/copenaghue): Architecture guide to Copenhagen, Dinamarca.
+- [Lisbon](https://sianaarchitecture.com/cities/lisbon): Architecture guide to Lisbon, portugal.
 - [Madrid](https://sianaarchitecture.com/cities/madrid): Architecture guide to Madrid, Spain — Madrid: donde la tradición y la modernidad se encuentran.
 - [Mexico City](https://sianaarchitecture.com/cities/mexico-city): Architecture guide to Mexico City, Mexico — Barragán's color and the weight of volcanic stone.
 - [New York](https://sianaarchitecture.com/cities/newyork): Architecture guide to New York, USA — The city that nevers sleeps
@@ -22,22 +24,21 @@ Siana documents notable architecture across global cities and writes about it wi
 - [The Drawing That Thinks Back](https://sianaarchitecture.com/journal/the-drawing-that-thinks-back): Architecture + AI — Generative tools promise infinite variation. What they ask in return is a new kind of authorship.
 - [On the Patience of Stone](https://sianaarchitecture.com/journal/on-the-patience-of-stone): Essay — Why the slowest buildings often outlast the fashions that surround them.
 - [The Museum That Forgot Its Street](https://sianaarchitecture.com/journal/the-museum-that-forgot-its-street): Criticism — A new cultural landmark dazzles from the water and turns its back on the city behind it.
-- [Lina Bo Bardi, In Her Own Light](https://sianaarchitecture.com/journal/lina-bo-bardi-in-her-own-light): Profile — The architect who treated concrete as an invitation rather than a barrier.
 - [A Conversation With the Last Brickmaker](https://sianaarchitecture.com/journal/a-conversation-with-the-last-brickmaker): Interview — Forty years at the kiln, and a quiet argument for materials that age in public.
 - [The Slow Return of the Courtyard](https://sianaarchitecture.com/journal/the-slow-return-of-the-courtyard): Reportage — Across three continents, architects are rediscovering the oldest trick for cooling a city block.
 
 ## Projects
-- [8 House](https://sianaarchitecture.com/projects/8-house): BIG, 2010 — Berlin.
+- [8 House](https://sianaarchitecture.com/projects/8-house): BIG, 2010 — Copenhagen.
 - [Caixaforum Madrid](https://sianaarchitecture.com/projects/caixaforum-madrid): Herzog & de Meuron — Madrid.
 - [Casa Batlló](https://sianaarchitecture.com/projects/casa-batllo): Antoni Gaudí, 1906 — Barcelona.
 - [Casa da Música](https://sianaarchitecture.com/projects/casa-da-musica): OMA / Rem Koolhaas, 2005 — Porto.
 - [Casa Luis Barragán](https://sianaarchitecture.com/projects/casa-luis-barragan): Luis Barragán, 1948 — Mexico City.
-- [Champalimaud Centre](https://sianaarchitecture.com/projects/champalimaud-centre): Charles Correa, 2010 — New York.
-- [MAAT](https://sianaarchitecture.com/projects/maat-lisbon): Amanda Levete (AL_A), 2016 — New York.
+- [Champalimaud Centre](https://sianaarchitecture.com/projects/champalimaud-centre): Charles Correa, 2010 — Lisbon.
+- [MAAT](https://sianaarchitecture.com/projects/maat-lisbon): Amanda Levete (AL_A), 2016 — Lisbon.
 - [Mercat de Santa Caterina](https://sianaarchitecture.com/projects/mercat-santa-caterina): EMBT, 2005 — Barcelona.
 - [Museo Soumaya](https://sianaarchitecture.com/projects/museo-soumaya): FR-EE / Fernando Romero, 2011 — Mexico City.
 - [Robie House](https://sianaarchitecture.com/projects/robie-house): Frank Lloyd Wright, 1910 — Chicago.
-- [Royal Danish Opera](https://sianaarchitecture.com/projects/royal-danish-opera): Henning Larsen, 2005 — Berlin.
+- [Royal Danish Opera](https://sianaarchitecture.com/projects/royal-danish-opera): Henning Larsen, 2005 — Copenhagen.
 - [Sagrada Família](https://sianaarchitecture.com/projects/sagrada-familia): Antoni Gaudí, 1882 — Barcelona.
 - [Serralves Museum](https://sianaarchitecture.com/projects/serralves-museum): Álvaro Siza, 1999 — Porto.
 - [Unité d'Habitation Berlin](https://sianaarchitecture.com/projects/unite-d-habitation-berlin): Le Corbusier, 1957 — Berlin.
