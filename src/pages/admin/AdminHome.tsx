@@ -3,6 +3,7 @@ import { Loader2, X, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ImageUpload from "@/components/admin/ImageUpload";
+import InlineRichInput from "@/components/admin/InlineRichInput";
 import { useToast } from "@/hooks/use-toast";
 import { HOME_DEFAULTS, mergeHomeContent, type HomeContent } from "@/lib/homeContent";
 import { adminInputCls, adminLabelCls } from "@/lib/adminUi";
@@ -100,11 +101,11 @@ export default function AdminHome() {
                   </Field>
 
                   <Field label="Description">
-                    <textarea
-                      rows={3}
-                      className={inputCls}
+                    <InlineRichInput
+                      multiline
+                      ariaLabel="Hero description"
                       value={content.hero.description}
-                      onChange={(e) => updateHero({ description: e.target.value })}
+                      onChange={(description) => updateHero({ description })}
                     />
                   </Field>
                 </div>
@@ -156,29 +157,20 @@ export default function AdminHome() {
                 />
               </Field>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="Headline — lead" hint="Rendered in regular ink">
-                  <input
-                    className={inputCls}
-                    value={content.map.headline_lead}
-                    onChange={(e) => updateMap({ headline_lead: e.target.value })}
-                  />
-                </Field>
-                <Field label="Headline — emphasis" hint="Rendered in italic, softened">
-                  <input
-                    className={inputCls}
-                    value={content.map.headline_emphasis}
-                    onChange={(e) => updateMap({ headline_emphasis: e.target.value })}
-                  />
-                </Field>
-              </div>
+              <Field label="Headline">
+                <InlineRichInput
+                  ariaLabel="Map preview headline"
+                  value={content.map.headline}
+                  onChange={(headline) => updateMap({ headline })}
+                />
+              </Field>
 
               <Field label="Description">
-                <textarea
-                  rows={3}
-                  className={inputCls}
+                <InlineRichInput
+                  multiline
+                  ariaLabel="Map preview description"
                   value={content.map.description}
-                  onChange={(e) => updateMap({ description: e.target.value })}
+                  onChange={(description) => updateMap({ description })}
                 />
               </Field>
             </CollapsibleSection>
@@ -188,28 +180,19 @@ export default function AdminHome() {
               title="Featured Buildings"
               description='Editorial intro above the asymmetric project grid. The cards themselves come from projects flagged as "Featured".'
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="Headline — lead" hint="Rendered in solid ink">
-                  <input
-                    className={inputCls}
-                    value={content.buildings.headline_lead}
-                    onChange={(e) => updateBuildings({ headline_lead: e.target.value })}
-                  />
-                </Field>
-                <Field label="Headline — emphasis" hint="Rendered in italic terracotta">
-                  <input
-                    className={inputCls}
-                    value={content.buildings.headline_emphasis}
-                    onChange={(e) => updateBuildings({ headline_emphasis: e.target.value })}
-                  />
-                </Field>
-              </div>
+              <Field label="Headline">
+                <InlineRichInput
+                  ariaLabel="Featured buildings headline"
+                  value={content.buildings.headline}
+                  onChange={(headline) => updateBuildings({ headline })}
+                />
+              </Field>
               <Field label="Description">
-                <textarea
-                  rows={3}
-                  className={inputCls}
+                <InlineRichInput
+                  multiline
+                  ariaLabel="Featured buildings description"
                   value={content.buildings.description}
-                  onChange={(e) => updateBuildings({ description: e.target.value })}
+                  onChange={(description) => updateBuildings({ description })}
                 />
               </Field>
             </CollapsibleSection>
@@ -219,28 +202,19 @@ export default function AdminHome() {
               title="Latest journal"
               description="Photo grid of recent posts. Cards are pulled from published posts ordered by date."
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="Headline — lead" hint="Rendered in solid ink">
-                  <input
-                    className={inputCls}
-                    value={content.journal.headline_lead}
-                    onChange={(e) => updateJournal({ headline_lead: e.target.value })}
-                  />
-                </Field>
-                <Field label="Headline — emphasis" hint="Rendered in italic terracotta">
-                  <input
-                    className={inputCls}
-                    value={content.journal.headline_emphasis}
-                    onChange={(e) => updateJournal({ headline_emphasis: e.target.value })}
-                  />
-                </Field>
-              </div>
+              <Field label="Headline">
+                <InlineRichInput
+                  ariaLabel="Latest journal headline"
+                  value={content.journal.headline}
+                  onChange={(headline) => updateJournal({ headline })}
+                />
+              </Field>
               <Field label="Description">
-                <textarea
-                  rows={3}
-                  className={inputCls}
+                <InlineRichInput
+                  multiline
+                  ariaLabel="Latest journal description"
                   value={content.journal.description}
-                  onChange={(e) => updateJournal({ description: e.target.value })}
+                  onChange={(description) => updateJournal({ description })}
                 />
               </Field>
             </CollapsibleSection>
@@ -258,18 +232,18 @@ export default function AdminHome() {
                 />
               </Field>
               <Field label="Headline">
-                <input
-                  className={inputCls}
+                <InlineRichInput
+                  ariaLabel="Newsletter headline"
                   value={content.newsletter.headline}
-                  onChange={(e) => updateNewsletter({ headline: e.target.value })}
+                  onChange={(headline) => updateNewsletter({ headline })}
                 />
               </Field>
               <Field label="Description">
-                <textarea
-                  rows={3}
-                  className={inputCls}
+                <InlineRichInput
+                  multiline
+                  ariaLabel="Newsletter description"
                   value={content.newsletter.description}
-                  onChange={(e) => updateNewsletter({ description: e.target.value })}
+                  onChange={(description) => updateNewsletter({ description })}
                 />
               </Field>
             </CollapsibleSection>

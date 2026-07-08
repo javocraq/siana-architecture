@@ -98,7 +98,7 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <div className="px-10 py-10 max-w-[1180px]">
+      <div className="px-10 py-10">
         {/* Header */}
         <div className="mb-10">
           <h1

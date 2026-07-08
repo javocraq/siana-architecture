@@ -6,9 +6,10 @@
  * The hero headline is a single string; newlines in it render as line
  * breaks on the public page (whitespace: pre-line). Older records that
  * still have `headline_line1` / `headline_line2` are migrated on read by
- * `mergeHomeContent`. The map block's headline is split into a leading
- * phrase and an emphasised tail (rendered in italic), matching the
- * original markup.
+ * `mergeHomeContent`. The map / buildings / journal blocks store their
+ * headline as a single inline-HTML string (bold / italic / terracotta);
+ * older records that still split it into `headline_lead` + `headline_emphasis`
+ * are migrated on read into that combined markup.
  */
 export type HomeContent = {
   hero: {
@@ -30,8 +31,8 @@ export type HomeContent = {
   };
   map: {
     eyebrow: string;
-    headline_lead: string;
-    headline_emphasis: string;
+    /** Inline-formatted HTML (bold / italic / terracotta). */
+    headline: string;
     description: string;
     cta: string;
   };
@@ -39,13 +40,13 @@ export type HomeContent = {
     title: string;
   };
   buildings: {
-    headline_lead: string;
-    headline_emphasis: string;
+    /** Inline-formatted HTML (bold / italic / terracotta). */
+    headline: string;
     description: string;
   };
   journal: {
-    headline_lead: string;
-    headline_emphasis: string;
+    /** Inline-formatted HTML (bold / italic / terracotta). */
+    headline: string;
     description: string;
     cta: string;
   };
@@ -70,8 +71,7 @@ export const HOME_DEFAULTS: HomeContent = {
   },
   map: {
     eyebrow: "The Map",
-    headline_lead: "Every building,",
-    headline_emphasis: "on the map",
+    headline: 'Every building, <em class="text-accent-terra">on the map</em>',
     description:
       "A living atlas of architecture. Open the Map to filter by city, architect, style and year — and discover each project on the map.",
     cta: "Open the interactive map",
@@ -80,14 +80,12 @@ export const HOME_DEFAULTS: HomeContent = {
     title: "Cities",
   },
   buildings: {
-    headline_lead: "Featured",
-    headline_emphasis: "Buildings",
+    headline: 'Featured <em class="text-accent-terra">Buildings</em>',
     description:
       "A curated selection of the projects we keep returning to — across cities, eras and materials.",
   },
   journal: {
-    headline_lead: "Field",
-    headline_emphasis: "notes",
+    headline: 'Field <em class="text-accent-terra">notes</em>',
     description: "Essays, criticism and field notes on architecture — slowly written.",
     cta: "All notes",
   },
@@ -98,6 +96,35 @@ export const HOME_DEFAULTS: HomeContent = {
       "Subscribe to our newsletter to receive updates on curated architecture discoveries, city guides, and resources for architects.",
   },
 };
+
+/** Escape plain text so a migrated lead/emphasis pair can't inject markup. */
+function esc(text?: string): string {
+  return (text || "").replace(/[&<>"]/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string)
+  );
+}
+
+/**
+ * Merge one headline section over its defaults. Sections used to store the
+ * headline as `headline_lead` + `headline_emphasis` (the emphasis rendered in
+ * italic terracotta); if a record still has those and no new `headline`,
+ * reconstruct the equivalent inline-HTML so old saved copy keeps rendering.
+ */
+function mergeHeadlineSection<T extends { headline: string }>(defaults: T, partial?: any): T {
+  const p = (partial || {}) as any;
+  let headline: string | undefined = p.headline;
+  if (headline == null && (p.headline_lead != null || p.headline_emphasis != null)) {
+    const lead = esc(p.headline_lead);
+    const emphasis = p.headline_emphasis
+      ? ` <em class="text-accent-terra">${esc(p.headline_emphasis)}</em>`
+      : "";
+    headline = `${lead}${emphasis}`.trim();
+  }
+  const merged = { ...defaults, ...p, headline: headline ?? defaults.headline };
+  delete (merged as any).headline_lead;
+  delete (merged as any).headline_emphasis;
+  return merged;
+}
 
 /** Merge a partial DB record on top of the defaults so missing fields don't blank out. */
 export function mergeHomeContent(partial?: Partial<HomeContent> | null): HomeContent {
@@ -121,10 +148,10 @@ export function mergeHomeContent(partial?: Partial<HomeContent> | null): HomeCon
   delete (hero as any).headline_line2;
   return {
     hero,
-    map: { ...HOME_DEFAULTS.map, ...(partial.map || {}) },
+    map: mergeHeadlineSection(HOME_DEFAULTS.map, partial.map),
     cities: { ...HOME_DEFAULTS.cities, ...(partial.cities || {}) },
-    buildings: { ...HOME_DEFAULTS.buildings, ...(partial.buildings || {}) },
-    journal: { ...HOME_DEFAULTS.journal, ...(partial.journal || {}) },
+    buildings: mergeHeadlineSection(HOME_DEFAULTS.buildings, partial.buildings),
+    journal: mergeHeadlineSection(HOME_DEFAULTS.journal, partial.journal),
     newsletter: { ...HOME_DEFAULTS.newsletter, ...(partial.newsletter || {}) },
   };
 }

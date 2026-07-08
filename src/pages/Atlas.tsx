@@ -158,6 +158,8 @@ function SearchBox({
   onPickCity,
   onPickProject,
   onPickPlace,
+  onClear,
+  syncName,
   autoFocus,
 }: {
   projects: Project[];
@@ -166,11 +168,19 @@ function SearchBox({
   onPickCity: (c: City) => void;
   onPickProject: (p: Project) => void;
   onPickPlace: (lng: number, lat: number, bbox?: number[]) => void;
+  onClear?: () => void;
+  syncName?: string;
   autoFocus?: boolean;
 }) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [places, setPlaces] = useState<{ name: string; lng: number; lat: number; bbox?: number[] }[]>([]);
+
+  // Keep the field in sync with a selection made outside the box (e.g. clicking
+  // a map pin selects a project) — show that name instead of the stale query.
+  useEffect(() => {
+    if (syncName) { setQ(syncName); setOpen(false); }
+  }, [syncName]);
   const query = q.trim().toLowerCase();
   const cityMatches = query ? cities.filter((c) => c.name.toLowerCase().includes(query)).slice(0, 4) : [];
   const projMatches = query
@@ -194,7 +204,7 @@ function SearchBox({
       try {
         const url =
           `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(qq)}.json` +
-          `?access_token=${token}&limit=5&language=en`;
+          `?access_token=${token}&limit=5&language=en,es`;
         const res = await fetch(url, { signal: ctrl.signal });
         const data = await res.json();
         setPlaces(
@@ -238,8 +248,8 @@ function SearchBox({
         />
         {q && (
           <button
-            onClick={() => { setQ(""); setOpen(false); }}
-            aria-label="Clear search"
+            onClick={() => { setQ(""); setOpen(false); onClear?.(); }}
+            aria-label="Clear search and return to world view"
             className="inline-flex items-center justify-center text-ink-soft hover:text-ink shrink-0"
             style={{ width: 26, height: 26, borderRadius: 8 }}
           >
@@ -260,7 +270,7 @@ function SearchBox({
             {cityMatches.map((c) => (
               <button
                 key={"c" + c.id}
-                onClick={() => { onPickCity(c); setQ(""); setOpen(false); }}
+                onClick={() => { onPickCity(c); setQ(c.name); setOpen(false); }}
                 className="w-full text-left px-3 py-2.5 hover:bg-paper-mid transition-colors flex items-center justify-between gap-2"
                 style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
               >
@@ -271,7 +281,7 @@ function SearchBox({
             {projMatches.map((p) => (
               <button
                 key={"p" + p.id}
-                onClick={() => { onPickProject(p); setQ(""); setOpen(false); }}
+                onClick={() => { onPickProject(p); setQ(p.name); setOpen(false); }}
                 className="w-full text-left px-3 py-2.5 hover:bg-paper-mid transition-colors flex items-center justify-between gap-2"
                 style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
               >
@@ -287,7 +297,7 @@ function SearchBox({
             {places.map((pl, i) => (
               <button
                 key={"pl" + i}
-                onClick={() => { onPickPlace(pl.lng, pl.lat, pl.bbox); setQ(""); setOpen(false); }}
+                onClick={() => { onPickPlace(pl.lng, pl.lat, pl.bbox); setQ(pl.name); setOpen(false); }}
                 className="w-full text-left px-3 py-2.5 hover:bg-paper-mid transition-colors flex items-center justify-between gap-3"
                 style={{ borderBottom: "1px solid hsl(var(--paper-mid))" }}
               >
@@ -697,6 +707,10 @@ export default function Atlas() {
 
   const selectProject = (p: Project) => {
     setSelected(p);
+    // Reflect the picked project's name in the search field (both the mobile
+    // pill and — via the `selected` prop — the desktop SearchBox) so clicking
+    // a map pin updates the search text instead of leaving the stale query.
+    setMobileQ(p.name);
     if (p.latitude != null && p.longitude != null) {
       mapRef.current?.flyTo({ center: [p.longitude, p.latitude], zoom: 15, essential: true });
     }
@@ -733,11 +747,6 @@ export default function Atlas() {
     setSelected(null);
     clearSearchMarker();
   };
-  const resetView = () => {
-    clearAllFilters();
-    mapRef.current?.flyTo({ center: [10, 25], zoom: 1.5, speed: 1.2, curve: 1.4, essential: true });
-  };
-
   // Search: jump straight to a city (filter + fly + project list) or a project
   // (fly to it + open its card). After picking, the chosen name stays in the
   // search input so the user knows what they're looking at; tapping the × in
@@ -803,6 +812,14 @@ export default function Atlas() {
     clearSearchMarker();
   };
 
+  // The search box's × button: reset everything to neutral (like the mobile
+  // pill) AND fly the map back out to the world globe. This is how the user
+  // returns to the world view after zooming into a city or place.
+  const resetToWorld = () => {
+    clearMobileSearch();
+    mapRef.current?.flyTo({ center: [10, 25], zoom: 1.5, speed: 1.2, curve: 1.4, essential: true });
+  };
+
   const saveToken = () => {
     if (!tokenInput.trim()) return;
     localStorage.setItem(TOKEN_KEY, tokenInput.trim());
@@ -819,7 +836,7 @@ export default function Atlas() {
       try {
         const url =
           `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(qq)}.json` +
-          `?access_token=${token}&limit=5&language=en`;
+          `?access_token=${token}&limit=5&language=en,es`;
         const res = await fetch(url, { signal: ctrl.signal });
         const data = await res.json();
         setMobilePlaces(
@@ -959,31 +976,6 @@ export default function Atlas() {
             className="absolute inset-0 z-[35]"
             onClick={() => { setSearchOpen(false); setFiltersOpen(false); }}
           />
-        )}
-
-        {/* Reset-view button — only visible once the user has zoomed in.
-            Sits bottom-left so it doesn't clash with Mapbox's nav controls
-            (top-right) or the selected-project card. */}
-        {isZoomedIn && !selected && !(filters.city && filtered.length > 0) && (
-          <button
-            onClick={resetView}
-            className="absolute z-40 font-mono uppercase inline-flex items-center gap-1.5 px-2.5 py-1 transition-opacity hover:opacity-100 fade-in"
-            style={{
-              bottom: 18,
-              left: 18,
-              fontSize: 10,
-              letterSpacing: "0.16em",
-              fontWeight: 500,
-              background: "hsl(var(--paper-warm) / 0.85)",
-              border: "1px solid rgba(0,0,0,0.12)",
-              color: "hsl(var(--ink-soft))",
-              opacity: 0.8,
-            }}
-            aria-label="Reset map view"
-          >
-            <span aria-hidden="true">←</span>
-            Back to world
-          </button>
         )}
 
         {/* Filter bar — floats over the map, just below the navbar.
@@ -1205,7 +1197,7 @@ export default function Atlas() {
               to the right. */}
           <div className="hidden md:flex items-center gap-2 flex-wrap px-8 py-3 pointer-events-auto">
             <div className="w-[280px] shrink-0">
-              <SearchBox projects={projects} cities={cities} token={token} onPickCity={searchPickCity} onPickProject={searchPickProject} onPickPlace={searchPickPlace} />
+              <SearchBox projects={projects} cities={cities} token={token} onPickCity={searchPickCity} onPickProject={searchPickProject} onPickPlace={searchPickPlace} onClear={resetToWorld} syncName={selected?.name} />
             </div>
             <div className="inline-flex items-center gap-2 flex-wrap">
               <FilterMenu label="Materials" options={tax.materials} selected={filters.material ? [filters.material] : []} onToggle={(v) => activate("material", v)} open={openMenu === "materials"} onToggleOpen={() => toggleMenu("materials")} onClose={closeMenu} stacked />

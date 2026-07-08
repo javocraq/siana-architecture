@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Reveal from "@/components/site/Reveal";
 import { useHomeContent } from "@/hooks/useHomeContent";
+import { sanitizeInline } from "@/lib/inlineHtml";
 
 interface Project {
   id: string;
@@ -29,7 +30,11 @@ export default function FeaturedBuildings() {
         .select("id, name, slug, cover_image_url, hero_image_url, city:cities(name)")
         .eq("status", "published")
         .eq("featured", true)
-        .order("created_at", { ascending: false })
+        // Order by last-touched, not creation date, so toggling a project's
+        // "featured" flag (which bumps updated_at via the DB trigger) promotes
+        // it to the front of this 5-slot showcase. Otherwise older featured
+        // projects could never surface here no matter how you toggle them.
+        .order("updated_at", { ascending: false })
         .limit(5);
       if (data) setProjects(data as any);
     })();
@@ -51,20 +56,15 @@ export default function FeaturedBuildings() {
       >
         <div className="text-center max-w-xl mx-auto">
           <h2
-            className="font-display-black text-ink"
+            className="font-display-black text-ink [&_em]:italic"
             style={{ fontSize: "clamp(2rem, 3.7vw, 3.4rem)", lineHeight: 1.05 }}
-          >
-            {content.buildings.headline_lead}
-            {content.buildings.headline_emphasis ? (
-              <> <em className="italic text-accent-terra">{content.buildings.headline_emphasis}</em></>
-            ) : null}
-          </h2>
+            dangerouslySetInnerHTML={{ __html: sanitizeInline(content.buildings.headline) }}
+          />
           <p
-            className="font-mono text-ink-soft mt-7 mx-auto"
+            className="font-mono text-ink-soft mt-7 mx-auto [&_em]:italic [&_strong]:font-semibold"
             style={{ fontSize: 16, lineHeight: 1.7, letterSpacing: "0.01em", maxWidth: 460 }}
-          >
-            {content.buildings.description}
-          </p>
+            dangerouslySetInnerHTML={{ __html: sanitizeInline(content.buildings.description) }}
+          />
         </div>
       </Reveal>
 

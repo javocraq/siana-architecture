@@ -89,6 +89,21 @@ export default function AdminProjects() {
     return p.city_id === cityFilter;
   });
 
+  // The home "Featured Buildings" showcase shows only the 5 most recently
+  // updated *published* featured projects. Mirror that rule here so the admin
+  // can see exactly which toggles are actually live on the home — and which
+  // are marked but not shown (draft, or pushed past the top 5).
+  const HOME_FEATURED_LIMIT = 5;
+  const liveFeaturedIds = new Set(
+    projects
+      .filter((p) => p.featured && p.status === "published")
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+      .slice(0, HOME_FEATURED_LIMIT)
+      .map((p) => p.id)
+  );
+  const featuredCount = projects.filter((p) => p.featured).length;
+  const shownCount = liveFeaturedIds.size;
+
   return (
     <AdminLayout>
       <div className="px-10 py-10">
@@ -107,6 +122,17 @@ export default function AdminProjects() {
             >
               {loading ? "Loading…" : `${filteredProjects.length} of ${projects.length}`}
             </p>
+            {!loading && featuredCount > 0 && (
+              <p
+                className="mt-1.5 font-mono uppercase text-ink-faint"
+                style={{ fontSize: 10, letterSpacing: "0.16em" }}
+              >
+                {featuredCount} featured · {shownCount} shown on home
+                {featuredCount > shownCount && (
+                  <span className="text-ink-muted"> · {featuredCount - shownCount} not shown</span>
+                )}
+              </p>
+            )}
           </div>
           <Link
             to="/admin/projects/new"
@@ -185,35 +211,50 @@ export default function AdminProjects() {
                       <td className="px-4 py-3 text-ink-muted">{p.city_id ? cities[p.city_id] || "—" : "—"}</td>
                       <td className="px-4 py-3 text-ink-muted">{p.category || "—"}</td>
                       <td className="px-4 py-3 text-ink-muted">{p.style || "—"}</td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => toggleFeatured(p)}
-                          disabled={savingId === p.id}
-                          aria-label="Toggle featured"
-                          className="inline-flex items-center"
-                          style={{
-                            width: 32,
-                            height: 18,
-                            borderRadius: 9999,
-                            background: p.featured ? "hsl(var(--ink))" : "rgba(0,0,0,0.15)",
-                            transition: "background 0.2s ease",
-                            position: "relative",
-                          }}
-                        >
-                          <span
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col items-center gap-1">
+                          <button
+                            onClick={() => toggleFeatured(p)}
+                            disabled={savingId === p.id}
+                            aria-label="Toggle featured"
+                            className="inline-flex items-center"
                             style={{
-                              position: "absolute",
-                              top: 2,
-                              left: p.featured ? 16 : 2,
-                              width: 14,
-                              height: 14,
+                              width: 32,
+                              height: 18,
                               borderRadius: 9999,
-                              background: "#fff",
-                              transition: "left 0.2s ease",
-                              boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
+                              background: p.featured ? "hsl(var(--ink))" : "rgba(0,0,0,0.15)",
+                              transition: "background 0.2s ease",
+                              position: "relative",
                             }}
-                          />
-                        </button>
+                          >
+                            <span
+                              style={{
+                                position: "absolute",
+                                top: 2,
+                                left: p.featured ? 16 : 2,
+                                width: 14,
+                                height: 14,
+                                borderRadius: 9999,
+                                background: "#fff",
+                                transition: "left 0.2s ease",
+                                boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
+                              }}
+                            />
+                          </button>
+                          {p.featured && !liveFeaturedIds.has(p.id) && (
+                            <span
+                              className="uppercase text-ink-faint whitespace-nowrap"
+                              style={{ fontSize: 8.5, letterSpacing: "0.12em" }}
+                              title={
+                                p.status !== "published"
+                                  ? "Marked featured but the project is a draft, so it never shows on the home."
+                                  : `Marked featured but only the ${HOME_FEATURED_LIMIT} most recently updated show on the home. Re-toggle or edit it to bump it up.`
+                              }
+                            >
+                              {p.status !== "published" ? "draft" : "not shown"}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <span

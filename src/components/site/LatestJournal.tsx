@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Reveal from "@/components/site/Reveal";
 import EditorialButton from "@/components/site/EditorialButton";
 import { useHomeContent } from "@/hooks/useHomeContent";
+import { sanitizeInline } from "@/lib/inlineHtml";
 
 interface Post {
   id: string;
@@ -47,18 +48,16 @@ export default function LatestJournal() {
         style={{ paddingBottom: "5rem" }}
       >
         <div className="text-center max-w-xl mx-auto">
-          <h2 className="font-display-black text-ink" style={{ fontSize: "clamp(1.85rem, 3.3vw, 3rem)", lineHeight: 1.05 }}>
-            {content.journal.headline_lead}
-            {content.journal.headline_emphasis ? (
-              <> <em className="italic text-accent-terra">{content.journal.headline_emphasis}</em></>
-            ) : null}
-          </h2>
+          <h2
+            className="font-display-black text-ink [&_em]:italic"
+            style={{ fontSize: "clamp(1.85rem, 3.3vw, 3rem)", lineHeight: 1.05 }}
+            dangerouslySetInnerHTML={{ __html: sanitizeInline(content.journal.headline) }}
+          />
           <p
-            className="font-mono text-ink-soft mt-7 mx-auto"
+            className="font-mono text-ink-soft mt-7 mx-auto [&_em]:italic [&_strong]:font-semibold"
             style={{ fontSize: 16, lineHeight: 1.7, letterSpacing: "0.01em", maxWidth: 460 }}
-          >
-            {content.journal.description}
-          </p>
+            dangerouslySetInnerHTML={{ __html: sanitizeInline(content.journal.description) }}
+          />
         </div>
       </Reveal>
 

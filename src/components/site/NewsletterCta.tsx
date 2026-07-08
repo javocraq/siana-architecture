@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import Reveal from "@/components/site/Reveal";
 import EditorialButton from "@/components/site/EditorialButton";
 import { useHomeContent } from "@/hooks/useHomeContent";
+import { sanitizeInline } from "@/lib/inlineHtml";
 
 const INTERESTS = [
   "Architecture Guides",
@@ -56,17 +57,15 @@ export default function NewsletterCta() {
             {content.newsletter.eyebrow}
           </p>
           <h2
-            className="font-display-black text-ink"
+            className="font-display-black text-ink [&_em]:italic"
             style={{ fontSize: "clamp(1.6rem, 2.8vw, 2.6rem)", lineHeight: 1.05 }}
-          >
-            {content.newsletter.headline}
-          </h2>
+            dangerouslySetInnerHTML={{ __html: sanitizeInline(content.newsletter.headline) }}
+          />
           <p
-            className="font-mono text-ink-soft mt-6 md:mt-8"
+            className="font-mono text-ink-soft mt-6 md:mt-8 [&_em]:italic [&_strong]:font-semibold"
             style={{ fontSize: "15px", lineHeight: 1.7, maxWidth: 420, letterSpacing: "0.01em" }}
-          >
-            {content.newsletter.description}
-          </p>
+            dangerouslySetInnerHTML={{ __html: sanitizeInline(content.newsletter.description) }}
+          />
         </Reveal>
 
         {/* Right — form */}

@@ -14,6 +14,7 @@ import NewsletterCta from "@/components/site/NewsletterCta";
 import Footer from "@/components/site/Footer";
 import Reveal from "@/components/site/Reveal";
 import { useHomeContent } from "@/hooks/useHomeContent";
+import { sanitizeInline } from "@/lib/inlineHtml";
 
 type Pin = { latitude: number | null; longitude: number | null };
 
@@ -234,11 +235,10 @@ const Index = () => {
 
           <div className="fadeup-3 mt-10 md:mt-12">
             <p
-              className="font-mono text-white/85 mx-auto md:mx-0"
+              className="font-mono text-white/85 mx-auto md:mx-0 [&_em]:italic [&_strong]:font-semibold"
               style={{ fontSize: "16.5px", lineHeight: 1.7, maxWidth: 380, letterSpacing: "0.01em", textShadow: "0 1px 8px rgba(0,0,0,0.25)" }}
-            >
-              {content.hero.description}
-            </p>
+              dangerouslySetInnerHTML={{ __html: sanitizeInline(content.hero.description) }}
+            />
           </div>
         </div>
       </section>
@@ -283,20 +283,15 @@ const Index = () => {
                 {content.map.eyebrow}
               </p>
               <h2
-                className="font-display text-ink"
+                className="font-display text-ink [&_em]:italic"
                 style={{ fontSize: "clamp(2.1rem, 4vw, 3.8rem)", fontWeight: 400, lineHeight: 1 }}
-              >
-                {content.map.headline_lead}
-                {content.map.headline_emphasis ? (
-                  <> <em className="italic text-ink-soft">{content.map.headline_emphasis}</em></>
-                ) : null}
-              </h2>
+                dangerouslySetInnerHTML={{ __html: sanitizeInline(content.map.headline) }}
+              />
               <p
-                className="font-mono text-ink-soft mt-5 mx-auto"
+                className="font-mono text-ink-soft mt-5 mx-auto [&_em]:italic [&_strong]:font-semibold"
                 style={{ fontSize: "16.5px", lineHeight: 1.65, maxWidth: 540, letterSpacing: "0.01em" }}
-              >
-                {content.map.description}
-              </p>
+                dangerouslySetInnerHTML={{ __html: sanitizeInline(content.map.description) }}
+              />
 
               {/* CTA — minimal hairline underline, gap grows on hover. */}
               <span
