@@ -225,7 +225,7 @@ export default function ProjectDetail() {
 
       {/* Project facts — moved to the foot of the article */}
       {metaStrip.length > 0 && (
-        <section className="mx-auto max-w-[1280px] px-6 lg:px-10 pb-4">
+        <section className="mx-auto max-w-[1280px] px-6 lg:px-10 pb-16 md:pb-20">
           <dl
             className="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-12 pt-10"
             style={{ borderTop: "1px solid rgba(0,0,0,0.08)" }}
