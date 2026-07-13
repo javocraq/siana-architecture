@@ -10,7 +10,8 @@ export const REGIONS = [
 
 export const STYLES = [
   "Classical",
-  "Moderno",
-  "Contemporáneo",
-  "Postmoderno",
+  "Modern",
+  "Contemporary",
+  "Postmodern",
+  "Brutalist",
 ] as const;
