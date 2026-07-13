@@ -225,7 +225,7 @@ export default function ProjectDetail() {
 
       {/* Project facts — moved to the foot of the article */}
       {metaStrip.length > 0 && (
-        <section className="mx-auto max-w-[1280px] px-6 lg:px-10 pb-16 md:pb-20">
+        <section className="mx-auto max-w-[1280px] px-6 lg:px-10 pb-4">
           <dl
             className="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-12 pt-10"
             style={{ borderTop: "1px solid rgba(0,0,0,0.08)" }}
@@ -246,7 +246,7 @@ export default function ProjectDetail() {
 
       {/* Back link + map CTA */}
       <section className="pb-24 md:pb-32 mx-auto max-w-[1280px] px-6 lg:px-10">
-        <div className="border-t hairline pt-8 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
+        <div className="border-t hairline pt-16 md:pt-20 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
           <EditorialButton to="/cities" variant="muted" leadingArrow>Explore more</EditorialButton>
           <EditorialButton to={`/atlas?project=${project.slug}`} arrow>See on the map</EditorialButton>
         </div>
