@@ -152,27 +152,6 @@ export default function ProjectDetail() {
         )}
       </section>
 
-      {/* Meta strip — 4-column definition list */}
-      {metaStrip.length > 0 && (
-        <section className="mx-auto max-w-[1280px] px-6 lg:px-10">
-          <dl
-            className="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-12 pt-10 pb-10"
-            style={{ borderTop: "1px solid rgba(0,0,0,0.08)", borderBottom: "1px solid rgba(0,0,0,0.08)" }}
-          >
-            {metaStrip.map((m) => (
-              <div key={m.label}>
-                <dt className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-3">{m.label}</dt>
-                <dd className="text-[15px]" style={{ color: "#0f0f0f" }}>
-                  {m.href ? (
-                    <Link to={m.href} className="hover:opacity-60">{m.value}</Link>
-                  ) : m.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      )}
-
       {/* 60px breathing room */}
       <div style={{ height: 60 }} />
 
@@ -216,31 +195,6 @@ export default function ProjectDetail() {
       )}
 
 
-      {/* Byline card — full-width #f8f7f4 strip */}
-      {(project.architect || project.practice) && (
-        <section className="bg-off-white py-16 md:py-20 text-center px-6">
-          {project.architect && (
-            <p style={{ ...cormorant, fontWeight: 400, fontSize: 28, color: "#0f0f0f", lineHeight: 1.2 }}>
-              {project.architect}
-            </p>
-          )}
-          {project.practice && (
-            <p
-              className="mt-3 uppercase"
-              style={{
-                fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-                fontWeight: 300,
-                fontSize: 12,
-                letterSpacing: "0.18em",
-                color: "hsl(var(--ink-muted))",
-              }}
-            >
-              {project.practice}
-            </p>
-          )}
-        </section>
-      )}
-
       {/* Gallery — image-only, centered, no background plate so portrait
           shots don't end up framed by big grey side bars. The container is
           narrow on purpose: editorial photo essay, not a hero. */}
@@ -266,6 +220,27 @@ export default function ProjectDetail() {
               ))}
             </div>
           </div>
+        </section>
+      )}
+
+      {/* Project facts — moved to the foot of the article */}
+      {metaStrip.length > 0 && (
+        <section className="mx-auto max-w-[1280px] px-6 lg:px-10 pb-4">
+          <dl
+            className="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-12 pt-10"
+            style={{ borderTop: "1px solid rgba(0,0,0,0.08)" }}
+          >
+            {metaStrip.map((m) => (
+              <div key={m.label}>
+                <dt className="text-[12px] font-semibold tracking-[0.16em] uppercase text-ink-soft mb-3">{m.label}</dt>
+                <dd className="text-[15px]" style={{ color: "#0f0f0f" }}>
+                  {m.href ? (
+                    <Link to={m.href} className="hover:opacity-60">{m.value}</Link>
+                  ) : m.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </section>
       )}
 
