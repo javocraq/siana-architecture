@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ImageUpload from "@/components/admin/ImageUpload";
 import InlineRichInput from "@/components/admin/InlineRichInput";
+import HeroImagePicker from "@/components/admin/HeroImagePicker";
 import { useToast } from "@/hooks/use-toast";
 import { HOME_DEFAULTS, mergeHomeContent, type HomeContent } from "@/lib/homeContent";
 import { adminInputCls, adminLabelCls } from "@/lib/adminUi";
@@ -139,6 +140,10 @@ export default function AdminHome() {
                         folder="home"
                       />
                     </div>
+                    <HeroImagePicker
+                      selected={content.hero.images}
+                      onPick={(url) => { if (!content.hero.images.includes(url)) updateHero({ images: [...content.hero.images, url] }); }}
+                    />
                   </div>
                 </Field>
               </div>
