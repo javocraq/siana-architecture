@@ -30,3 +30,6 @@ dist-ssr
 !.env.example
 .vercel
 .env*
+
+# Supabase CLI scratch
+supabase/.temp/
