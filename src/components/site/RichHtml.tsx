@@ -1,10 +1,15 @@
 import DOMPurify from "dompurify";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import ContentMapEmbed from "@/components/site/ContentMapEmbed";
+import { MAP_EMBED_SELECTOR, readMapEmbed, type MapEmbedTarget } from "@/lib/mapEmbed";
 
 type Props = {
   html: string;
   className?: string;
 };
+
+type MountedEmbed = MapEmbedTarget & { host: HTMLElement };
 
 /**
  * Renders sanitized HTML content from the rich text editor.
@@ -21,7 +26,14 @@ type Props = {
  */
 export default function RichHtml({ html, className = "" }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const clean = html ? DOMPurify.sanitize(html, { ADD_ATTR: ["target", "rel"] }) : "";
+  // `data-map-embed` / `data-slug` survive sanitising because DOMPurify keeps
+  // data-* attributes by default; they are named here so the intent is explicit.
+  const clean = html
+    ? DOMPurify.sanitize(html, {
+        ADD_ATTR: ["target", "rel", "data-map-embed", "data-slug", "data-label"],
+      })
+    : "";
+  const [embeds, setEmbeds] = useState<MountedEmbed[]>([]);
 
   useEffect(() => {
     const root = ref.current;
@@ -66,16 +78,43 @@ export default function RichHtml({ html, className = "" }: Props) {
       });
     };
 
-    const raf = requestAnimationFrame(prepare);
-    return () => cancelAnimationFrame(raf);
+    // Map placeholders left by the editor become real maps, portalled into the
+    // exact spot the author put them in.
+    const collectEmbeds = () => {
+      const found: MountedEmbed[] = [];
+      root.querySelectorAll<HTMLElement>(MAP_EMBED_SELECTOR).forEach((host) => {
+        const target = readMapEmbed(host);
+        if (target) found.push({ ...target, host });
+      });
+      setEmbeds(found);
+    };
+
+    const raf = requestAnimationFrame(() => {
+      prepare();
+      collectEmbeds();
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+      // Unmount the portals before React replaces the innerHTML they live in.
+      setEmbeds([]);
+    };
   }, [clean]);
 
   if (!clean) return null;
   return (
-    <div
-      ref={ref}
-      className={`prose prose-stone max-w-none ${className}`}
-      dangerouslySetInnerHTML={{ __html: clean }}
-    />
+    <>
+      <div
+        ref={ref}
+        className={`prose prose-stone max-w-none ${className}`}
+        dangerouslySetInnerHTML={{ __html: clean }}
+      />
+      {embeds.map((e, i) =>
+        createPortal(
+          <ContentMapEmbed kind={e.kind} slug={e.slug} label={e.label} />,
+          e.host,
+          `${e.kind}:${e.slug}:${i}`,
+        ),
+      )}
+    </>
   );
 }

@@ -1,4 +1,4 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
@@ -9,18 +9,26 @@ import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableRowResize } from "./tableRowResize";
 import TextAlign from "@tiptap/extension-text-align";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Bold, Italic, Heading2, Heading3, List, ListOrdered, Quote,
-  Link as LinkIcon, Image as ImageIcon, Undo2, Redo2, Code2,
-  Table as TableIcon, Trash2,
+  Link as LinkIcon, Image as ImageIcon, ImagePlus, Undo2, Redo2, Code2,
+  Table as TableIcon, Trash2, Loader2,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
 } from "lucide-react";
+import { imageFilesFrom, uploadImage } from "@/lib/uploadImage";
+import { tsvToGrid, type TsvGrid } from "@/lib/tsvTable";
+import { MapEmbed } from "./mapEmbedNode";
+import type { MapEmbedKind } from "@/lib/mapEmbed";
+import { supabase } from "@/integrations/supabase/client";
+import { Map as MapIcon } from "lucide-react";
 
 type Props = {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
+  /** Folder inside the storage bucket for images uploaded from this editor. */
+  uploadFolder?: string;
 };
 
 // Row height, stored as inline `style: height` on table cells. In tables a
@@ -125,16 +133,90 @@ function prettyHtml(html: string): string {
   return serializeChildren(container, 0).trimEnd();
 }
 
-export default function RichTextEditor({ value, onChange, placeholder }: Props) {
+type MapOption = { kind: MapEmbedKind; name: string; slug: string };
+
+/** Cities first, then projects — the editor almost always wants "the map of
+ *  this city", and only sometimes a single building. */
+async function loadMapOptions(): Promise<MapOption[]> {
+  const [{ data: cities }, { data: projects }] = await Promise.all([
+    supabase.from("cities").select("name, slug").order("name"),
+    supabase.from("projects").select("name, slug").order("name"),
+  ]);
+  return [
+    ...(cities || []).map((c) => ({ kind: "city" as const, name: c.name, slug: c.slug })),
+    ...(projects || []).map((p) => ({ kind: "project" as const, name: p.name, slug: p.slug })),
+  ];
+}
+
+function escapeHtml(s: string) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/** Spreadsheet grid → table markup, first row as the header. Fed through
+ *  `insertContent` so TipTap builds real table nodes from it. */
+function gridToTableHtml({ rows }: TsvGrid): string {
+  const [head, ...body] = rows;
+  const tr = (cells: string[], tag: "th" | "td") =>
+    `<tr>${cells.map((c) => `<${tag}>${escapeHtml(c)}</${tag}>`).join("")}</tr>`;
+  return `<table>${tr(head, "th")}${body.map((r) => tr(r, "td")).join("")}</table>`;
+}
+
+export default function RichTextEditor({ value, onChange, placeholder, uploadFolder = "content" }: Props) {
   const [mode, setMode] = useState<"visual" | "html">("visual");
   const [htmlBuffer, setHtmlBuffer] = useState(value || "");
   const [tablePickerOpen, setTablePickerOpen] = useState(false);
   const [hoverDims, setHoverDims] = useState<{ rows: number; cols: number } | null>(null);
   const pickerRef = useRef<HTMLDivElement | null>(null);
 
+  // Image uploads. `editorRef` lets the paste/drop handlers — which are wired
+  // once, when the editor is created — reach the live editor instance.
+  const editorRef = useRef<Editor | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const folderRef = useRef(uploadFolder);
+  folderRef.current = uploadFolder;
+  const [pending, setPending] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Map block picker — cities and projects are fetched the first time the
+  // picker opens, so an editor that never inserts a map costs nothing.
+  const [mapPickerOpen, setMapPickerOpen] = useState(false);
+  const [mapQuery, setMapQuery] = useState("");
+  const [mapOptions, setMapOptions] = useState<MapOption[] | null>(null);
+  const mapPickerRef = useRef<HTMLDivElement | null>(null);
+
+  /** Uploads each image and drops it into the document. `at` is a document
+   *  position (used for drops, so the photo lands where it was released);
+   *  without it images go in at the cursor. */
+  const insertImages = useCallback(async (files: File[], at?: number) => {
+    const ed = editorRef.current;
+    if (!ed || files.length === 0) return;
+    setUploadError(null);
+    setPending((n) => n + files.length);
+    let pos = at;
+    for (const file of files) {
+      try {
+        const src = await uploadImage(file, folderRef.current);
+        const alt = file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
+        if (pos == null) {
+          ed.chain().focus().setImage({ src, alt }).run();
+        } else {
+          ed.chain().focus().insertContentAt(pos, { type: "image", attrs: { src, alt } }).run();
+          pos += 1; // keep a multi-file drop in the order it was dropped
+        }
+      } catch (err) {
+        setUploadError(err instanceof Error ? err.message : "Could not upload that image.");
+      } finally {
+        setPending((n) => n - 1);
+      }
+    }
+  }, []);
+
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ heading: { levels: [2, 3] } }),
+      // StarterKit ships its own Link; turn it off so the configured one below
+      // is the only one registered. With both, TipTap warns about a duplicate
+      // extension and the `openOnClick` / underline settings may not win.
+      StarterKit.configure({ heading: { levels: [2, 3] }, link: false }),
       Link.configure({ openOnClick: false, HTMLAttributes: { class: "underline" } }),
       Image,
       Placeholder.configure({ placeholder: placeholder || "Start writing…" }),
@@ -157,6 +239,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
       TableHeader.extend({ addAttributes() { return { ...this.parent?.(), ...ROW_HEIGHT_ATTR }; } }),
       TableCell.extend({ addAttributes() { return { ...this.parent?.(), ...ROW_HEIGHT_ATTR }; } }),
       TableRowResize,
+      MapEmbed,
       TextAlign.configure({
         types: ["heading", "paragraph"],
         alignments: ["left", "center", "right", "justify"],
@@ -169,9 +252,52 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
         class:
           "prose prose-sm max-w-none min-h-[280px] px-4 py-4 focus:outline-none text-[14px] leading-relaxed text-ink",
       },
+      handlePaste: (_view, event) => {
+        const data = event.clipboardData;
+
+        // A screenshot or a photo copied from Finder/Explorer: upload it
+        // rather than letting the browser inline a huge base64 blob.
+        const images = imageFilesFrom(data);
+        if (images.length) {
+          event.preventDefault();
+          void insertImages(images);
+          return true;
+        }
+
+        // Spreadsheet cells. Excel and Sheets also put an HTML table on the
+        // clipboard — that flavour carries the formatting, so let TipTap take
+        // it. Only fall back to the tab-separated text when there is no table.
+        const html = data?.getData("text/html") || "";
+        if (!/<table/i.test(html)) {
+          const grid = tsvToGrid(data?.getData("text/plain") || "");
+          if (grid) {
+            event.preventDefault();
+            editorRef.current?.chain().focus().insertContent(gridToTableHtml(grid)).run();
+            return true;
+          }
+        }
+        return false;
+      },
+      handleDrop: (view, event, _slice, moved) => {
+        // `moved` means the user is dragging content already in the document.
+        if (moved) return false;
+        const images = imageFilesFrom((event as DragEvent).dataTransfer);
+        if (!images.length) return false;
+        event.preventDefault();
+        const coords = view.posAtCoords({
+          left: (event as DragEvent).clientX,
+          top: (event as DragEvent).clientY,
+        });
+        void insertImages(images, coords?.pos);
+        return true;
+      },
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
   });
+
+  useEffect(() => {
+    editorRef.current = editor;
+  }, [editor]);
 
   useEffect(() => {
     if (!editor) return;
@@ -194,6 +320,20 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [tablePickerOpen]);
+
+  useEffect(() => {
+    if (!mapPickerOpen) return;
+    if (mapOptions === null) {
+      loadMapOptions().then(setMapOptions).catch(() => setMapOptions([]));
+    }
+    const onDocClick = (e: MouseEvent) => {
+      if (mapPickerRef.current && !mapPickerRef.current.contains(e.target as Node)) {
+        setMapPickerOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [mapPickerOpen, mapOptions]);
 
   if (!editor) return null;
 
@@ -236,7 +376,11 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
           }}>
           <LinkIcon className="w-3.5 h-3.5" />
         </Btn>
-        <Btn title="Image URL" disabled={mode === "html"}
+        <Btn title="Upload image from your computer" disabled={mode === "html" || pending > 0}
+          onClick={() => fileInputRef.current?.click()}>
+          {pending > 0 ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImagePlus className="w-3.5 h-3.5" />}
+        </Btn>
+        <Btn title="Insert image from a URL" disabled={mode === "html"}
           onClick={() => {
             const url = window.prompt("Image URL");
             if (url) editor.chain().focus().setImage({ src: url }).run();
@@ -298,6 +442,60 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
               <p className="text-[10px] text-ink-muted mt-2 text-center">
                 Click to insert
               </p>
+            </div>
+          )}
+        </div>
+
+        {/* Insert a map pinned to a city or a building, right where the
+            reader is being told about it. */}
+        <div className="relative" ref={mapPickerRef}>
+          <Btn
+            title="Insert map"
+            active={mapPickerOpen || editor.isActive("mapEmbed")}
+            disabled={mode === "html"}
+            onClick={() => setMapPickerOpen((o) => !o)}
+          >
+            <MapIcon className="w-3.5 h-3.5" />
+          </Btn>
+          {mapPickerOpen && (
+            <div className="absolute left-0 top-full mt-1 z-50 bg-background border hairline shadow-lg p-2 w-64">
+              <input
+                autoFocus
+                value={mapQuery}
+                onChange={(e) => setMapQuery(e.target.value)}
+                placeholder="Search cities and projects"
+                className="w-full px-2 py-1.5 mb-2 text-[12px] border hairline bg-background text-ink focus:outline-none"
+              />
+              <div className="max-h-56 overflow-y-auto">
+                {mapOptions === null ? (
+                  <p className="px-2 py-3 text-[11px] text-ink-muted">Loading…</p>
+                ) : (() => {
+                  const q = mapQuery.trim().toLowerCase();
+                  const matches = q
+                    ? mapOptions.filter((o) => o.name.toLowerCase().includes(q))
+                    : mapOptions;
+                  if (!matches.length) {
+                    return <p className="px-2 py-3 text-[11px] text-ink-muted">Nothing matches “{mapQuery}”.</p>;
+                  }
+                  return matches.slice(0, 60).map((o) => (
+                    <button
+                      key={`${o.kind}:${o.slug}`}
+                      type="button"
+                      onClick={() => {
+                        editor.chain().focus()
+                          .setMapEmbed({ kind: o.kind, slug: o.slug, label: o.name })
+                          .run();
+                        setMapPickerOpen(false);
+                        setMapQuery("");
+                      }}
+                      className="w-full flex items-center justify-between gap-2 px-2 py-1.5 text-left text-[12px] text-ink hover:bg-stone"
+                    >
+                      <span className="truncate">{o.name}</span>
+                      <span className="shrink-0 text-[9px] tracking-tag uppercase text-ink-muted">{o.kind}</span>
+                    </button>
+                  ));
+                })()}
+              </div>
             </div>
           )}
         </div>
@@ -369,6 +567,36 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
           spellCheck={false}
         />
       )}
+
+      {/* Images can also be dragged onto the editor or pasted straight from
+          the clipboard — the hint keeps that discoverable. */}
+      {mode === "visual" && (
+        <div className="flex items-center gap-2 px-4 py-2 border-t hairline text-[11px] text-ink-muted">
+          {pending > 0 ? (
+            <>
+              <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+              Uploading {pending} image{pending > 1 ? "s" : ""}…
+            </>
+          ) : uploadError ? (
+            <span className="text-destructive">{uploadError}</span>
+          ) : (
+            <span>Drag images in, or paste them straight from the clipboard.</span>
+          )}
+        </div>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          const files = Array.from(e.target.files || []);
+          e.target.value = "";
+          void insertImages(files);
+        }}
+      />
     </div>
   );
 }

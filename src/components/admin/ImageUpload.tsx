@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { uploadImage } from "@/lib/uploadImage";
 import { Upload, X, Loader2 } from "lucide-react";
 
 type Props = {
@@ -21,20 +21,13 @@ export default function ImageUpload({ value, onChange, label = "Image", aspect =
   const handleFile = async (file: File) => {
     setError(null);
     setUploading(true);
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `${folder}/${crypto.randomUUID()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from("project-images").upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-    });
-    if (upErr) {
+    try {
+      onChange(await uploadImage(file, folder));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not upload that image.");
+    } finally {
       setUploading(false);
-      setError(upErr.message);
-      return;
     }
-    const { data } = supabase.storage.from("project-images").getPublicUrl(path);
-    onChange(data.publicUrl);
-    setUploading(false);
   };
 
   return (
