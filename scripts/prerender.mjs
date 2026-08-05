@@ -72,7 +72,7 @@ function renderPage(template, { path, title, description, image, type = "website
   const head = [
     `<link rel="canonical" href="${esc(canonical)}" />`,
     `<meta property="og:url" content="${esc(canonical)}" />`,
-    `<meta property="og:site_name" content="Siana" />`,
+    `<meta property="og:site_name" content="Siana Architecture" />`,
     image ? `<meta property="og:image" content="${esc(image)}" />` : "",
     image ? `<meta name="twitter:image" content="${esc(image)}" />` : "",
     `<meta name="twitter:title" content="${esc(title)}" />`,
@@ -92,7 +92,7 @@ function renderPage(template, { path, title, description, image, type = "website
 
 const ORG = {
   "@type": "Organization",
-  name: "Siana",
+  name: "Siana Architecture",
   url: SITE_URL,
   description: "An editorial atlas of architecture — significant buildings mapped city by city.",
 };
@@ -130,7 +130,7 @@ async function main() {
     title: "Siana — Architecture, city by city",
     description: "An editorial atlas of architecture: significant buildings mapped city by city, with a journal of essays and field notes and resources for architects.",
     image: OG_DEFAULT,
-    jsonld: { "@context": "https://schema.org", "@graph": [ORG, { "@type": "WebSite", name: "Siana", url: SITE_URL }] },
+    jsonld: { "@context": "https://schema.org", "@graph": [ORG, { "@type": "WebSite", name: "Siana Architecture", url: SITE_URL }] },
     content:
       `<h1>Siana — Architecture, city by city</h1>` +
       `<p>An editorial atlas of architecture: significant buildings mapped city by city, paired with a journal of essays and field notes and a library of resources for architects.</p>` +

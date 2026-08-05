@@ -1,4 +1,4 @@
-# Siana
+# Siana Architecture
 
 An editorial atlas of architecture — public site (cities, projects, journal, resources) with a built-in admin CMS. Client-only React SPA (Vite, no SSR) backed by Supabase (Postgres + Auth + Storage).
 

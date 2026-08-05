@@ -1,5 +1,5 @@
 ---
-name: Siana Atlas Narrative
+name: Siana Architecture Narrative
 colors:
   surface: '#fef8f1'
   surface-dim: '#dfd9d2'

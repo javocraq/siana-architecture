@@ -1,5 +1,5 @@
 -- ============================================================
--- Siana Atlas — demo seed data (published cities + projects)
+-- Siana Architecture — demo seed data (published cities + projects)
 -- ------------------------------------------------------------
 -- Purpose: populate the public site so /cities renders the
 -- "Fragment" cards (each card needs a published city; the
