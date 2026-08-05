@@ -7,7 +7,3 @@ verify_jwt = false
 # Public llms.txt endpoint (AI context file) — fetched without a JWT.
 [functions.llms]
 verify_jwt = false
-
-# Public newsletter sign-up — posted to by the footer form on every page.
-[functions.newsletter-subscribe]
-verify_jwt = false

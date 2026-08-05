@@ -56,12 +56,6 @@ export default function NewsletterCta() {
           <EditorialButton href={SUBSTACK_URL} target="_blank" arrow>
             Subscribe on Substack
           </EditorialButton>
-          <p
-            className="font-mono text-ink-soft mt-5"
-            style={{ fontSize: "13px", letterSpacing: "0.02em" }}
-          >
-            Free — one edition at a time, no clutter.
-          </p>
         </Reveal>
       </div>
     </section>
