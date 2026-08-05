@@ -4,39 +4,52 @@ import Reveal from "@/components/site/Reveal";
 import EditorialButton from "@/components/site/EditorialButton";
 import { useHomeContent } from "@/hooks/useHomeContent";
 import { sanitizeInline } from "@/lib/inlineHtml";
-
-const INTERESTS = [
-  "Architecture Guides",
-  "Architectural Stays",
-  "Practice",
-  "AI for Architects",
-  "City Guides",
-  "Architectural Travel",
-] as const;
+import { supabase } from "@/integrations/supabase/client";
 
 export default function NewsletterCta() {
   const { toast } = useToast();
   const content = useHomeContent();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [interests, setInterests] = useState<string[]>([]);
+  const [company, setCompany] = useState(""); // honeypot — see the hidden field
   const [submitting, setSubmitting] = useState(false);
 
-  const toggleInterest = (i: string) =>
-    setInterests((curr) => (curr.includes(i) ? curr.filter((x) => x !== i) : [...curr, i]));
-
+  /**
+   * Posts to the `newsletter-subscribe` Edge Function, which stores the address
+   * and hands it to Substack. Subscribing happens here — the reader is never
+   * sent off to substack.com.
+   */
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!email.trim() || submitting) return;
     setSubmitting(true);
-    // Backend wiring (e.g. Supabase newsletter_subscribers table) can be
-    // added later — keep the UX intact in the meantime.
-    await new Promise((r) => setTimeout(r, 350));
+
+    const { data, error } = await supabase.functions.invoke("newsletter-subscribe", {
+      body: {
+        email: email.trim(),
+        name: name.trim() || null,
+        source: window.location.pathname,
+        company,
+      },
+    });
     setSubmitting(false);
-    toast({ title: "You're on the list.", description: "Thanks for signing up — we'll be in touch." });
+
+    // Keep what they typed on failure so the retry is one click, not a retype.
+    if (error || !(data as { ok?: boolean } | null)?.ok) {
+      toast({
+        title: "That didn't go through.",
+        description: "Please check the address and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "You're on the list.",
+      description: "Check your inbox to confirm your subscription.",
+    });
     setName("");
     setEmail("");
-    setInterests([]);
   };
 
   return (
@@ -70,45 +83,23 @@ export default function NewsletterCta() {
 
         {/* Right — form */}
         <Reveal delay={160} className="flex">
-        <form onSubmit={onSubmit} className="flex flex-col w-full">
-          <p
-            className="font-mono uppercase text-ink-soft mb-4 font-medium"
-            style={{ fontSize: "11px", letterSpacing: "0.22em" }}
-          >
-            I'm interested in
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 mb-10">
-            {INTERESTS.map((label) => {
-              const checked = interests.includes(label);
-              return (
-                <label
-                  key={label}
-                  className="flex items-center gap-3 cursor-pointer text-ink-soft hover:text-ink transition-colors"
-                  style={{ fontSize: "14px" }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleInterest(label)}
-                    className="w-3.5 h-3.5 accent-accent-terra cursor-pointer"
-                    style={{ borderRadius: 0 }}
-                  />
-                  <span style={{ lineHeight: 1.4 }}>{label}</span>
-                </label>
-              );
-            })}
-          </div>
-
+        {/* Just name + email: the fewer fields between a reader and the list,
+            the more of them finish. `justify-center` keeps the short form
+            optically aligned with the intro copy in the column beside it. */}
+        <form onSubmit={onSubmit} className="flex flex-col justify-center w-full">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 mb-10">
             <div>
               <label
+                htmlFor="newsletter-name"
                 className="font-mono uppercase text-ink-soft mb-2 block font-medium"
                 style={{ fontSize: "11px", letterSpacing: "0.22em" }}
               >
                 Name
               </label>
               <input
+                id="newsletter-name"
                 type="text"
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-transparent text-ink focus:outline-none focus:border-ink transition-colors py-2"
@@ -120,14 +111,17 @@ export default function NewsletterCta() {
             </div>
             <div>
               <label
+                htmlFor="newsletter-email"
                 className="font-mono uppercase text-ink-soft mb-2 block font-medium"
                 style={{ fontSize: "11px", letterSpacing: "0.22em" }}
               >
                 E-Mail
               </label>
               <input
+                id="newsletter-email"
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-transparent text-ink focus:outline-none focus:border-ink transition-colors py-2"
@@ -138,6 +132,19 @@ export default function NewsletterCta() {
               />
             </div>
           </div>
+
+          {/* Honeypot: off-screen and skipped by keyboard and screen readers,
+              so only a bot filling every field will trip it. */}
+          <input
+            type="text"
+            name="company"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            className="absolute w-px h-px -left-[9999px] opacity-0"
+          />
 
           <EditorialButton type="submit" disabled={submitting} arrow className="self-center md:self-start">
             {submitting ? "Subscribing…" : "Subscribe"}
