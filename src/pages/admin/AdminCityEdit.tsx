@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import SaveBar from "@/components/admin/SaveBar";
 import ImageUpload from "@/components/admin/ImageUpload";
 import MapPicker from "@/components/admin/MapPicker";
 import SelectOrCreate from "@/components/admin/SelectOrCreate";
@@ -71,6 +72,9 @@ export default function AdminCityEdit() {
   const [form, setForm] = useState<FormState>(empty);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
+  // What the site is showing right now, as opposed to `form.status`, which
+  // is the visibility the editor has selected for the next save.
+  const [savedStatus, setSavedStatus] = useState<"draft" | "published">("draft");
   const [error, setError] = useState<string | null>(null);
   const [slugTouched, setSlugTouched] = useState(!isNew);
 
@@ -101,6 +105,7 @@ export default function AdminCityEdit() {
         canonical_url: data.canonical_url || "",
         sections: Array.isArray((data as any).sections) ? ((data as any).sections as CitySection[]) : [],
       });
+      setSavedStatus((data.status as "draft" | "published") || "draft");
       setLoading(false);
     })();
   }, [id, isNew]);
@@ -112,7 +117,8 @@ export default function AdminCityEdit() {
     setForm((f) => ({ ...f, name: v, slug: slugTouched ? f.slug : slugify(v) }));
   };
 
-  const submit = async (publishOverride?: "draft" | "published") => {
+  /** Saves with whatever visibility the editor selected in the SaveBar. */
+  const submit = async () => {
     setError(null);
     if (!form.name.trim()) { setError("Name is required"); setTab("content"); return; }
     if (!form.slug.trim()) { setError("Slug is required"); setTab("content"); return; }
@@ -129,13 +135,14 @@ export default function AdminCityEdit() {
       default_zoom: form.default_zoom,
       hero_image_url: form.hero_image_url,
       og_image_url: form.og_image_url,
-      status: publishOverride || form.status,
+      status: form.status,
       meta_title: form.meta_title || null,
       meta_description: form.meta_description || null,
       canonical_url: form.canonical_url || null,
       sections: form.sections as any,
     };
-    const finalStatus = publishOverride || form.status;
+    const finalStatus = form.status;
+    const wasPublished = savedStatus === "published";
     if (isNew) {
       const { data, error } = await supabase.from("cities").insert(payload).select("id").single();
       setSaving(false);
@@ -144,6 +151,7 @@ export default function AdminCityEdit() {
         toast({ title: "Could not save city", description: error.message, variant: "destructive" });
         return;
       }
+      setSavedStatus(finalStatus);
       toast({
         title: finalStatus === "published" ? "City published" : "Draft saved",
         description: `“${payload.name}” has been ${finalStatus === "published" ? "published" : "saved as a draft"}.`,
@@ -157,16 +165,12 @@ export default function AdminCityEdit() {
         toast({ title: "Could not save city", description: error.message, variant: "destructive" });
         return;
       }
-      if (publishOverride) set("status", publishOverride);
+      setSavedStatus(finalStatus);
       toast({
         title:
-          publishOverride === "published"
-            ? "City published"
-            : publishOverride === "draft"
-              ? "Moved to draft"
-              : finalStatus === "published"
-                ? "City updated"
-                : "Draft saved",
+          finalStatus === "published"
+            ? wasPublished ? "City updated" : "City published"
+            : wasPublished ? "Moved to draft" : "Draft saved",
         description: `“${payload.name}” has been saved.`,
       });
     }
@@ -203,22 +207,14 @@ export default function AdminCityEdit() {
             <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-2">{isNew ? "New" : "Edit"} city</p>
             <h1 className="font-display text-[28px] text-ink">{form.name || "Untitled city"}</h1>
           </div>
-          <div className="flex items-center gap-3">
-            {!isNew && form.status === "published" && (
-              <Link to={`/cities/${form.slug}`} target="_blank" className="text-[11px] tracking-tag uppercase text-ink-muted hover:text-ink">
-                View live ↗
-              </Link>
-            )}
-            <button type="button" onClick={() => submit("draft")} disabled={saving}
-              className="text-[11px] tracking-tag uppercase border hairline px-4 py-2.5 text-ink hover:bg-off-white disabled:opacity-50">
-              Save draft
-            </button>
-            <button type="button" onClick={() => submit("published")} disabled={saving}
-              className="text-[11px] tracking-tag uppercase text-background px-5 py-2.5 disabled:opacity-50"
-              style={{ background: "hsl(var(--ink))" }}>
-              {saving ? "Saving…" : form.status === "published" ? "Update" : "Publish"}
-            </button>
-          </div>
+          <SaveBar
+            status={form.status}
+            savedStatus={savedStatus}
+            onStatusChange={(s) => set("status", s)}
+            onSave={() => submit()}
+            saving={saving}
+            liveHref={isNew ? undefined : `/cities/${form.slug}`}
+          />
         </div>
 
         <div className="flex gap-6 border-b hairline mb-8">

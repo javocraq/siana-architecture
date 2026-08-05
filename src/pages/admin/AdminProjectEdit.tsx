@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
+import SaveBar from "@/components/admin/SaveBar";
 import MapPicker from "@/components/admin/MapPicker";
 import SelectOrCreate from "@/components/admin/SelectOrCreate";
 import { useTaxonomies } from "@/hooks/useTaxonomies";
@@ -89,6 +90,9 @@ export default function AdminProjectEdit() {
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
+  // What the site is showing right now, as opposed to `form.status`, which
+  // is the visibility the editor has selected for the next save.
+  const [savedStatus, setSavedStatus] = useState<"draft" | "published">("draft");
   const [error, setError] = useState<string | null>(null);
   const [slugTouched, setSlugTouched] = useState(!isNew);
   const [addingCity, setAddingCity] = useState(false);
@@ -141,6 +145,7 @@ export default function AdminProjectEdit() {
         meta_description: data.meta_description || "",
         canonical_url: data.canonical_url || "",
       });
+      setSavedStatus((data.status as "draft" | "published") || "draft");
       setLoading(false);
     })();
   }, [id, isNew]);
@@ -174,7 +179,8 @@ export default function AdminProjectEdit() {
     setForm((f) => ({ ...f, name: v, slug: slugTouched ? f.slug : slugify(v) }));
   };
 
-  const submit = async (publishOverride?: "draft" | "published") => {
+  /** Saves with whatever visibility the editor selected in the SaveBar. */
+  const submit = async () => {
     setError(null);
     if (!form.name.trim()) {
       setError("Name is required");
@@ -208,12 +214,13 @@ export default function AdminProjectEdit() {
       og_image_url: form.og_image_url,
       gallery: form.gallery,
       featured: form.featured,
-      status: publishOverride || form.status,
+      status: form.status,
       meta_title: form.meta_title || null,
       meta_description: form.meta_description || null,
       canonical_url: form.canonical_url || null,
     };
-    const finalStatus = publishOverride || form.status;
+    const finalStatus = form.status;
+    const wasPublished = savedStatus === "published";
 
     const writeOnce = async (pl: any) => {
       if (isNew) return await supabase.from("projects").insert(pl).select("id").single();
@@ -241,6 +248,7 @@ export default function AdminProjectEdit() {
       toast({ title: "Could not save project", description: error.message, variant: "destructive" });
       return;
     }
+    setSavedStatus(finalStatus);
     if (isNew) {
       toast({
         title: finalStatus === "published" ? "Project published" : "Draft saved",
@@ -248,16 +256,11 @@ export default function AdminProjectEdit() {
       });
       navigate(`/admin/projects/${data.id}`, { replace: true });
     } else {
-      if (publishOverride) set("status", publishOverride);
       toast({
         title:
-          publishOverride === "published"
-            ? "Project published"
-            : publishOverride === "draft"
-              ? "Moved to draft"
-              : finalStatus === "published"
-                ? "Project updated"
-                : "Draft saved",
+          finalStatus === "published"
+            ? wasPublished ? "Project updated" : "Project published"
+            : wasPublished ? "Moved to draft" : "Draft saved",
         description: `“${payload.name}” has been saved.`,
       });
     }
@@ -297,30 +300,14 @@ export default function AdminProjectEdit() {
             <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-2">{isNew ? "New" : "Edit"} project</p>
             <h1 className="font-display text-[28px] text-ink">{form.name || "Untitled project"}</h1>
           </div>
-          <div className="flex items-center gap-3">
-            {!isNew && form.status === "published" && (
-              <Link to={`/projects/${form.slug}`} target="_blank" className="text-[11px] tracking-tag uppercase text-ink-muted hover:text-ink">
-                View live ↗
-              </Link>
-            )}
-            <button
-              type="button"
-              onClick={() => submit("draft")}
-              disabled={saving}
-              className="text-[11px] tracking-tag uppercase border hairline px-4 py-2.5 text-ink hover:bg-off-white disabled:opacity-50"
-            >
-              Save draft
-            </button>
-            <button
-              type="button"
-              onClick={() => submit("published")}
-              disabled={saving}
-              className="text-[11px] tracking-tag uppercase text-background px-5 py-2.5 disabled:opacity-50"
-              style={{ background: "hsl(var(--ink))" }}
-            >
-              {saving ? "Saving…" : form.status === "published" ? "Update" : "Publish"}
-            </button>
-          </div>
+          <SaveBar
+            status={form.status}
+            savedStatus={savedStatus}
+            onStatusChange={(s) => set("status", s)}
+            onSave={() => submit()}
+            saving={saving}
+            liveHref={isNew ? undefined : `/projects/${form.slug}`}
+          />
         </div>
 
         {/* Tabs */}

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
+import SaveBar from "@/components/admin/SaveBar";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, X } from "lucide-react";
 import { kindConfig } from "@/lib/postKind";
@@ -79,6 +80,9 @@ export default function AdminJournalEdit() {
   const [error, setError] = useState<string | null>(null);
   const [slugTouched, setSlugTouched] = useState(!isNew);
   const [projectQuery, setProjectQuery] = useState("");
+  // What the site is showing right now, as opposed to `form.status`, which is
+  // the visibility the editor has selected for the next save.
+  const [savedStatus, setSavedStatus] = useState<"draft" | "published">("draft");
 
   useEffect(() => {
     Promise.all([
@@ -116,6 +120,7 @@ export default function AdminJournalEdit() {
         meta_description: data.meta_description || "",
         canonical_url: data.canonical_url || "",
       });
+      setSavedStatus((data.status as "draft" | "published") || "draft");
       setLoading(false);
     })();
   }, [id, isNew]);
@@ -145,7 +150,8 @@ export default function AdminJournalEdit() {
     }));
   };
 
-  const submit = async (publishOverride?: "draft" | "published") => {
+  /** Saves with whatever visibility the editor selected in the SaveBar. */
+  const submit = async () => {
     setError(null);
     if (!form.title.trim()) {
       setError("Title is required");
@@ -158,7 +164,7 @@ export default function AdminJournalEdit() {
       return;
     }
     setSaving(true);
-    const newStatus = publishOverride || form.status;
+    const newStatus = form.status;
     const payload = {
       title: form.title.trim(),
       slug: form.slug.trim(),
@@ -188,6 +194,7 @@ export default function AdminJournalEdit() {
         toast({ title: `Could not save ${cfg.label.toLowerCase()}`, description: error.message, variant: "destructive" });
         return;
       }
+      setSavedStatus(newStatus);
       toast({
         title: newStatus === "published" ? `${cfg.label} published` : "Draft saved",
         description: `“${payload.title}” has been ${newStatus === "published" ? "published" : "saved as a draft"}.`,
@@ -195,6 +202,7 @@ export default function AdminJournalEdit() {
       navigate(`${cfg.adminBase}/${data.id}`, { replace: true });
 
     } else {
+      const wasPublished = savedStatus === "published";
       const { error } = await supabase.from("posts").update(payload).eq("id", id!);
       setSaving(false);
       if (error) {
@@ -202,21 +210,15 @@ export default function AdminJournalEdit() {
         toast({ title: `Could not save ${cfg.label.toLowerCase()}`, description: error.message, variant: "destructive" });
         return;
       }
-      if (publishOverride) {
-        set("status", publishOverride);
-        if (publishOverride === "published" && !form.published_at) {
-          set("published_at", payload.published_at);
-        }
+      if (newStatus === "published" && !form.published_at) {
+        set("published_at", payload.published_at);
       }
+      setSavedStatus(newStatus);
       toast({
         title:
-          publishOverride === "published"
-            ? `${cfg.label} published`
-            : publishOverride === "draft"
-              ? "Moved to draft"
-              : newStatus === "published"
-                ? `${cfg.label} updated`
-                : "Draft saved",
+          newStatus === "published"
+            ? wasPublished ? `${cfg.label} updated` : `${cfg.label} published`
+            : wasPublished ? "Moved to draft" : "Draft saved",
         description: `“${payload.title}” has been saved.`,
       });
     }
@@ -260,31 +262,14 @@ export default function AdminJournalEdit() {
             <p className="text-[10px] tracking-tag uppercase text-ink-muted mb-2">{isNew ? "New" : "Edit"} {cfg.label.toLowerCase()}</p>
             <h1 className="font-display text-[28px] text-ink">{form.title || `Untitled ${cfg.label.toLowerCase()}`}</h1>
           </div>
-          <div className="flex items-center gap-3">
-            {!isNew && form.status === "published" && (
-              <Link to={`${cfg.publicBase}/${form.slug}`} target="_blank" className="text-[11px] tracking-tag uppercase text-ink-muted hover:text-ink">
-                View live ↗
-              </Link>
-            )}
-
-            <button
-              type="button"
-              onClick={() => submit("draft")}
-              disabled={saving}
-              className="text-[11px] tracking-tag uppercase border hairline px-4 py-2.5 text-ink hover:bg-off-white disabled:opacity-50"
-            >
-              Save draft
-            </button>
-            <button
-              type="button"
-              onClick={() => submit("published")}
-              disabled={saving}
-              className="text-[11px] tracking-tag uppercase text-background px-5 py-2.5 disabled:opacity-50"
-              style={{ background: "hsl(var(--ink))" }}
-            >
-              {saving ? "Saving…" : form.status === "published" ? "Update" : "Publish"}
-            </button>
-          </div>
+          <SaveBar
+            status={form.status}
+            savedStatus={savedStatus}
+            onStatusChange={(s) => set("status", s)}
+            onSave={() => submit()}
+            saving={saving}
+            liveHref={isNew ? undefined : `${cfg.publicBase}/${form.slug}`}
+          />
         </div>
 
         <div className="flex gap-6 border-b hairline mb-8">
