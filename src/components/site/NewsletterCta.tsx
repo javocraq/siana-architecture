@@ -1,56 +1,22 @@
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 import Reveal from "@/components/site/Reveal";
 import EditorialButton from "@/components/site/EditorialButton";
 import { useHomeContent } from "@/hooks/useHomeContent";
 import { sanitizeInline } from "@/lib/inlineHtml";
-import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * Where readers subscribe, in the footer of every page.
+ *
+ * Sign-up happens on Substack itself. Subscribing from a form here needs
+ * Substack's own subscribe endpoint, which refuses server-to-server calls
+ * (HTTP 403 from their edge — it is not a public API), so the alternatives
+ * were an unstyleable Substack iframe or sending the reader to the
+ * publication. This is the second, chosen deliberately for its simplicity.
+ */
+const SUBSTACK_URL =
+  "https://sianaarchitecture.substack.com/?r=8l6ahp&utm_campaign=pub-share-checklist";
 
 export default function NewsletterCta() {
-  const { toast } = useToast();
   const content = useHomeContent();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [company, setCompany] = useState(""); // honeypot — see the hidden field
-  const [submitting, setSubmitting] = useState(false);
-
-  /**
-   * Posts to the `newsletter-subscribe` Edge Function, which stores the address
-   * and hands it to Substack. Subscribing happens here — the reader is never
-   * sent off to substack.com.
-   */
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || submitting) return;
-    setSubmitting(true);
-
-    const { data, error } = await supabase.functions.invoke("newsletter-subscribe", {
-      body: {
-        email: email.trim(),
-        name: name.trim() || null,
-        source: window.location.pathname,
-        company,
-      },
-    });
-    setSubmitting(false);
-
-    // Keep what they typed on failure so the retry is one click, not a retype.
-    if (error || !(data as { ok?: boolean } | null)?.ok) {
-      toast({
-        title: "That didn't go through.",
-        description: "Please check the address and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "You're on the list.",
-      description: "Check your inbox to confirm your subscription.",
-    });
-    setName("");
-    setEmail("");
-  };
 
   return (
     <section
@@ -81,75 +47,21 @@ export default function NewsletterCta() {
           />
         </Reveal>
 
-        {/* Right — form */}
-        <Reveal delay={160} className="flex">
-        {/* Just name + email: the fewer fields between a reader and the list,
-            the more of them finish. `justify-center` keeps the short form
-            optically aligned with the intro copy in the column beside it. */}
-        <form onSubmit={onSubmit} className="flex flex-col justify-center w-full">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 mb-10">
-            <div>
-              <label
-                htmlFor="newsletter-name"
-                className="font-mono uppercase text-ink-soft mb-2 block font-medium"
-                style={{ fontSize: "11px", letterSpacing: "0.22em" }}
-              >
-                Name
-              </label>
-              <input
-                id="newsletter-name"
-                type="text"
-                autoComplete="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-transparent text-ink focus:outline-none focus:border-ink transition-colors py-2"
-                style={{
-                  borderBottom: "1px solid hsl(var(--paper-mid))",
-                  fontSize: "15px",
-                }}
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="newsletter-email"
-                className="font-mono uppercase text-ink-soft mb-2 block font-medium"
-                style={{ fontSize: "11px", letterSpacing: "0.22em" }}
-              >
-                E-Mail
-              </label>
-              <input
-                id="newsletter-email"
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-transparent text-ink focus:outline-none focus:border-ink transition-colors py-2"
-                style={{
-                  borderBottom: "1px solid hsl(var(--paper-mid))",
-                  fontSize: "15px",
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Honeypot: off-screen and skipped by keyboard and screen readers,
-              so only a bot filling every field will trip it. */}
-          <input
-            type="text"
-            name="company"
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            tabIndex={-1}
-            autoComplete="off"
-            aria-hidden="true"
-            className="absolute w-px h-px -left-[9999px] opacity-0"
-          />
-
-          <EditorialButton type="submit" disabled={submitting} arrow className="self-center md:self-start">
-            {submitting ? "Subscribing…" : "Subscribe"}
+        {/* Right — the call to action. Opens in a new tab so the reader does
+            not lose the page they were on. */}
+        <Reveal
+          delay={160}
+          className="flex flex-col justify-center items-center md:items-start"
+        >
+          <EditorialButton href={SUBSTACK_URL} target="_blank" arrow>
+            Subscribe on Substack
           </EditorialButton>
-        </form>
+          <p
+            className="font-mono text-ink-soft mt-5"
+            style={{ fontSize: "13px", letterSpacing: "0.02em" }}
+          >
+            Free — one edition at a time, no clutter.
+          </p>
         </Reveal>
       </div>
     </section>

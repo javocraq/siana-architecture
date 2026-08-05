@@ -23,6 +23,8 @@ type LinkProps = CommonProps & {
 };
 type AnchorProps = CommonProps & {
   href: string;
+  /** Set "_blank" for an off-site link so the reader keeps their place here. */
+  target?: string;
   to?: never;
   onClick?: never;
   type?: never;
@@ -99,8 +101,17 @@ export default function EditorialButton(props: EditorialButtonProps) {
     );
   }
   if ("href" in props && props.href) {
+    const target = (props as AnchorProps).target;
     return (
-      <a href={props.href} className={baseClass} style={mergedStyle}>
+      <a
+        href={props.href}
+        target={target}
+        // Required with _blank: without it the opened page can reach back
+        // through window.opener.
+        rel={target === "_blank" ? "noopener noreferrer" : undefined}
+        className={baseClass}
+        style={mergedStyle}
+      >
         {content}
       </a>
     );
