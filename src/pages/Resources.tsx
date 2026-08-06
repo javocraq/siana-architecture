@@ -69,7 +69,7 @@ export default function Resources() {
   return (
     <SiteLayout>
       <SEO
-        title={activeCategory ? `${activeCategory} — Practice — Siana` : "Practice — Siana"}
+        title={activeCategory ? `${activeCategory} — Practice — Siana Architecture` : "Practice — Siana Architecture"}
         description="Essays, field notes and practical guides for architecture, engineering and construction firms."
       />
 

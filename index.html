@@ -13,7 +13,7 @@
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Siana — Architecture, city by city</title>
+    <title>Siana Architecture</title>
     <meta name="description" content="Curated architectural projects, mapped across Europe's greatest cities." />
     <meta name="author" content="Siana Architecture" />
 
@@ -21,11 +21,37 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
     <meta name="theme-color" content="#111110" />
 
-    <meta property="og:title" content="Siana — Architecture, city by city" />
+    <meta property="og:title" content="Siana Architecture" />
     <meta property="og:description" content="Curated architectural projects, mapped across Europe's greatest cities." />
     <meta property="og:type" content="website" />
 
     <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- The prerender step (scripts/prerender.mjs) writes a plain-HTML copy of
+         each page into #root so crawlers that don't run JavaScript still see
+         the content. React replaces it the moment it mounts — but until the
+         bundle has downloaded and booted, that unstyled markup was visible as
+         a flash of raw text on every cold load.
+
+         Clipping it keeps the markup in the rendered DOM (crawlers still read
+         it, unlike display:none) while taking it out of view. The paper
+         background means the pre-mount moment shows the site's own colour
+         rather than a white blink. -->
+    <style>
+      html, body { background: #ffffff; }
+      #prerender {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

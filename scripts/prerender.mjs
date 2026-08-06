@@ -127,7 +127,7 @@ async function main() {
   // --- Home ---
   write("/", renderPage(template, {
     path: "/",
-    title: "Siana — Architecture, city by city",
+    title: "Siana Architecture",
     description: "An editorial atlas of architecture: significant buildings mapped city by city, with a journal of essays and field notes and resources for architects.",
     image: OG_DEFAULT,
     jsonld: { "@context": "https://schema.org", "@graph": [ORG, { "@type": "WebSite", name: "Siana Architecture", url: SITE_URL }] },
@@ -164,7 +164,7 @@ async function main() {
   // --- Listing: Resources ---
   write("/resources", renderPage(template, {
     path: "/resources",
-    title: "Resources for Architects — Siana",
+    title: "Resources for Architects — Siana Architecture",
     description: "Practical guides, playbooks and tools for architecture, engineering and construction practices.",
     image: OG_DEFAULT,
     content:
@@ -188,7 +188,7 @@ async function main() {
   // --- Atlas (the discovery tool) ---
   write("/atlas", renderPage(template, {
     path: "/atlas",
-    title: "Atlas — Explore Architecture on the Map | Siana",
+    title: "Atlas — Explore Architecture on the Map | Siana Architecture",
     description: "An interactive atlas of significant architecture across the world's cities. Filter by city, architect, style and year, and explore each project on the map.",
     image: OG_DEFAULT,
     content:
@@ -201,7 +201,7 @@ async function main() {
   for (const c of cities) {
     write(`/cities/${c.slug}`, renderPage(template, {
       path: `/cities/${c.slug}`,
-      title: `${c.name} — Architecture Guide | Siana`,
+      title: `${c.name} — Architecture Guide | Siana Architecture`,
       description: `Architecture guide to ${c.name}${c.country ? ", " + c.country : ""}.${c.tagline ? " " + c.tagline : ""}`,
       image: c.hero_image_url || OG_DEFAULT,
       jsonld: { "@context": "https://schema.org", "@type": "Place", name: c.name, address: c.country || undefined, url: `${SITE_URL}/cities/${c.slug}` },
@@ -214,7 +214,7 @@ async function main() {
     const facts = [p.architect, p.year_completed && p.year_completed > 1000 ? p.year_completed : null, p.city?.name].filter(Boolean).join(" · ");
     write(`/projects/${p.slug}`, renderPage(template, {
       path: `/projects/${p.slug}`,
-      title: `${p.name}${p.architect ? " by " + p.architect : ""} | Siana`,
+      title: `${p.name}${p.architect ? " by " + p.architect : ""} | Siana Architecture`,
       description: p.tagline || `${p.name}${facts ? " — " + facts : ""}.`,
       image: p.cover_image_url || p.hero_image_url || OG_DEFAULT,
       type: "article",
@@ -234,7 +234,7 @@ async function main() {
     const base = p.kind === "resource" ? "/resources" : "/journal";
     write(`${base}/${p.slug}`, renderPage(template, {
       path: `${base}/${p.slug}`,
-      title: `${p.title} | Siana ${p.kind === "resource" ? "Resources" : "Journal"}`,
+      title: `${p.title} | Siana Architecture`,
       description: p.excerpt || stripHtml(p.body).slice(0, 200),
       image: p.hero_image_url || OG_DEFAULT,
       type: "article",

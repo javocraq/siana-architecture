@@ -166,7 +166,7 @@ const Index = () => {
     <div className="bg-paper">
       <WelcomeOverlay />
       <Helmet>
-        <title>Siana — Your city through architecture</title>
+        <title>Siana Architecture</title>
         <meta name="description" content="An editorial atlas of architecture. Curated projects across the world's great cities — explore them on the interactive map." />
         <link rel="canonical" href="/" />
       </Helmet>

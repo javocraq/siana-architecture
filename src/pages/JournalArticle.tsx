@@ -151,7 +151,7 @@ export default function JournalArticle() {
   return (
     <SiteLayout>
       <SEO
-        title={post.meta_title || `${post.title} — Siana ${cfg.sectionTitle}`}
+        title={post.meta_title || `${post.title} — Siana Architecture`}
         description={post.meta_description || post.excerpt}
         image={post.og_image_url || post.hero_image_url}
         type="article"
