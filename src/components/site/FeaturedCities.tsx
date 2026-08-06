@@ -101,8 +101,7 @@ export default function FeaturedCities() {
 
   return (
     <section
-      className="bg-white"
-      style={{ padding: "5rem 0" }}
+      className="bg-white py-16 md:py-20"
     >
       <div
         className="mx-auto max-w-[1400px] px-6 lg:px-10"
@@ -129,7 +128,7 @@ export default function FeaturedCities() {
         onClick={() => scrollBy(-1)}
         disabled={!canScrollLeft}
         aria-label="Anterior"
-        className="absolute z-10 inline-flex items-center justify-center transition-all disabled:opacity-0 disabled:pointer-events-none hover:bg-white"
+        className="hidden md:inline-flex absolute z-10 items-center justify-center transition-all disabled:opacity-0 disabled:pointer-events-none hover:bg-white"
         style={{
           left: "1.75rem",
           top: "37%",
@@ -150,7 +149,7 @@ export default function FeaturedCities() {
         onClick={() => scrollBy(1)}
         disabled={!canScrollRight}
         aria-label="Siguiente"
-        className="absolute z-10 inline-flex items-center justify-center transition-all disabled:opacity-0 disabled:pointer-events-none hover:bg-white"
+        className="hidden md:inline-flex absolute z-10 items-center justify-center transition-all disabled:opacity-0 disabled:pointer-events-none hover:bg-white"
         style={{
           right: "1.75rem",
           top: "37%",
@@ -176,7 +175,7 @@ export default function FeaturedCities() {
       <Reveal>
         <div
           ref={scrollRef}
-          className="flex no-scrollbar overflow-x-auto scroll-smooth mx-auto max-w-[1400px] px-6 lg:px-10 snap-x snap-mandatory md:snap-none"
+          className="flex no-scrollbar overflow-x-auto scroll-smooth mx-auto max-w-[1400px] px-6 lg:px-10 snap-x snap-mandatory scroll-pl-6 lg:scroll-pl-10 md:snap-none"
           style={{
             gap: "2rem",
             cursor: "grab",

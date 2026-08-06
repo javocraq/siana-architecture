@@ -47,12 +47,11 @@ export default function FeaturedBuildings() {
 
   return (
     <section
-      className="bg-paper"
-      style={{ padding: "6rem 0" }}
+      className="bg-paper py-16 md:py-24"
     >
       <Reveal
         className="mx-auto max-w-[1400px] px-6 lg:px-10"
-        style={{ paddingBottom: "5rem" }}
+        style={{ paddingBottom: "2.5rem" }}
       >
         <div className="text-center max-w-xl mx-auto">
           <h2
@@ -72,7 +71,7 @@ export default function FeaturedBuildings() {
         // Mobile: a swipeable row that snaps card to card, matching the
         // Cities strip above it. From md up it goes back to the asymmetric
         // mosaic, with the hero spanning both rows.
-        className="mx-auto max-w-[1400px] px-6 lg:px-10 flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory md:grid md:grid-cols-[1.4fr_1fr_1fr] md:gap-2 md:overflow-visible md:snap-none"
+        className="mx-auto max-w-[1400px] px-6 lg:px-10 flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-pl-6 lg:scroll-pl-10 md:grid md:grid-cols-[1.4fr_1fr_1fr] md:gap-2 md:overflow-visible md:snap-none"
         style={{ gridAutoRows: "minmax(240px, auto)" }}
       >
         {/* Hero — spans both rows on desktop; full-width on mobile */}
@@ -89,22 +88,24 @@ export default function FeaturedBuildings() {
             loading="lazy"
           />
           <div
-            className="absolute bottom-0 left-0 right-0"
+            className="absolute bottom-0 left-0 right-0 pt-[2.2rem] px-[1.2rem] pb-[1rem] md:pt-[3rem] md:px-[1.8rem] md:pb-[1.5rem]"
             style={{
-              padding: "3rem 1.8rem 1.5rem",
               background: "linear-gradient(transparent, rgba(17,17,16,0.9))",
               borderRadius: 0,
             }}
+            // Same box as the smaller cards on mobile, where the strip makes
+            // every card the same size; only the desktop mosaic gives the
+            // hero its extra room.
           >
             {hero.city?.name && (
               <p
-                className="font-mono uppercase mb-2 font-semibold"
-                style={{ fontSize: "13px", letterSpacing: "0.18em", color: "#ffffff" }}
+                className="font-mono uppercase mb-2 font-semibold text-[12px] md:text-[13px]"
+                style={{ letterSpacing: "0.18em", color: "#ffffff" }}
               >
                 {hero.city.name}
               </p>
             )}
-            <h3 className="font-display text-white" style={{ fontSize: "2rem", letterSpacing: "-0.01em" }}>
+            <h3 className="font-display text-white text-[1.3rem] md:text-[2rem]" style={{ letterSpacing: "-0.01em" }}>
               {hero.name}
             </h3>
           </div>

@@ -42,10 +42,10 @@ export default function LatestJournal() {
   const rest = posts.slice(1, 5);
 
   return (
-    <section className="bg-paper" style={{ padding: "6rem 0" }}>
+    <section className="bg-paper py-16 md:py-24">
       <Reveal
         className="mx-auto max-w-[1400px] px-6 lg:px-10"
-        style={{ paddingBottom: "5rem" }}
+        style={{ paddingBottom: "2.5rem" }}
       >
         <div className="text-center max-w-xl mx-auto">
           <h2
