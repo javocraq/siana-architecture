@@ -222,8 +222,14 @@ export default function FeaturedCities() {
                 >
                   {c.name}
                 </h3>
-                <p className="font-grotesk text-[13px] font-semibold uppercase tracking-[0.16em] text-[#4F4534] mt-3">
-                  {c.country ? `${c.country} • ` : ""}
+                {/* Country on its own line, count beneath it. Weight drops
+                    from 600 to 300 so the name above carries the card. */}
+                {c.country && (
+                  <p className="font-grotesk text-[13px] font-light uppercase tracking-[0.16em] text-[#4F4534] mt-3">
+                    {c.country}
+                  </p>
+                )}
+                <p className={`font-grotesk text-[13px] font-light uppercase tracking-[0.16em] text-[#4F4534] ${c.country ? "mt-1" : "mt-3"}`}>
                   {String(c.project_count).padStart(2, "0")} Proyectos
                 </p>
               </Link>

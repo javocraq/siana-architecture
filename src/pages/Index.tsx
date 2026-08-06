@@ -278,8 +278,8 @@ const Index = () => {
 
           <div className="fadeup-3 mt-10 md:mt-12">
             <p
-              className="font-mono text-white/85 mx-auto md:mx-0 [&_em]:italic [&_strong]:font-semibold"
-              style={{ fontSize: "16.5px", lineHeight: 1.7, maxWidth: 380, letterSpacing: "0.01em", textShadow: "0 1px 8px rgba(0,0,0,0.25)" }}
+              className="font-mono text-white/85 mx-auto md:mx-0 max-w-[380px] md:max-w-none [&_em]:italic [&_strong]:font-semibold"
+              style={{ fontSize: "16.5px", lineHeight: 1.7, letterSpacing: "0.01em", textShadow: "0 1px 8px rgba(0,0,0,0.25)" }}
               dangerouslySetInnerHTML={{ __html: sanitizeInline(content.hero.description) }}
             />
           </div>
