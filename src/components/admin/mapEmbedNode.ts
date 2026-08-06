@@ -86,7 +86,7 @@ export const MapEmbed = Node.create({
       const target = node.attrs.label || node.attrs.slug;
       text.textContent = target
         ? `Map · ${target}`
-        : "Map — no city or project selected";
+        : "Map - no city or project selected";
 
       dom.append(icon, text);
       return { dom };

@@ -87,7 +87,7 @@ export default function SaveBar({
             ? "Saving will publish this to the site."
             : status === "published"
               ? "Live on the site."
-              : "Draft — only visible here."}
+              : "Draft - only visible here."}
       </p>
     </div>
   );

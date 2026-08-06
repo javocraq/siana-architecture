@@ -15,10 +15,10 @@ export type AboutContent = {
 };
 
 export const ABOUT_DEFAULTS: AboutContent = {
-  eyebrow: "Siana — Manifesto",
+  eyebrow: "Siana - Manifesto",
   headline: "The city as architecture.",
   body:
-    "<p>Siana is an architectural magazine that lives on a map. We believe the most interesting building in any city is rarely the most famous one — and that the best way to understand a place is to walk it, slowly, with someone pointing.</p>" +
+    "<p>Siana is an architectural magazine that lives on a map. We believe the most interesting building in any city is rarely the most famous one - and that the best way to understand a place is to walk it, slowly, with someone pointing.</p>" +
     "<p>We curate projects across cities, write about them with the care of an editor and the eye of an architect, and put them on a map you can actually use. No ads. No clutter. No infinite scroll.</p>" +
     "<p><em>Made for those who look.</em></p>",
   cta_label: "Open the map →",

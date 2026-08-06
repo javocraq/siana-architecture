@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import type * as MapboxGL from "mapbox-gl";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/site/Navbar";
@@ -22,8 +21,10 @@ const HERO_SLIDE_MS = 6000;
 
 const Index = () => {
   const mapContainer = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const mapRef = useRef<MapboxGL.Map | null>(null);
+  const mapboxRef = useRef<typeof MapboxGL.default | null>(null);
+  const [mapReady, setMapReady] = useState(false);
+  const markersRef = useRef<MapboxGL.Marker[]>([]);
   const [token] = useState<string>(() => getMapboxToken());
   const [pins, setPins] = useState<Pin[]>([]);
   const [heroImages, setHeroImages] = useState<string[]>([]);
@@ -125,48 +126,71 @@ const Index = () => {
   // hero map feels alive even though it's not clickable as a map.
   useEffect(() => {
     if (!token || !mapContainer.current || mapRef.current) return;
-    mapboxgl.accessToken = token;
     let io: IntersectionObserver | null = null;
-    try {
-      const map = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: "mapbox://styles/mapbox/light-v11",
-        projection: { name: "mercator" },
-        center: [10, 25],
-        zoom: 1.6,
-        attributionControl: false,
-        interactive: false,
-      });
-      mapRef.current = map;
+    let cancelled = false;
 
-      // Spinning globe — slower than the Atlas tool since this is decorative.
-      // Pause the spin whenever the hero is scrolled out of view (and for
-      // reduced-motion users). Otherwise the map keeps repainting behind the
-      // rest of the page, which made scrolling stutter.
-      const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-      let visible = true;
-      const SECONDS_PER_REV = 120;
-      const spinGlobe = () => {
-        if (!visible || reduceMotion) return;
-        const c = map.getCenter();
-        c.lng -= 360 / SECONDS_PER_REV;
-        map.easeTo({ center: c, duration: 1000, easing: (n) => n });
-      };
-      map.on("moveend", spinGlobe);
-      map.on("load", spinGlobe);
+    // Mapbox is ~1.7 MB. Pulling it in here, after the page has painted,
+    // keeps it off the critical path: this map is decorative and below the
+    // fold, so nobody is waiting on it.
+    (async () => {
+      let mapboxgl: typeof MapboxGL.default;
+      try {
+        [{ default: mapboxgl }] = await Promise.all([
+          import("mapbox-gl"),
+          import("mapbox-gl/dist/mapbox-gl.css"),
+        ]) as [{ default: typeof MapboxGL.default }, unknown];
+      } catch (e) {
+        console.error("Mapbox failed to load", e);
+        return;
+      }
+      if (cancelled || !mapContainer.current || mapRef.current) return;
+      mapboxRef.current = mapboxgl;
+      mapboxgl.accessToken = token;
 
-      io = new IntersectionObserver(
-        ([entry]) => {
-          visible = entry.isIntersecting;
-          if (visible) spinGlobe(); // restart the loop when it scrolls back in
-        },
-        { threshold: 0 }
-      );
-      io.observe(mapContainer.current);
-    } catch (e) {
-      console.error("Mapbox preview init failed", e);
-    }
+      try {
+        const map = new mapboxgl.Map({
+          container: mapContainer.current,
+          style: "mapbox://styles/mapbox/light-v11",
+          projection: { name: "mercator" },
+          center: [10, 25],
+          zoom: 1.6,
+          attributionControl: false,
+          interactive: false,
+        });
+        mapRef.current = map;
+
+        // Spinning globe, slower than the Atlas tool since this is decorative.
+        // Pause the spin whenever the hero is scrolled out of view (and for
+        // reduced-motion users). Otherwise the map keeps repainting behind the
+        // rest of the page, which made scrolling stutter.
+        const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+        let visible = true;
+        const SECONDS_PER_REV = 120;
+        const spinGlobe = () => {
+          if (!visible || reduceMotion) return;
+          const c = map.getCenter();
+          c.lng -= 360 / SECONDS_PER_REV;
+          map.easeTo({ center: c, duration: 1000, easing: (n) => n });
+        };
+        map.on("moveend", spinGlobe);
+        map.on("load", spinGlobe);
+
+        io = new IntersectionObserver(
+          ([entry]) => {
+            visible = entry.isIntersecting;
+            if (visible) spinGlobe(); // restart the loop when it scrolls back in
+          },
+          { threshold: 0 }
+        );
+        io.observe(mapContainer.current);
+        setMapReady(true);
+      } catch (e) {
+        console.error("Mapbox preview init failed", e);
+      }
+    })();
+
     return () => {
+      cancelled = true;
       io?.disconnect();
       mapRef.current?.remove();
       mapRef.current = null;
@@ -177,7 +201,8 @@ const Index = () => {
   // we deliberately do NOT fitBounds here so the whole globe stays visible.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || pins.length === 0) return;
+    const mapboxgl = mapboxRef.current;
+    if (!map || !mapboxgl || pins.length === 0) return;
     const draw = () => {
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
@@ -193,14 +218,14 @@ const Index = () => {
     };
     if (map.loaded()) draw();
     else map.once("load", draw);
-  }, [pins]);
+  }, [pins, mapReady]);
 
   return (
     <div className="bg-paper">
       <WelcomeOverlay />
       <Helmet>
         <title>Siana Architecture</title>
-        <meta name="description" content="An editorial atlas of architecture. Curated projects across the world's great cities — explore them on the interactive map." />
+        <meta name="description" content="An editorial atlas of architecture. Curated projects across the world's great cities - explore them on the interactive map." />
         <link rel="canonical" href="/" />
       </Helmet>
 

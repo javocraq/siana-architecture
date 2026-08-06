@@ -36,7 +36,7 @@ const About = () => {
   return (
     <SiteLayout>
       <Helmet>
-        <title>About — Siana Architecture</title>
+        <title>About - Siana Architecture</title>
         <meta
           name="description"
           content="An architectural magazine meets a city platform. Curated projects, explored through an editorial lens."

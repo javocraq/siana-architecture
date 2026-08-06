@@ -22,7 +22,7 @@ export default function AdminIntegrations() {
             Integrations
           </h2>
           <p className="text-[13px] text-ink-soft" style={{ lineHeight: 1.65, maxWidth: 560 }}>
-            Keys and credentials for connected services will live here — Mapbox,
+            Keys and credentials for connected services will live here - Mapbox,
             Supabase Storage, email providers, analytics, etc. Coming soon.
           </p>
         </section>

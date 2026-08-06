@@ -102,7 +102,7 @@ export default function ProjectDetail() {
   return (
     <SiteLayout>
       <SEO
-        title={project.meta_title || `${project.name} — Siana Architecture`}
+        title={project.meta_title || `${project.name} - Siana Architecture`}
         description={project.meta_description || project.tagline}
         image={project.og_image_url || project.hero_image_url || project.cover_image_url}
         type="article"
@@ -207,7 +207,7 @@ export default function ProjectDetail() {
                 <figure key={i} className="flex flex-col items-center">
                   <img
                     src={img.url}
-                    alt={img.caption || `${project.name} — ${i + 1}`}
+                    alt={img.caption || `${project.name} - ${i + 1}`}
                     className="block w-auto max-w-full max-h-[70vh] object-contain"
                     loading="lazy"
                   />

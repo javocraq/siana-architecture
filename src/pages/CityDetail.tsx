@@ -147,7 +147,7 @@ export default function CityDetail() {
   return (
     <SiteLayout>
       <SEO
-        title={city.meta_title || `${city.name} — Siana Architecture`}
+        title={city.meta_title || `${city.name} - Siana Architecture`}
         description={city.meta_description || city.tagline}
         image={city.og_image_url || city.hero_image_url}
       />
@@ -803,7 +803,7 @@ function exampleArticlesFor(city: City): Post[] {
       id: `example-best-buildings-${city.id}`,
       slug: `best-buildings-${city.slug}`,
       title: `The Best Buildings in ${city.name}`,
-      excerpt: `A walking guide to the buildings that define ${city.name}'s architectural identity — from icons to overlooked gems.`,
+      excerpt: `A walking guide to the buildings that define ${city.name}'s architectural identity - from icons to overlooked gems.`,
       category: "City Guide",
       hero_image_url:
         "https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=1600&q=80",
@@ -813,7 +813,7 @@ function exampleArticlesFor(city: City): Post[] {
       id: `example-style-guide-${city.id}`,
       slug: `style-guide-${city.slug}`,
       title: `A Field Guide to ${city.name}'s Style`,
-      excerpt: `Materials, motifs and structural moves — a short field guide to recognising ${city.name}'s architectural language on a single walk.`,
+      excerpt: `Materials, motifs and structural moves - a short field guide to recognising ${city.name}'s architectural language on a single walk.`,
       category: "Style Guide",
       hero_image_url:
         "https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=1600&q=80",

@@ -268,7 +268,7 @@ export default function AdminCityEdit() {
             {/* Map — full width, below the details. The zoom level you leave
                 the map at (using +/- or ⌘+scroll) is what the public page
                 will use. No separate slider. */}
-            <Field label="Map center" hint={form.center_latitude && form.center_longitude ? `${form.center_latitude}, ${form.center_longitude} · zoom ${form.default_zoom}` : "We'll locate the city automatically — drag the pin or click to fine-tune"}>
+            <Field label="Map center" hint={form.center_latitude && form.center_longitude ? `${form.center_latitude}, ${form.center_longitude} · zoom ${form.default_zoom}` : "We'll locate the city automatically - drag the pin or click to fine-tune"}>
               <MapPicker
                 latitude={form.center_latitude}
                 longitude={form.center_longitude}

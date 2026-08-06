@@ -399,7 +399,7 @@ export default function AdminProjectEdit() {
                       else set("city_id", e.target.value || null);
                     }}
                   >
-                    <option value="">— Select —</option>
+                    <option value="">- Select -</option>
                     {cities.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -475,7 +475,7 @@ export default function AdminProjectEdit() {
                 a project name (and ideally picks a city), the map auto-locates
                 to that building/address. Clicking, dragging or searching after
                 that takes precedence — auto-locate never overrides a manual pin. */}
-            <Field label="Location" hint={form.latitude && form.longitude ? `${form.latitude}, ${form.longitude}` : "We'll locate the project automatically as you type the name — click or drag to fine-tune"}>
+            <Field label="Location" hint={form.latitude && form.longitude ? `${form.latitude}, ${form.longitude}` : "We'll locate the project automatically as you type the name - click or drag to fine-tune"}>
               {(() => {
                 const selectedCity = cities.find((c) => c.id === form.city_id);
                 const proximity: [number, number] | undefined =

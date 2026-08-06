@@ -14,7 +14,7 @@ export default function SelectOrCreate({
   value,
   onChange,
   options,
-  placeholder = "— Select —",
+  placeholder = "- Select -",
 }: Props) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");

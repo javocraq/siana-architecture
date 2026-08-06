@@ -945,8 +945,8 @@ export default function Atlas() {
   return (
     <div className="bg-paper">
       <SEO
-        title="Map — Explore Architecture | Siana Architecture"
-        description="An interactive atlas of significant architecture across the world's cities. Filter by city, material, experience, style, era and architect — and explore each project on the map."
+        title="Map - Explore Architecture | Siana Architecture"
+        description="An interactive atlas of significant architecture across the world's cities. Filter by city, material, experience, style, era and architect - and explore each project on the map."
       />
       <Navbar />
 

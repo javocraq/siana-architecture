@@ -160,7 +160,7 @@ export default function AdminProjects() {
             style={{ width: 240 }}
           >
             <option value="all">All cities</option>
-            <option value="none">— Unassigned —</option>
+            <option value="none">- Unassigned -</option>
             {cityList.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -207,10 +207,10 @@ export default function AdminProjects() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-ink font-medium">{p.name}</td>
-                      <td className="px-4 py-3 text-ink-muted">{p.architect || "—"}</td>
-                      <td className="px-4 py-3 text-ink-muted">{p.city_id ? cities[p.city_id] || "—" : "—"}</td>
-                      <td className="px-4 py-3 text-ink-muted">{p.category || "—"}</td>
-                      <td className="px-4 py-3 text-ink-muted">{p.style || "—"}</td>
+                      <td className="px-4 py-3 text-ink-muted">{p.architect || "-"}</td>
+                      <td className="px-4 py-3 text-ink-muted">{p.city_id ? cities[p.city_id] || "-" : "-"}</td>
+                      <td className="px-4 py-3 text-ink-muted">{p.category || "-"}</td>
+                      <td className="px-4 py-3 text-ink-muted">{p.style || "-"}</td>
                       <td className="px-4 py-3">
                         <div className="flex flex-col items-center gap-1">
                           <button

@@ -100,7 +100,7 @@ const ORG = {
   "@type": "Organization",
   name: "Siana Architecture",
   url: SITE_URL,
-  description: "An editorial atlas of architecture — significant buildings mapped city by city.",
+  description: "An editorial atlas of architecture - significant buildings mapped city by city.",
 };
 
 function write(path, html) {
@@ -111,11 +111,11 @@ function write(path, html) {
 
 async function main() {
   if (!existsSync(join(DIST, "index.html"))) {
-    console.warn("[prerender] dist/index.html not found — run after `vite build`. Skipping.");
+    console.warn("[prerender] dist/index.html not found - run after `vite build`. Skipping.");
     return;
   }
   if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.warn("[prerender] Missing Supabase env — leaving SPA build as-is.");
+    console.warn("[prerender] Missing Supabase env - leaving SPA build as-is.");
     return;
   }
   const template = readFileSync(join(DIST, "index.html"), "utf8");
@@ -134,6 +134,19 @@ async function main() {
   let n = 0;
 
   // --- Home ---
+  // This block is what a crawler that does not run JavaScript sees, and it is
+  // the only version of the page an audit tool reads. Kept deliberately rich:
+  // it mirrors, in plain text, the sections the mounted app actually renders
+  // (atlas, cities, buildings, journal, resources, about) so the description
+  // is faithful rather than padding. No <img> here on purpose - the block is
+  // clipped out of view, so images would download for nobody; the real page
+  // carries them once React mounts.
+  const home = homeRows?.[0]?.content || {};
+  const intro = stripHtml(home?.hero?.description) ||
+    "Curated architectural projects, city guides and field notes, mapped city by city.";
+  const li = (href, label, tail) =>
+    `<li><a href="${esc(href)}">${esc(label)}</a>${tail ? " - " + esc(clamp(stripHtml(tail), 150)) : ""}</li>`;
+
   write("/", renderPage(template, {
     path: "/",
     preloadImage: heroPreload,
@@ -142,53 +155,87 @@ async function main() {
     image: OG_DEFAULT,
     jsonld: { "@context": "https://schema.org", "@graph": [ORG, { "@type": "WebSite", name: "Siana Architecture", url: SITE_URL }] },
     content:
-      `<h1>Siana Architecture — architecture, city by city</h1>` +
-      `<p>An editorial atlas of architecture: significant buildings mapped city by city, paired with a journal of essays and field notes and a library of resources for architects.</p>` +
-      `<nav><a href="/cities">Cities</a> · <a href="/journal">Journal</a> · <a href="/resources">Resources</a> · <a href="/about">About</a></nav>`,
+      `<h1>Siana Architecture</h1>` +
+      `<p>${esc(intro)}</p>` +
+      `<p>Siana Architecture is an editorial atlas: we document significant buildings across the world's cities, write about them with the care of an editor and the eye of an architect, and place every one of them on a map you can actually use.</p>` +
+
+      `<h2>The interactive map</h2>` +
+      `<p>Every project we publish is pinned on the <a href="/atlas">Atlas</a>, our interactive map. Filter by city, material, era or architectural style, then open any pin to read the full entry.</p>` +
+
+      `<h2>Cities we cover</h2>` +
+      `<p>City guides pair an essay on the place with the buildings worth walking to. We currently cover ${cities.length} ${cities.length === 1 ? "city" : "cities"}.</p>` +
+      (cities.length
+        ? `<ul>` + cities.map((c) => li(`/cities/${c.slug}`, c.name, [c.country, c.tagline].filter(Boolean).join(", "))).join("") + `</ul>`
+        : "") +
+      `<p><a href="/cities">Browse every city guide</a></p>` +
+
+      `<h2>Featured buildings</h2>` +
+      `<p>Each entry carries the architect, the year of completion, the materials and the context that makes the building worth the detour.</p>` +
+      (projects.length
+        ? `<ul>` + projects.slice(0, 12).map((p) => li(
+            `/projects/${p.slug}`,
+            p.name,
+            [p.architect, p.year_completed, p.city?.name, p.tagline].filter(Boolean).join(", "),
+          )).join("") + `</ul>`
+        : "") +
+
+      `<h2>From Practice</h2>` +
+      `<p>Essays, criticism, interviews and field notes on architecture and the cities that hold it.</p>` +
+      (journal.length
+        ? `<ul>` + journal.slice(0, 8).map((p) => li(`/journal/${p.slug}`, p.title, p.excerpt)).join("") + `</ul>`
+        : "") +
+      (resources.length
+        ? `<p>Practical guides for architecture practices:</p><ul>` +
+          resources.slice(0, 8).map((p) => li(`/resources/${p.slug}`, p.title, p.excerpt)).join("") + `</ul>`
+        : "") +
+      `<p><a href="/practice">Read everything in Practice</a></p>` +
+
+      `<h2>About Siana Architecture</h2>` +
+      `<p>We believe the most interesting building in any city is rarely the most famous one, and that the best way to understand a place is to walk it slowly, with someone pointing. No ads, no clutter, no infinite scroll. <a href="/about">More about what we do</a>.</p>`,
   })); n++;
 
   // --- Listing: Cities ---
   write("/cities", renderPage(template, {
     path: "/cities",
-    title: "Cities — Siana Architecture",
+    title: "Cities - Siana Architecture",
     description: "Browse Siana's architecture guides city by city: " + cities.map((c) => c.name).join(", ") + ".",
     image: OG_DEFAULT,
     content:
       `<h1>Cities</h1><ul>` +
-      cities.map((c) => `<li><a href="/cities/${esc(c.slug)}">${esc(c.name)}</a>${c.country ? " — " + esc(c.country) : ""}${c.tagline ? ": " + esc(c.tagline) : ""}</li>`).join("") +
+      cities.map((c) => `<li><a href="/cities/${esc(c.slug)}">${esc(c.name)}</a>${c.country ? " - " + esc(c.country) : ""}${c.tagline ? ": " + esc(c.tagline) : ""}</li>`).join("") +
       `</ul>`,
   })); n++;
 
   // --- Listing: Journal ---
   write("/journal", renderPage(template, {
     path: "/journal",
-    title: "Journal — Siana Architecture",
+    title: "Journal - Siana Architecture",
     description: "Essays, criticism, profiles, interviews and field notes on architecture from Siana.",
     image: OG_DEFAULT,
     content:
       `<h1>Journal</h1><ul>` +
-      journal.map((p) => `<li><a href="/journal/${esc(p.slug)}">${esc(p.title)}</a>${p.excerpt ? " — " + esc(p.excerpt) : ""}</li>`).join("") +
+      journal.map((p) => `<li><a href="/journal/${esc(p.slug)}">${esc(p.title)}</a>${p.excerpt ? " - " + esc(p.excerpt) : ""}</li>`).join("") +
       `</ul>`,
   })); n++;
 
   // --- Listing: Resources ---
   write("/resources", renderPage(template, {
     path: "/resources",
-    title: "Resources for Architects — Siana Architecture",
+    title: "Resources for Architects - Siana Architecture",
     description: "Practical guides, playbooks and tools for architecture, engineering and construction practices.",
     image: OG_DEFAULT,
     content:
       `<h1>Resources for architects</h1>` +
       (resources.length
-        ? `<ul>` + resources.map((p) => `<li><a href="/resources/${esc(p.slug)}">${esc(p.title)}</a>${p.excerpt ? " — " + esc(p.excerpt) : ""}</li>`).join("") + `</ul>`
-        : `<p>Practical guides for AEC practices — coming soon.</p>`),
+        ? `<ul>` + resources.map((p) => `<li><a href="/resources/${esc(p.slug)}">${esc(p.title)}</a>${p.excerpt ? " - " + esc(p.excerpt) : ""}</li>`).join("") + `</ul>`
+        : `<p>Practical guides for AEC practices - coming soon.</p>`),
   })); n++;
 
   // --- About ---
   write("/about", renderPage(template, {
     path: "/about",
-    title: "About — Siana Architecture",
-    description: "Siana is an architectural magazine that lives on a map — curated projects explored through an editorial lens.",
+    title: "About - Siana Architecture",
+    description: "Siana is an architectural magazine that lives on a map - curated projects explored through an editorial lens.",
     image: OG_DEFAULT,
     content:
       `<h1>The city as architecture.</h1>` +
@@ -198,12 +245,12 @@ async function main() {
   // --- Atlas (the discovery tool) ---
   write("/atlas", renderPage(template, {
     path: "/atlas",
-    title: "Atlas — Explore Architecture on the Map | Siana Architecture",
+    title: "Atlas - Explore Architecture on the Map | Siana Architecture",
     description: "An interactive atlas of significant architecture across the world's cities. Filter by city, architect, style and year, and explore each project on the map.",
     image: OG_DEFAULT,
     content:
       `<h1>The Atlas</h1>` +
-      `<p>An interactive map of significant architecture across the world's cities — filter by city, architect, style and year, and explore each project on the map.</p>` +
+      `<p>An interactive map of significant architecture across the world's cities - filter by city, architect, style and year, and explore each project on the map.</p>` +
       `<p><a href="/cities">Browse cities</a> · <a href="/journal">Journal</a></p>`,
   })); n++;
 
@@ -211,7 +258,7 @@ async function main() {
   for (const c of cities) {
     write(`/cities/${c.slug}`, renderPage(template, {
       path: `/cities/${c.slug}`,
-      title: `${c.name} — Architecture Guide | Siana Architecture`,
+      title: `${c.name} - Architecture Guide | Siana Architecture`,
       description: `Architecture guide to ${c.name}${c.country ? ", " + c.country : ""}.${c.tagline ? " " + c.tagline : ""}`,
       image: c.hero_image_url || OG_DEFAULT,
       jsonld: { "@context": "https://schema.org", "@type": "Place", name: c.name, address: c.country || undefined, url: `${SITE_URL}/cities/${c.slug}` },
@@ -225,7 +272,7 @@ async function main() {
     write(`/projects/${p.slug}`, renderPage(template, {
       path: `/projects/${p.slug}`,
       title: `${p.name}${p.architect ? " by " + p.architect : ""} | Siana Architecture`,
-      description: p.tagline || `${p.name}${facts ? " — " + facts : ""}.`,
+      description: p.tagline || `${p.name}${facts ? " - " + facts : ""}.`,
       image: p.cover_image_url || p.hero_image_url || OG_DEFAULT,
       type: "article",
       jsonld: {

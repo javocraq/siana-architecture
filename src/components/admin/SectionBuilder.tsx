@@ -66,7 +66,7 @@ export default function SectionBuilder({ value, onChange }: Props) {
 
       {value.length === 0 && (
         <div className="border hairline border-dashed px-6 py-10 text-center text-ink-muted text-[12px]">
-          No sections yet. Add your first block below — public page will use the default layout until you do.
+          No sections yet. Add your first block below - public page will use the default layout until you do.
         </div>
       )}
 
@@ -238,7 +238,7 @@ function SectionSettings({ section, onChange }: { section: CitySection; onChange
   if (section.type === "spacer") {
     return (
       <div>
-        <label className={lab}>Height — {section.settings.height}px</label>
+        <label className={lab}>Height - {section.settings.height}px</label>
         <input type="range" min={20} max={240} step={10} value={section.settings.height} onChange={(e) => onChange({ height: parseInt(e.target.value, 10) })} className="w-full" />
       </div>
     );

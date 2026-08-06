@@ -121,8 +121,8 @@ export default function AdminJournal() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-ink font-medium">{p.title}</td>
-                      <td className="px-4 py-3 text-ink-muted">{p.author || "—"}</td>
-                      <td className="px-4 py-3 text-ink-muted">{p.category || "—"}</td>
+                      <td className="px-4 py-3 text-ink-muted">{p.author || "-"}</td>
+                      <td className="px-4 py-3 text-ink-muted">{p.category || "-"}</td>
                       <td className="px-4 py-3">
                         <span
                           className="inline-flex uppercase px-2 py-0.5"
@@ -137,7 +137,7 @@ export default function AdminJournal() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-ink-faint text-[11px]">
-                        {p.published_at ? new Date(p.published_at).toLocaleDateString() : "—"}
+                        {p.published_at ? new Date(p.published_at).toLocaleDateString() : "-"}
                       </td>
                       <td className="px-4 py-3 text-ink-faint text-[11px]">
                         {new Date(p.updated_at).toLocaleDateString()}

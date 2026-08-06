@@ -169,7 +169,7 @@ export default function AdminDashboard() {
                 {recent.length === 0 ? (
                   <p className="px-7 py-6 text-[13px] text-ink-faint">
                     {totalAll === 0
-                      ? "No content yet — create your first project or city above."
+                      ? "No content yet - create your first project or city above."
                       : "Nothing to show."}
                   </p>
                 ) : (

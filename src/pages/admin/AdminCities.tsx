@@ -111,7 +111,7 @@ export default function AdminCities() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-ink font-medium">{c.name}</td>
-                      <td className="px-4 py-3 text-ink-muted">{c.country || "—"}</td>
+                      <td className="px-4 py-3 text-ink-muted">{c.country || "-"}</td>
                       <td className="px-4 py-3 text-ink-faint">/{c.slug}</td>
                       <td className="px-4 py-3">
                         <span

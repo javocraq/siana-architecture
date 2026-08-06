@@ -347,7 +347,7 @@ export default function AdminJournalEdit() {
                   value={form.category}
                   onChange={(e) => set("category", e.target.value)}
                 >
-                  <option value="">— Select —</option>
+                  <option value="">- Select -</option>
                   {(form.category && !tax.categories.includes(form.category)
                     ? [form.category, ...tax.categories]
                     : tax.categories

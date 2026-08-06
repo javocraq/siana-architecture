@@ -46,7 +46,7 @@ export default function ArchitectureAISection() {
           <p className="mt-5" style={{ fontFamily: sans, fontWeight: 400, fontSize: 16, color: "#4F4534", lineHeight: 1.7, maxWidth: 460 }}>
             AI is changing how architects design, how cities are imagined, and how
             architectural knowledge travels across the internet. Siana explores
-            this intersection — through criticism, reporting, and original research.
+            this intersection - through criticism, reporting, and original research.
           </p>
           <Link
             to="/practice?category=architecture-ai"

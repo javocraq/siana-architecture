@@ -91,23 +91,23 @@ function buildSitemap({ cities, projects, journal, resources }) {
 
 // ---------- llms.txt ---------------------------------------------------------
 const LLMS_INTRO =
-  `# Siana — Architecture, city by city\n\n` +
+  `# Siana - Architecture, city by city\n\n` +
   `> Siana is an editorial atlas of architecture: a curated guide to significant buildings around the world, mapped city by city, paired with a journal of essays and field notes and a library of resources for architects.\n\n` +
-  `Siana documents notable architecture across global cities and writes about it with an editorial eye. The site is organized into four areas: **Cities** (city guides with an interactive map of pinned buildings), **Projects** (individual buildings with architect, year and context), the **Journal** (the blog — essays, criticism, profiles, interviews and field notes on architecture), and **Resources** (practical guides for architecture practices).\n`;
+  `Siana documents notable architecture across global cities and writes about it with an editorial eye. The site is organized into four areas: **Cities** (city guides with an interactive map of pinned buildings), **Projects** (individual buildings with architect, year and context), the **Journal** (the blog - essays, criticism, profiles, interviews and field notes on architecture), and **Resources** (practical guides for architecture practices).\n`;
 
 function buildLlms({ cities, projects, journal }) {
   const cityLine = (c) => {
     let d = `Architecture guide to ${c.name}${c.country ? ", " + c.country : ""}`;
-    d += c.tagline ? ` — ${c.tagline}` : ".";
+    d += c.tagline ? ` - ${c.tagline}` : ".";
     return `- [${c.name}](${SITE_URL}/cities/${c.slug}): ${d}`;
   };
   const journalLine = (p) =>
-    `- [${p.title}](${SITE_URL}/journal/${p.slug}): ${p.category ? p.category + " — " : ""}${p.excerpt ?? ""}`.trimEnd();
+    `- [${p.title}](${SITE_URL}/journal/${p.slug}): ${p.category ? p.category + " - " : ""}${p.excerpt ?? ""}`.trimEnd();
   const projectLine = (p) => {
     const year = p.year_completed && p.year_completed > 1000 ? p.year_completed : null;
     const meta = [p.architect, year].filter(Boolean).join(", ");
     const city = p.city?.name;
-    const tail = [meta, city].filter(Boolean).join(" — ");
+    const tail = [meta, city].filter(Boolean).join(" - ");
     return `- [${p.name}](${SITE_URL}/projects/${p.slug})${tail ? ": " + tail + "." : ""}`;
   };
 
@@ -121,7 +121,7 @@ function buildLlms({ cities, projects, journal }) {
     `## Journal (blog)\n${journal.map(journalLine).join("\n")}\n\n` +
     `## Projects\n${projects.map(projectLine).join("\n")}\n\n` +
     `## Main sections\n` +
-    `- [Atlas](${SITE_URL}/atlas): Interactive map — explore every project by city, architect, style and year.\n` +
+    `- [Atlas](${SITE_URL}/atlas): Interactive map - explore every project by city, architect, style and year.\n` +
     `- [Cities index](${SITE_URL}/cities): Browse all cities in the atlas.\n` +
     `- [Journal](${SITE_URL}/journal): All essays and field notes (the blog).\n` +
     `- [Resources for architects](${SITE_URL}/resources): Practical guides for architecture, engineering and construction practices.\n` +
@@ -134,7 +134,7 @@ function buildLlms({ cities, projects, journal }) {
 // ---------- main -------------------------------------------------------------
 async function main() {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.warn("[seo] Missing VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY — keeping existing sitemap.xml / llms.txt");
+    console.warn("[seo] Missing VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY - keeping existing sitemap.xml / llms.txt");
     return;
   }
 
@@ -156,7 +156,7 @@ async function main() {
 
   const total = 5 + cities.length + projects.length + journal.length + resources.length;
   console.log(
-    `[seo] Wrote public/sitemap.xml (${total} URLs) + public/llms.txt — ` +
+    `[seo] Wrote public/sitemap.xml (${total} URLs) + public/llms.txt - ` +
       `${cities.length} cities, ${projects.length} projects, ${journal.length} journal, ${resources.length} resources`,
   );
 }

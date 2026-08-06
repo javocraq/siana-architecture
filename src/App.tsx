@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -6,30 +6,40 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
-import Atlas from "./pages/Atlas.tsx";
-import About from "./pages/About.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import Cities from "./pages/Cities.tsx";
-import CityDetail from "./pages/CityDetail.tsx";
-import ProjectDetail from "./pages/ProjectDetail.tsx";
-import JournalArticle from "./pages/JournalArticle.tsx";
-import Resources from "./pages/Resources.tsx";
 
-import AdminLogin from "./pages/admin/AdminLogin.tsx";
-import AdminProjects from "./pages/admin/AdminProjects.tsx";
-import AdminPlaceholder from "./pages/admin/AdminPlaceholder.tsx";
-import AdminProjectEdit from "./pages/admin/AdminProjectEdit.tsx";
-import AdminJournal from "./pages/admin/AdminJournal.tsx";
-import AdminJournalEdit from "./pages/admin/AdminJournalEdit.tsx";
-import AdminCities from "./pages/admin/AdminCities.tsx";
-import AdminCityEdit from "./pages/admin/AdminCityEdit.tsx";
-import AdminSEO from "./pages/admin/AdminSEO.tsx";
-import AdminSettings from "./pages/admin/AdminSettings.tsx";
-import AdminIntegrations from "./pages/admin/AdminIntegrations.tsx";
-import AdminAbout from "./pages/admin/AdminAbout.tsx";
-import AdminHome from "./pages/admin/AdminHome.tsx";
-import AdminTaxonomies from "./pages/admin/AdminTaxonomies.tsx";
-import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
+
+// The admin is behind a login and pulls in the whole rich-text editor
+// (~560 kB of TipTap). Loading it lazily keeps that weight off every
+// public page view; a brief fallback inside the admin is a fair trade.
+// Every route except the landing page loads on demand. The detail pages
+// pull in Mapbox through their embedded maps, which would otherwise sit on
+// the critical path of a visitor who only ever sees the home page.
+const About = lazy(() => import("./pages/About.tsx"));
+const Cities = lazy(() => import("./pages/Cities.tsx"));
+const CityDetail = lazy(() => import("./pages/CityDetail.tsx"));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail.tsx"));
+const JournalArticle = lazy(() => import("./pages/JournalArticle.tsx"));
+const Resources = lazy(() => import("./pages/Resources.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+
+// Atlas carries Mapbox (~1.7 MB). It is its own destination, so it loads
+// on demand instead of weighing down every landing on the home page.
+const Atlas = lazy(() => import("./pages/Atlas.tsx"));
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin.tsx"));
+const AdminProjects = lazy(() => import("./pages/admin/AdminProjects.tsx"));
+const AdminPlaceholder = lazy(() => import("./pages/admin/AdminPlaceholder.tsx"));
+const AdminProjectEdit = lazy(() => import("./pages/admin/AdminProjectEdit.tsx"));
+const AdminJournal = lazy(() => import("./pages/admin/AdminJournal.tsx"));
+const AdminJournalEdit = lazy(() => import("./pages/admin/AdminJournalEdit.tsx"));
+const AdminCities = lazy(() => import("./pages/admin/AdminCities.tsx"));
+const AdminCityEdit = lazy(() => import("./pages/admin/AdminCityEdit.tsx"));
+const AdminSEO = lazy(() => import("./pages/admin/AdminSEO.tsx"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings.tsx"));
+const AdminIntegrations = lazy(() => import("./pages/admin/AdminIntegrations.tsx"));
+const AdminAbout = lazy(() => import("./pages/admin/AdminAbout.tsx"));
+const AdminHome = lazy(() => import("./pages/admin/AdminHome.tsx"));
+const AdminTaxonomies = lazy(() => import("./pages/admin/AdminTaxonomies.tsx"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -64,6 +74,9 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
+          {/* Only the lazily-loaded admin routes ever suspend; the public
+              pages are in the main chunk and render straight away. */}
+          <Suspense fallback={<div style={{ minHeight: "100vh" }} />}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/atlas" element={<Atlas />} />
@@ -106,6 +119,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

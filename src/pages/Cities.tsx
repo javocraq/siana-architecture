@@ -90,7 +90,7 @@ export default function Cities() {
   return (
     <SiteLayout>
       <SEO
-        title="Cities — Siana Architecture"
+        title="Cities - Siana Architecture"
         description="Explore architectural projects city by city. Curated editorial features from across the world."
       />
       {/* Neutral light gray canvas */}

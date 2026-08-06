@@ -12,6 +12,24 @@ export default defineConfig(() => ({
     },
   },
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        // The app shipped as one ~3 MB chunk, which the browser had to fetch
+        // and parse in full before anything rendered. Splitting the heavy,
+        // rarely-changing libraries out means they cache independently of our
+        // code: an edit to the site no longer invalidates Mapbox for every
+        // returning visitor, and the browser parses the pieces in parallel.
+        // Only the framework is pinned. Everything else is left to Rollup:
+        // forcing libraries into named chunks defeated the route-level code
+        // splitting below, pulling the editor onto the public critical path.
+        manualChunks: {
+          vendor: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
+          mapbox: ["mapbox-gl"],
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

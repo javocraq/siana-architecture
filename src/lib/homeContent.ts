@@ -73,7 +73,7 @@ export const HOME_DEFAULTS: HomeContent = {
     eyebrow: "The Map",
     headline: 'Every building, <em class="text-accent-terra">on the map</em>',
     description:
-      "A living atlas of architecture. Open the Map to filter by city, architect, style and year — and discover each project on the map.",
+      "A living atlas of architecture. Open the Map to filter by city, architect, style and year - and discover each project on the map.",
     cta: "Open the interactive map",
   },
   cities: {
@@ -82,11 +82,11 @@ export const HOME_DEFAULTS: HomeContent = {
   buildings: {
     headline: 'Featured <em class="text-accent-terra">Buildings</em>',
     description:
-      "A curated selection of the projects we keep returning to — across cities, eras and materials.",
+      "A curated selection of the projects we keep returning to - across cities, eras and materials.",
   },
   journal: {
     headline: 'Field <em class="text-accent-terra">notes</em>',
-    description: "Essays, criticism and field notes on architecture — slowly written.",
+    description: "Essays, criticism and field notes on architecture - slowly written.",
     cta: "All notes",
   },
   newsletter: {

@@ -95,7 +95,7 @@ export default function AdminAbout() {
               />
             </Field>
 
-            <Field label="Body" hint="Use the toolbar for italics, bold or block quotes — italics render as the editorial pull quote on /about.">
+            <Field label="Body" hint="Use the toolbar for italics, bold or block quotes - italics render as the editorial pull quote on /about.">
               <RichTextEditor
                 value={content.body}
                 onChange={(html) => setContent((c) => ({ ...c, body: html }))}

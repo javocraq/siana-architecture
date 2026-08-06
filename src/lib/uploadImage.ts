@@ -92,7 +92,7 @@ export async function uploadImage(file: File, folder = "content"): Promise<strin
   if (file.size > MAX_IMAGE_BYTES) {
     const mb = (file.size / 1024 / 1024).toFixed(1);
     throw new ImageUploadError(
-      `That image is ${mb} MB — the limit is ${MAX_IMAGE_BYTES / 1024 / 1024} MB. Please resize it first.`,
+      `That image is ${mb} MB - the limit is ${MAX_IMAGE_BYTES / 1024 / 1024} MB. Please resize it first.`,
     );
   }
 

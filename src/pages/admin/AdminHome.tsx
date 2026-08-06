@@ -87,7 +87,7 @@ export default function AdminHome() {
             {/* Hero block */}
             <CollapsibleSection
               title="Hero"
-              description="The first screen visitors see — headline, intro line and the background images."
+              description="The first screen visitors see - headline, intro line and the background images."
             >
               <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-8 items-start">
                 {/* Left — editable copy */}
