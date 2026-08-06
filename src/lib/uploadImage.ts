@@ -19,11 +19,61 @@ const EXT_FROM_TYPE: Record<string, string> = {
 };
 
 function extensionFor(file: File): string {
+  // The MIME type wins: re-encoding below can change the format without
+  // touching the filename, and the extension must match what we upload.
+  const fromType = EXT_FROM_TYPE[file.type];
+  if (fromType) return fromType;
   const fromName = file.name.includes(".") ? file.name.split(".").pop()! : "";
-  if (fromName && /^[a-z0-9]{1,5}$/i.test(fromName)) return fromName.toLowerCase();
-  // Clipboard pastes arrive as `image.png` or with no name at all, so fall
-  // back to the MIME type before guessing.
-  return EXT_FROM_TYPE[file.type] || "png";
+  return fromName && /^[a-z0-9]{1,5}$/i.test(fromName) ? fromName.toLowerCase() : "png";
+}
+
+/** Longest edge kept, in pixels. Comfortably past a full-bleed 4K hero, far
+ *  short of what a phone camera produces. */
+const MAX_EDGE = 2400;
+const QUALITY = 0.82;
+/** Under this, re-encoding costs quality and saves nothing worth having. */
+const SKIP_UNDER_BYTES = 600 * 1024;
+const RESIZABLE = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+/**
+ * Shrinks camera-sized photos before they are stored.
+ *
+ * Straight-from-the-phone images run to 8–10 MB. Uploaded raw they were being
+ * served at that size to every visitor, which is what made the home cover take
+ * seconds to appear. Anything already small, plus SVG and animated GIF, is
+ * passed through untouched.
+ */
+async function downscale(file: File): Promise<File> {
+  if (!RESIZABLE.has(file.type) || file.size <= SKIP_UNDER_BYTES) return file;
+  if (typeof createImageBitmap !== "function") return file;
+
+  const bitmap = await createImageBitmap(file).catch(() => null);
+  if (!bitmap) return file;
+
+  try {
+    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+
+    // WebP for PNG sources so transparency survives; JPEG otherwise.
+    const type = file.type === "image/png" ? "image/webp" : "image/jpeg";
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, type, QUALITY),
+    );
+    // If the encoder gave us something no smaller (or refused the format),
+    // the original is the better answer.
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], file.name, { type: blob.type || type });
+  } finally {
+    bitmap.close?.();
+  }
 }
 
 /**
@@ -46,11 +96,14 @@ export async function uploadImage(file: File, folder = "content"): Promise<strin
     );
   }
 
-  const path = `${folder}/${crypto.randomUUID()}.${extensionFor(file)}`;
-  const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(path, file, {
-    cacheControl: "3600",
+  const prepared = await downscale(file);
+  const path = `${folder}/${crypto.randomUUID()}.${extensionFor(prepared)}`;
+  const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(path, prepared, {
+    // A year: the filename is a fresh UUID per upload, so the URL changes
+    // whenever the image does and there is nothing stale to serve.
+    cacheControl: "31536000",
     upsert: false,
-    contentType: file.type || undefined,
+    contentType: prepared.type || undefined,
   });
   if (error) throw new ImageUploadError(error.message);
 

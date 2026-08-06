@@ -56,7 +56,7 @@ async function fetchRows(query) {
 }
 
 /** Inject SEO head tags + content into a copy of the built index.html. */
-function renderPage(template, { path, title, description, image, type = "website", jsonld, content }) {
+function renderPage(template, { path, title, description, image, type = "website", jsonld, content, preloadImage }) {
   const canonical = SITE_URL + path;
   const desc = clamp(stripHtml(description || ""), 300);
   let html = template;
@@ -78,6 +78,12 @@ function renderPage(template, { path, title, description, image, type = "website
     `<meta name="twitter:title" content="${esc(title)}" />`,
     `<meta name="twitter:description" content="${esc(desc)}" />`,
     jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : "",
+    // Starts the cover photo downloading from the very first byte of HTML,
+    // in parallel with the JS bundle — instead of after the bundle boots and
+    // then queries Supabase for which photo to show.
+    preloadImage
+      ? `<link rel="preload" as="image" fetchpriority="high" href="${esc(preloadImage)}" />`
+      : "",
   ].filter(Boolean).join("\n    ");
   sub(/<\/head>/, `    ${head}\n  </head>`);
 
@@ -115,11 +121,14 @@ async function main() {
   const template = readFileSync(join(DIST, "index.html"), "utf8");
   const byNewest = (a, b) => (b.published_at ?? "").localeCompare(a.published_at ?? "");
 
-  const [cities, projects, posts] = await Promise.all([
+  const [cities, projects, posts, homeRows] = await Promise.all([
     fetchRows("cities?status=eq.published&select=slug,name,country,tagline,hero_image_url&order=name"),
     fetchRows("projects?status=eq.published&select=slug,name,tagline,architect,practice,year_completed,category,description,hero_image_url,cover_image_url,city:cities(name)&order=name"),
     fetchRows("posts?status=eq.published&select=slug,kind,title,excerpt,body,author,category,hero_image_url,published_at&order=published_at.desc"),
+    fetchRows("site_pages?key=eq.home&select=content").catch(() => []),
   ]);
+  // The home cover: whichever image the editor put first in /admin/home.
+  const heroPreload = homeRows?.[0]?.content?.hero?.images?.[0] || null;
   const journal = posts.filter((p) => p.kind === "journal");
   const resources = posts.filter((p) => p.kind === "resource");
   let n = 0;
@@ -127,12 +136,13 @@ async function main() {
   // --- Home ---
   write("/", renderPage(template, {
     path: "/",
+    preloadImage: heroPreload,
     title: "Siana Architecture",
     description: "An editorial atlas of architecture: significant buildings mapped city by city, with a journal of essays and field notes and resources for architects.",
     image: OG_DEFAULT,
     jsonld: { "@context": "https://schema.org", "@graph": [ORG, { "@type": "WebSite", name: "Siana Architecture", url: SITE_URL }] },
     content:
-      `<h1>Siana — Architecture, city by city</h1>` +
+      `<h1>Siana Architecture — architecture, city by city</h1>` +
       `<p>An editorial atlas of architecture: significant buildings mapped city by city, paired with a journal of essays and field notes and a library of resources for architects.</p>` +
       `<nav><a href="/cities">Cities</a> · <a href="/journal">Journal</a> · <a href="/resources">Resources</a> · <a href="/about">About</a></nav>`,
   })); n++;

@@ -28,6 +28,7 @@ const Index = () => {
   const [pins, setPins] = useState<Pin[]>([]);
   const [heroImages, setHeroImages] = useState<string[]>([]);
   const [activeHero, setActiveHero] = useState(0);
+  const [heroReady, setHeroReady] = useState(false);
   const content = useHomeContent();
 
   // Lightweight: just coordinates, to scatter pins across the preview map
@@ -68,14 +69,46 @@ const Index = () => {
       // Country home interior with built-in wooden shelving
       "https://images.unsplash.com/photo-1780427670049-43aa7921e3f0?auto=format&fit=crop&w=1800&q=80",
     ];
-    // Shuffle so the order isn't predictable between visits
-    const pool = [...ARCH_IMAGES];
-    for (let i = pool.length - 1; i > 0; i--) {
+    // Shuffle so the order isn't predictable between visits — but pin the
+    // first slide. It is the one the page can preload (see the preload tag
+    // the prerender step writes), and preloading only pays off if the image
+    // it fetches is the one actually shown first.
+    const [first, ...rest] = ARCH_IMAGES;
+    for (let i = rest.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
+      [rest[i], rest[j]] = [rest[j], rest[i]];
     }
-    setHeroImages(pool);
+    setHeroImages([first, ...rest]);
   }, [content.hero.images]);
+
+  // Hold the cover back until its first photo has decoded. Without this the
+  // veil and the white headline paint over an empty background — the grey
+  // wash that showed on every load while the photo was still in flight.
+  //
+  // The deadline is its own mount-once effect on purpose. Living inside the
+  // image effect, it was cleared and restarted every time the URL changed
+  // (the list starts as the built-in photos, then swaps to the editor's), so
+  // it could never fire — and a cover that never appears is worse than one
+  // that appears late. Nothing can cancel this one but unmounting.
+  useEffect(() => {
+    const deadline = setTimeout(() => setHeroReady(true), 2500);
+    return () => clearTimeout(deadline);
+  }, []);
+
+  const firstHero = heroImages[0];
+  useEffect(() => {
+    if (!firstHero) return;
+    let cancelled = false;
+    const reveal = () => !cancelled && setHeroReady(true);
+    const img = new Image();
+    img.onload = reveal;
+    img.onerror = reveal;
+    img.src = firstHero;
+    if (img.complete) reveal();
+    return () => {
+      cancelled = true;
+    };
+  }, [firstHero]);
 
   // Rotate the active hero image on a calm interval
   useEffect(() => {
@@ -182,8 +215,13 @@ const Index = () => {
         className="relative grid"
         style={{ gridTemplateRows: "1fr auto", minHeight: "100vh", background: "hsl(var(--paper-warm))", paddingTop: "76px", overflow: "hidden" }}
       >
-        {/* Background slideshow */}
-        <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+        {/* Background slideshow. Held at opacity 0 until the first photo has
+            decoded, so the cover never shows its veil over an empty frame. */}
+        <div
+          className="absolute inset-0 z-0 overflow-hidden"
+          aria-hidden="true"
+          style={{ opacity: heroReady ? 1 : 0, transition: "opacity 900ms ease" }}
+        >
           {heroImages.map((src, i) => (
             <div
               key={src}
@@ -211,7 +249,17 @@ const Index = () => {
 
         <div
           className="relative z-10 mx-auto w-full max-w-[1400px] px-6 lg:px-10 text-center md:text-left"
-          style={{ display: "flex", flexDirection: "column", justifyContent: "center", paddingTop: "10rem", paddingBottom: "4rem" }}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            paddingTop: "10rem",
+            paddingBottom: "4rem",
+            // The copy is white: it only becomes legible once the photo and
+            // its veil are behind it, so it arrives with them, not before.
+            opacity: heroReady ? 1 : 0,
+            transition: "opacity 900ms ease",
+          }}
         >
           <p className="fadeup-1 font-mono uppercase text-white font-semibold" style={{ fontSize: "13px", letterSpacing: "0.22em", marginBottom: "1.5rem", textShadow: "0 1px 8px rgba(0,0,0,0.25)" }}>
             <Link to="/atlas" className="hover:opacity-70 transition-opacity">{content.hero.eyebrow_architecture}</Link>
