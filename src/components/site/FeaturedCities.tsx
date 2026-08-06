@@ -176,12 +176,17 @@ export default function FeaturedCities() {
       <Reveal>
         <div
           ref={scrollRef}
-          className="flex no-scrollbar overflow-x-auto scroll-smooth mx-auto max-w-[1400px] px-6 lg:px-10"
+          className="flex no-scrollbar overflow-x-auto scroll-smooth mx-auto max-w-[1400px] px-6 lg:px-10 snap-x snap-mandatory md:snap-none"
           style={{
             gap: "2rem",
             cursor: "grab",
             overscrollBehaviorY: "none",
-            touchAction: "pan-y",
+            // "pan-y" alone told the browser to handle only vertical gestures
+            // here, so a finger swiped sideways did nothing and the arrows
+            // were the only way through. Allowing both lets the browser pick
+            // by gesture direction: sideways scrolls the strip, up and down
+            // still scrolls the page.
+            touchAction: "pan-x pan-y",
           }}
           onWheel={(e) => {
             if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
@@ -195,7 +200,7 @@ export default function FeaturedCities() {
           onMouseMove={onMove}
         >
           {cities.map((c) => (
-            <div key={c.id} className="flex-shrink-0" style={{ width: 320 }}>
+            <div key={c.id} className="flex-shrink-0 snap-start" style={{ width: 320 }}>
               <Link
                 to={`/cities/${c.slug}`}
                 className="group block text-center"

@@ -69,11 +69,14 @@ export default function FeaturedBuildings() {
       </Reveal>
 
       <div
-        className="mx-auto max-w-[1400px] px-6 lg:px-10 grid grid-cols-1 gap-2 md:grid-cols-[1.4fr_1fr_1fr]"
+        // Mobile: a swipeable row that snaps card to card, matching the
+        // Cities strip above it. From md up it goes back to the asymmetric
+        // mosaic, with the hero spanning both rows.
+        className="mx-auto max-w-[1400px] px-6 lg:px-10 flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory md:grid md:grid-cols-[1.4fr_1fr_1fr] md:gap-2 md:overflow-visible md:snap-none"
         style={{ gridAutoRows: "minmax(240px, auto)" }}
       >
         {/* Hero — spans both rows on desktop; full-width on mobile */}
-        <Reveal className="md:row-span-2">
+        <Reveal className="shrink-0 w-[82%] snap-start md:w-auto md:shrink md:row-span-2">
         <Link
           to={`/projects/${hero.slug}`}
           className="group relative overflow-hidden bg-paper-mid block h-full lift"
@@ -110,7 +113,7 @@ export default function FeaturedBuildings() {
 
         {/* Smaller cards */}
         {rest.map((p, i) => (
-          <Reveal key={p.id} delay={120 + i * 110}>
+          <Reveal key={p.id} delay={120 + i * 110} className="shrink-0 w-[82%] snap-start md:w-auto md:shrink">
           <Link
             to={`/projects/${p.slug}`}
             className="group relative overflow-hidden bg-paper-mid block h-full lift"
