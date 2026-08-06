@@ -1,9 +1,9 @@
 import DOMPurify from "dompurify";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 // Pulled in only when a body actually contains a map block, so Mapbox stays
 // out of the bundle for the many entries that have none.
-const ContentMapEmbed = lazy(() => import("@/components/site/ContentMapEmbed"));
+import ContentMapEmbed from "@/components/site/ContentMapEmbed";
 import { MAP_EMBED_SELECTOR, readMapEmbed, type MapEmbedTarget } from "@/lib/mapEmbed";
 
 type Props = {
@@ -112,9 +112,7 @@ export default function RichHtml({ html, className = "" }: Props) {
       />
       {embeds.map((e, i) =>
         createPortal(
-          <Suspense fallback={null}>
-            <ContentMapEmbed kind={e.kind} slug={e.slug} label={e.label} />
-          </Suspense>,
+          <ContentMapEmbed kind={e.kind} slug={e.slug} label={e.label} />,
           e.host,
           `${e.kind}:${e.slug}:${i}`,
         ),

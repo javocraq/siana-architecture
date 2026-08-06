@@ -6,6 +6,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
+// Static on purpose: these carry the maps. Loading Mapbox through a lazy
+// chunk broke the map on both the Atlas and the home preview, so the map
+// surfaces stay in the main graph until that is understood properly.
+import Atlas from "./pages/Atlas.tsx";
+import CityDetail from "./pages/CityDetail.tsx";
+import ProjectDetail from "./pages/ProjectDetail.tsx";
+import JournalArticle from "./pages/JournalArticle.tsx";
 
 
 // The admin is behind a login and pulls in the whole rich-text editor
@@ -16,15 +23,11 @@ import Index from "./pages/Index.tsx";
 // the critical path of a visitor who only ever sees the home page.
 const About = lazy(() => import("./pages/About.tsx"));
 const Cities = lazy(() => import("./pages/Cities.tsx"));
-const CityDetail = lazy(() => import("./pages/CityDetail.tsx"));
-const ProjectDetail = lazy(() => import("./pages/ProjectDetail.tsx"));
-const JournalArticle = lazy(() => import("./pages/JournalArticle.tsx"));
 const Resources = lazy(() => import("./pages/Resources.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 // Atlas carries Mapbox (~1.7 MB). It is its own destination, so it loads
 // on demand instead of weighing down every landing on the home page.
-const Atlas = lazy(() => import("./pages/Atlas.tsx"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin.tsx"));
 const AdminProjects = lazy(() => import("./pages/admin/AdminProjects.tsx"));
 const AdminPlaceholder = lazy(() => import("./pages/admin/AdminPlaceholder.tsx"));
