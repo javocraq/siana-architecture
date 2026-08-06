@@ -4,9 +4,11 @@
 
 User-agent: Googlebot
 Allow: /
+Disallow: /admin
 
 User-agent: Bingbot
 Allow: /
+Disallow: /admin
 
 User-agent: Twitterbot
 Allow: /
@@ -63,6 +65,7 @@ Allow: /
 # Everyone else
 User-agent: *
 Allow: /
+Disallow: /admin
 
 # AI context file — overview of the site for LLMs (https://llmstxt.org)
 # https://sianaarchitecture.com/llms.txt

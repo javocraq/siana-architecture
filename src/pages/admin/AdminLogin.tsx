@@ -49,6 +49,7 @@ export default function AdminLogin() {
     <>
       <Helmet>
         <title>Admin · Siana Architecture</title>
+        <meta name="robots" content="noindex, nofollow" />
         <meta name="robots" content="noindex,nofollow" />
       </Helmet>
       <div className="min-h-screen flex items-center justify-center bg-paper-warm px-6">

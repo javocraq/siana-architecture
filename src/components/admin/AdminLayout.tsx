@@ -131,6 +131,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     <>
       <Helmet>
         <title>Siana Architecture Admin</title>
+        <meta name="robots" content="noindex, nofollow" />
         <meta name="robots" content="noindex,nofollow" />
       </Helmet>
       <div className="min-h-screen bg-paper-warm">
