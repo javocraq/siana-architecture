@@ -135,10 +135,7 @@ const Index = () => {
     (async () => {
       let mapboxgl: typeof MapboxGL.default;
       try {
-        [{ default: mapboxgl }] = await Promise.all([
-          import("mapbox-gl"),
-          import("mapbox-gl/dist/mapbox-gl.css"),
-        ]) as [{ default: typeof MapboxGL.default }, unknown];
+        ({ default: mapboxgl } = await import("mapbox-gl"));
       } catch (e) {
         console.error("Mapbox failed to load", e);
         return;
@@ -174,6 +171,9 @@ const Index = () => {
         };
         map.on("moveend", spinGlobe);
         map.on("load", spinGlobe);
+        // The container can still be measuring when the map is built; a resize
+        // on load makes sure it fills it rather than sticking at 0x0.
+        map.on("load", () => map.resize());
 
         io = new IntersectionObserver(
           ([entry]) => {
