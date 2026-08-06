@@ -53,15 +53,15 @@ export default function FeaturedBuildings() {
         className="mx-auto max-w-[1400px] px-6 lg:px-10"
         style={{ paddingBottom: "2.5rem" }}
       >
-        <div className="text-center max-w-xl mx-auto">
+        <div className="text-center max-w-xl md:max-w-4xl mx-auto">
           <h2
             className="font-display-black text-ink [&_em]:italic"
             style={{ fontSize: "clamp(2rem, 3.7vw, 3.4rem)", lineHeight: 1.05 }}
             dangerouslySetInnerHTML={{ __html: sanitizeInline(content.buildings.headline) }}
           />
           <p
-            className="font-mono text-ink-soft mt-7 mx-auto [&_em]:italic [&_strong]:font-semibold"
-            style={{ fontSize: 16, lineHeight: 1.7, letterSpacing: "0.01em", maxWidth: 460 }}
+            className="font-mono text-ink-soft mt-7 mx-auto max-w-[460px] md:max-w-none [&_em]:italic [&_strong]:font-semibold"
+            style={{ fontSize: 16, lineHeight: 1.7, letterSpacing: "0.01em" }}
             dangerouslySetInnerHTML={{ __html: sanitizeInline(content.buildings.description) }}
           />
         </div>
@@ -88,7 +88,7 @@ export default function FeaturedBuildings() {
             loading="lazy"
           />
           <div
-            className="absolute bottom-0 left-0 right-0 pt-[2.2rem] px-[1.2rem] pb-[1rem] md:pt-[3rem] md:px-[1.8rem] md:pb-[1.5rem]"
+            className="absolute bottom-0 left-0 right-0 pt-[2.2rem] px-[1.2rem] pb-[1rem]"
             style={{
               background: "linear-gradient(transparent, rgba(17,17,16,0.9))",
               borderRadius: 0,
@@ -99,13 +99,13 @@ export default function FeaturedBuildings() {
           >
             {hero.city?.name && (
               <p
-                className="font-mono uppercase mb-2 font-semibold text-[12px] md:text-[13px]"
+                className="font-mono uppercase mb-2 font-semibold text-[12px]"
                 style={{ letterSpacing: "0.18em", color: "#ffffff" }}
               >
                 {hero.city.name}
               </p>
             )}
-            <h3 className="font-display text-white text-[1.3rem] md:text-[2rem]" style={{ letterSpacing: "-0.01em" }}>
+            <h3 className="font-display text-white text-[1.3rem]" style={{ letterSpacing: "-0.01em" }}>
               {hero.name}
             </h3>
           </div>

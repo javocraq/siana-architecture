@@ -47,15 +47,15 @@ export default function LatestJournal() {
         className="mx-auto max-w-[1400px] px-6 lg:px-10"
         style={{ paddingBottom: "2.5rem" }}
       >
-        <div className="text-center max-w-xl mx-auto">
+        <div className="text-center max-w-xl md:max-w-4xl mx-auto">
           <h2
             className="font-display-black text-ink [&_em]:italic"
             style={{ fontSize: "clamp(1.85rem, 3.3vw, 3rem)", lineHeight: 1.05 }}
             dangerouslySetInnerHTML={{ __html: sanitizeInline(content.journal.headline) }}
           />
           <p
-            className="font-mono text-ink-soft mt-7 mx-auto [&_em]:italic [&_strong]:font-semibold"
-            style={{ fontSize: 16, lineHeight: 1.7, letterSpacing: "0.01em", maxWidth: 460 }}
+            className="font-mono text-ink-soft mt-7 mx-auto [&_em]:italic [&_strong]:font-semibold max-w-[460px] md:max-w-none"
+            style={{ fontSize: 16, lineHeight: 1.7, letterSpacing: "0.01em" }}
             dangerouslySetInnerHTML={{ __html: sanitizeInline(content.journal.description) }}
           />
         </div>

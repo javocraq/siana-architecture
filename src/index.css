@@ -6,7 +6,7 @@
    Siana Architecture — Editorial Design System
    Type system (all Google Fonts, no licensing required):
      • Adobe Garamond Pro 400 → primary display / headings (EB Garamond fallback)
-     • Manrope 600        → secondary titles (sans)
+     • Montserrat 600     → secondary titles (sans)
      • Inter 400          → body text (sans)
      • Instrument Serif   → wordmark (italic)
      • Montserrat 500/600 → tags / labels (uppercase + tracked)
@@ -153,7 +153,7 @@
     letter-spacing: -0.01em;
   }
   .font-title {
-    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+    font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
     font-weight: 600;
     letter-spacing: -0.005em;
   }

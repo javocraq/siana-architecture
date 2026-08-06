@@ -17,8 +17,8 @@ export default {
         // Primary serif — Adobe Garamond Pro (commercial) with EB Garamond
         // as the open-source web fallback (same Claude Garamont specimen).
         display: ['"Adobe Garamond Pro"', '"EB Garamond"', "Garamond", "Georgia", "Times New Roman", "serif"],
-        // Secondary sans for titles — Manrope (Google Fonts, Arboria-style).
-        title: ['"Manrope"', "system-ui", "-apple-system", "sans-serif"],
+        // Secondary sans for titles - Montserrat.
+        title: ['"Montserrat"', "system-ui", "-apple-system", "sans-serif"],
         // Body text — Inter (Google Fonts, Acumin Pro-style).
         body: ['"Inter"', '"Helvetica Neue"', "Helvetica", "Arial", "sans-serif"],
         // Label / tag typeface — Montserrat geometric sans (replaces DM Mono).
@@ -27,7 +27,7 @@ export default {
         logo: ['"Instrument Serif"', "Times New Roman", "serif"],
         // Legacy narrative aliases re-mapped to the current system.
         garamond: ['"Adobe Garamond Pro"', '"EB Garamond"', "Garamond", "Georgia", "serif"],
-        grotesk: ['"Manrope"', "system-ui", "sans-serif"],
+        grotesk: ['"Montserrat"', "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
